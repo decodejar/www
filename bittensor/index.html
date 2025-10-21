@@ -125,6 +125,7 @@
 
         async function loadPriceData() {
             try {
+                // IMPORTANT: The fetch URL includes a cache-buster parameter (?t=...) to ensure the latest data is loaded from the GitHub Action.
                 const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load data file: ${response.statusText}`);
@@ -224,26 +225,23 @@
             // Y-axis updates (always log scale, applying 33% extension)
             const prices = priceData.map(p => p.y).filter(y => y > 0);
             const logMinPrice = Math.log10(Math.min(...prices));
-            const logMaxPrice = Math.log10(Math.max(...prices));
             
-            // Calculate min/max price for the projection period
-            const projectedStartPrice = regressionLinePoints[0].y;
+            // Calculate max price for the projection period
             const projectedEndPrice = regressionLinePoints[regressionLinePoints.length - 1].y;
-            const projectedMaxPrice = Math.max(projectedEndPrice, Math.max(...prices));
+            const currentMaxPrice = Math.max(...prices, projectedEndPrice);
 
-            // Calculate the total range required for the projection period
-            const totalProjectedRange = Math.log10(projectedMaxPrice) - logMinPrice;
+            // Calculate the log range from the minimum recorded price to the projected max price
+            const totalProjectedRange = Math.log10(currentMaxPrice) - logMinPrice;
             
-            // Apply 33% (or 1.33 factor) extension to the visual price range.
+            // Apply 33% extension to this range
             const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
-            const extendedMaxPrice = Math.pow(10, newLogMaxPrice);
+            const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
             
-            // We use a small buffer for the minimum rather than expanding the minimum by 33%
-            // This prevents the minimum from dropping too low and wasting vertical space.
-            const extendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
+            // Set the minimum just slightly below the actual data minimum (safer floor)
+            const finalExtendedMinPrice = Math.pow(10, logMinPrice - 0.05); // Subtraction is safer than multiplication on log(value)
 
-            chart.options.scales.y.min = extendedMinPrice;
-            chart.options.scales.y.max = extendedMaxPrice;
+            chart.options.scales.y.min = finalExtendedMinPrice;
+            chart.options.scales.y.max = finalExtendedMaxPrice;
             
             // Custom Y-axis Ticks: 1, 10, 100, 1000, etc.
             chart.options.scales.y.ticks.callback = function(value, index, ticks) {
@@ -288,35 +286,23 @@
             }
             
             priceData = rawData; // Store globally
+            isLogTimeScale = logTimeToggle.checked; // Initialize state from checkbox
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
-            
+
+            // Initial Y-Axis Limit Setup (needed for Chart constructor)
             const prices = priceData.map(p => p.y).filter(y => y > 0);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-            const logPrices = prices.map(y => Math.log10(y));
-            const logMinPrice = Math.min(...logPrices);
-            
-            // Calculate Y-axis limits
+            const logMinPrice = Math.log10(Math.min(...prices));
             const { slope, intercept } = linearRegression(priceData);
-            
             const n = priceData.length;
             const startIndex = 1;
             const extendedEndDay = Math.ceil(n * EXPANSION_FACTOR); 
             
-            // Calculate projected price endpoint for Y-axis extension
             const projectedEndPrice = Math.pow(10, slope * Math.log10(extendedEndDay) + intercept);
             const currentMaxPrice = Math.max(...prices, projectedEndPrice);
-
-            // Calculate the log range from the minimum recorded price to the projected max price
             const totalProjectedRange = Math.log10(currentMaxPrice) - logMinPrice;
-            
-            // Apply 33% extension to this range
             const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
             const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
-            
-            // Set the minimum just slightly below the actual data minimum (minimal visual buffer)
-            const finalExtendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
-
+            const finalExtendedMinPrice = Math.pow(10, logMinPrice - 0.05); // Safer subtraction offset
 
             const rSquared = calculateRSquared(priceData, slope, intercept);
             modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Taostats API (Baseline)<br>
@@ -327,7 +313,7 @@
             const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
             const regressionLineData = [
                 { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: extendedEndDay, y: projectedEndPrice } // Use the calculated projected price
+                { x: extendedEndDay, y: projectedEndPrice } 
             ];
             
             loader.style.display = 'none';
@@ -348,7 +334,6 @@
                         tooltip: { 
                             callbacks: { 
                                 title: (tooltipItems) => {
-                                    // Use the X value (Day Number) to look up the original timestamp
                                     const day = tooltipItems[0].parsed.x;
                                     const dataPoint = priceData.find(p => p.x === day);
                                     if (dataPoint) {
@@ -367,7 +352,7 @@
                         x: { 
                             type: 'logarithmic',
                             min: startIndex,
-                            max: extendedEndDay, // X-axis extends 33%
+                            max: extendedEndDay, 
                             title: { display: true, text: 'Time (Days since start, Log Scale)', color: '#9ca3af' }, 
                             ticks: { 
                                 color: '#9ca3af',
