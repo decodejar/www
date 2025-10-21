@@ -4,9 +4,10 @@ import json
 
 def fetch_and_save_data():
     """
-    Fetches historical price data from the Taostats API using the correct
-    X-TAO-API-KEY header for authentication.
+    Fetches historical price data from the Taostats API using the correct,
+    lowercase 'x-tao-api-key' header for authentication.
     """
+    # Reads the secret named TAOSTATS_API_KEY from the GitHub environment.
     api_key = os.getenv('TAOSTATS_API_KEY')
     if not api_key:
         print("Error: TAOSTATS_API_KEY secret is not set in the GitHub repository.")
@@ -19,13 +20,13 @@ def fetch_and_save_data():
     output_filename = os.path.join(script_dir, "price_data.json")
 
     print(f"Attempting GET request to: {api_url}")
-    print(f"Using X-TAO-API-KEY header for authentication...")
+    print(f"Using 'x-tao-api-key' header for authentication...")
     
     try:
         # --- CORRECTED AUTHENTICATION PER OFFICIAL DOCUMENTATION ---
-        # The API requires a GET request with the key in the 'X-TAO-API-KEY' header.
+        # The API requires a GET request with the key in the all-lowercase 'x-tao-api-key' header.
         headers = {
-            'X-TAO-API-KEY': api_key
+            'x-tao-api-key': api_key
         }
         
         response = requests.get(api_url, headers=headers, timeout=30)
