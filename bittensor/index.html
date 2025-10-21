@@ -280,36 +280,32 @@
                 return null;
             };
 
-            // Custom X-axis Ticks (Updated to show ONLY Year on Power-of-Base Ticks)
+            // Custom X-axis Ticks (FIXED to show ONLY Year when the calendar year changes)
             chart.options.scales.x.ticks.callback = isLogTimeScale ? function(value, index, ticks) {
-                // Check if the custom log value is close to a whole number (i.e., a power of LOG_BASE: 1.5^0, 1.5^1, 1.5^2, etc.)
-                // This ensures we only label the mathematically significant points on the log scale.
-                const isPowerOfBaseTick = Math.abs(value - Math.round(value)) < 0.1;
+                // 1. Calculate the actual Day Number from the Chart's X value (which is custom logged)
+                const dayNumber = Math.round(fromCustomLog(value));
                 
-                if (isPowerOfBaseTick) {
-                    const dayNumber = Math.round(fromCustomLog(value));
+                if (dayNumber > 0) {
+                    const startDate = new Date(priceData[0].time);
+                    const tickDate = new Date(startDate.getTime());
+                    // Calculate the date corresponding to this day number
+                    tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
+                    const year = tickDate.getFullYear();
                     
-                    if (dayNumber > 0) {
-                        const startDate = new Date(priceData[0].time);
-                        const tickDate = new Date(startDate.getTime());
-                        tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
-                        const year = tickDate.getFullYear();
-                        
-                        if (index === 0) return year; // Always show the first year
+                    if (index === 0) return year; // Always show the first year
 
-                        // Get the previous tick's value
-                        const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                    // 2. Look up the value of the previous tick that Chart.js generated
+                    const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                    
+                    if (prevTickValue !== null) {
+                        // Calculate the day number and date for the previous tick
+                        const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
+                        const prevDate = new Date(startDate.getTime());
+                        prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
                         
-                        if (prevTickValue !== null) {
-                            const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
-                            
-                            // Calculate previous date to check if the year changed
-                            const prevDate = new Date(startDate.getTime());
-                            prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
-                            
-                            if (prevDate.getFullYear() < year) {
-                                return year; // Only show year if it's different from the previous labeled tick
-                            }
+                        // 3. Compare the current year to the previous tick's year
+                        if (prevDate.getFullYear() < year) {
+                            return year; // Only show year if it's different from the previous tick's date
                         }
                     }
                 }
@@ -433,33 +429,30 @@
                             ticks: { 
                                 color: '#9ca3af',
                                 callback: function(value, index, ticks) {
-                                    // Check if the custom log value is close to a whole number 
-                                    const isPowerOfBaseTick = Math.abs(value - Math.round(value)) < 0.1;
+                                    // 1. Calculate the actual Day Number from the Chart's X value (which is custom logged)
+                                    const dayNumber = Math.round(fromCustomLog(value));
                                     
-                                    if (isPowerOfBaseTick) {
-                                        const dayNumber = Math.round(fromCustomLog(value));
+                                    if (dayNumber > 0) {
+                                        const startDate = new Date(priceData[0].time);
+                                        const tickDate = new Date(startDate.getTime());
+                                        // Calculate the date corresponding to this day number
+                                        tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
+                                        const year = tickDate.getFullYear();
                                         
-                                        if (dayNumber > 0) {
-                                            const startDate = new Date(priceData[0].time);
-                                            const tickDate = new Date(startDate.getTime());
-                                            tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
-                                            const year = tickDate.getFullYear();
-                                            
-                                            if (index === 0) return year; // Always show the first year
+                                        if (index === 0) return year; // Always show the first year
 
-                                            // Get the previous tick's value
-                                            const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                                        // 2. Look up the value of the previous tick that Chart.js generated
+                                        const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                                        
+                                        if (prevTickValue !== null) {
+                                            // Calculate the day number and date for the previous tick
+                                            const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
+                                            const prevDate = new Date(startDate.getTime());
+                                            prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
                                             
-                                            if (prevTickValue !== null) {
-                                                const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
-                                                
-                                                // Calculate previous date to check if the year changed
-                                                const prevDate = new Date(startDate.getTime());
-                                                prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
-                                                
-                                                if (prevDate.getFullYear() < year) {
-                                                    return year; // Only show year if it's different from the previous labeled tick
-                                                }
+                                            // 3. Compare the current year to the previous tick's year
+                                            if (prevDate.getFullYear() < year) {
+                                                return year; // Only show year if it's different from the previous tick's date
                                             }
                                         }
                                     }
