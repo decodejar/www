@@ -229,7 +229,7 @@
             // Calculate min/max price for the projection period
             const projectedStartPrice = regressionLinePoints[0].y;
             const projectedEndPrice = regressionLinePoints[regressionLinePoints.length - 1].y;
-            const projectedMaxPrice = Math.max(projectedEndPrice, maxPrice);
+            const projectedMaxPrice = Math.max(projectedEndPrice, Math.max(...prices));
 
             // Calculate the total range required for the projection period
             const totalProjectedRange = Math.log10(projectedMaxPrice) - logMinPrice;
@@ -245,6 +245,15 @@
             chart.options.scales.y.min = extendedMinPrice;
             chart.options.scales.y.max = extendedMaxPrice;
             
+            // Custom Y-axis Ticks: 1, 10, 100, 1000, etc.
+            chart.options.scales.y.ticks.callback = function(value, index, ticks) {
+                // Only display ticks that are clean powers of 10
+                if (Math.log10(value) === Math.floor(Math.log10(value))) {
+                    return `$${Number(value).toLocaleString()}`;
+                }
+                return null;
+            };
+
             chart.options.scales.x.ticks.callback = isLogTimeScale ? function(value, index, ticks) {
                 const startDate = new Date(priceData[0].time);
                 const tickDate = new Date(startDate.getTime());
@@ -286,8 +295,7 @@
             const maxPrice = Math.max(...prices);
             const logPrices = prices.map(y => Math.log10(y));
             const logMinPrice = Math.min(...logPrices);
-            const logMaxPrice = Math.log10(Math.max(...prices)); // Recalculate based on current data, not the logPrices array
-
+            
             // Calculate Y-axis limits
             const { slope, intercept } = linearRegression(priceData);
             
@@ -303,7 +311,7 @@
             const totalProjectedRange = Math.log10(currentMaxPrice) - logMinPrice;
             
             // Apply 33% extension to this range
-            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPENSION_FACTOR;
+            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
             const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
             
             // Set the minimum just slightly below the actual data minimum (minimal visual buffer)
@@ -389,7 +397,16 @@
                             min: finalExtendedMinPrice, 
                             max: finalExtendedMaxPrice, 
                             title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
-                            ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, 
+                            ticks: { 
+                                color: '#9ca3af',
+                                callback: function(value, index, ticks) {
+                                    // Only display ticks that are clean powers of 10
+                                    if (Math.log10(value) === Math.floor(Math.log10(value))) {
+                                        return `$${Number(value).toLocaleString()}`;
+                                    }
+                                    return null;
+                                }
+                            }, 
                             grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                         }
                     }
