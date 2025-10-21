@@ -63,17 +63,17 @@
     </footer>
 
 
-    <script>
+<script>
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
+        let lastYear = 0; // CHANGE 1: Add a variable to track the last displayed year.
         
         async function loadPriceData() {
             try {
-                // Fetch the static JSON file from the same directory as this HTML file.
                 const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load data file: ${response.statusText}`);
@@ -82,7 +82,6 @@
                  if (!Array.isArray(data)) {
                     throw new Error("Invalid data format in JSON file");
                 }
-                // Convert Taostats data format [timestamp_in_seconds, price] to the format our chart needs.
                 return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
             } catch (error) {
                 console.error("Error loading price data:", error);
@@ -155,6 +154,7 @@
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
             
             loader.style.display = 'none';
+            lastYear = 0; // CHANGE 2: Reset the tracker before drawing the chart.
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
@@ -176,7 +176,26 @@
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { labels: { color: '#d1d5db' } }, tooltip: { callbacks: { label: (c) => `Price: $${c.parsed.y.toFixed(2)}` } } },
                         scales: {
-                            x: { type: 'logarithmic', min: extendedMinTime, max: extendedMaxTime, title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, ticks: { color: '#9ca3af', callback: (v) => new Date(v).toLocaleDateString() }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                            x: { 
+                                type: 'logarithmic', 
+                                min: extendedMinTime, 
+                                max: extendedMaxTime, 
+                                title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
+                                ticks: { 
+                                    color: '#9ca3af', 
+                                    // CHANGE 3: Implement the custom callback function.
+                                    callback: function(value, index, ticks) {
+                                        const date = new Date(value);
+                                        const year = date.getFullYear();
+                                        if (year !== lastYear) {
+                                            lastYear = year;
+                                            return year; // Display just the year
+                                        }
+                                        return null;
+                                    }
+                                }, 
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                            },
                             y: { type: 'logarithmic', min: extendedMinPrice, max: extendedMaxPrice, title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
                         }
                     }
