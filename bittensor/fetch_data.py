@@ -1,85 +1,83 @@
 import os
 import requests
 import json
-import time
+from datetime import datetime
 
 def fetch_and_save_data():
     """
-    Fetches the entire historical price data for TAOUSDT from the Binance API
-    by making multiple requests and saves it to a JSON file.
+    Fetches the entire historical OHLCV data for Bittensor (TAO) from the
+    CoinMarketCap API and saves it to a JSON file.
     """
-    api_url = "https://api.binance.com/api/v3/klines"
-    symbol = "TAOUSDT"
-    interval = "1d"
-    limit = 1000  # Binance API max limit per request
+    # The new secret name for the CoinMarketCap key will be COINMARKETCAP_API_KEY.
+    api_key = os.getenv('COINMARKETCAP_API_KEY')
+    if not api_key:
+        print("Error: COINMARKETCAP_API_KEY secret is not set in the GitHub repository.")
+        print("Please create this secret under Settings > Secrets and variables > Actions.")
+        return
 
+    # CoinMarketCap API endpoint for historical OHLCV data.
+    api_url = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/ohlcv/historical"
+    
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_filename = os.path.join(script_dir, "price_data.json")
 
-    print(f"Fetching full historical data for {symbol} from Binance...")
+    print(f"Attempting GET request to CoinMarketCap for Bittensor (TAO)...")
     
-    all_klines = []
-    end_time = None
-
-    while True:
-        try:
-            params = {
-                'symbol': symbol,
-                'interval': interval,
-                'limit': limit
-            }
-            if end_time:
-                params['endTime'] = end_time
-
-            print(f"Fetching chunk ending at {end_time}...")
-            
-            response = requests.get(api_url, params=params, timeout=30)
-            response.raise_for_status()
-            
-            klines = response.json()
-
-            # If the API returns an empty list, we've reached the beginning of the history
-            if not klines:
-                print("Reached the beginning of the trading history.")
-                break
-
-            all_klines = klines + all_klines
-            
-            # Set the end_time for the next request to be just before the oldest candle we just received
-            end_time = klines[0][0] - 1
-
-            # Be respectful of the API rate limits
-            time.sleep(0.5)
-
-        except requests.exceptions.HTTPError as e:
-            print(f"HTTP Error occurred: {e}")
-            print(f"Response body: {e.response.text}")
-            return  # Stop the script on error
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred while fetching data: {e}")
-            return
-        except json.JSONDecodeError:
-            print(f"Error: Failed to decode JSON from the API response. Response was: {response.text}")
-            return
-            
-    if not all_klines:
-        print("No data was fetched. Aborting.")
-        return
-
-    # Sort data by timestamp and remove duplicates
-    all_klines = sorted(list({kline[0]: kline for kline in all_klines}.values()))
-
-    # Process the data into the [timestamp_in_seconds, price] format
-    # Binance provides [open_time_ms, open, high, low, close_price, ...]
-    processed_data = [[kline[0] // 1000, float(kline[4])] for kline in all_klines]
-
-    print(f"Successfully fetched a total of {len(processed_data)} data points.")
-
-    with open(output_filename, 'w') as f:
-        json.dump(processed_data, f)
+    try:
+        # --- AUTHENTICATION PER COINMARKETCAP DOCUMENTATION ---
+        headers = {
+            'Accepts': 'application/json',
+            'X-CMC_PRO_API_KEY': api_key,
+        }
         
-    print(f"Data successfully saved to {output_filename}")
+        # Parameters to get all daily data for TAO in USD.
+        params = {
+            'slug': 'bittensor',
+            'convert': 'USD',
+            'interval': 'daily'
+        }
+        
+        response = requests.get(api_url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        
+        # The data is nested under data -> <id> -> quotes
+        response_data = response.json()
+        quotes = response_data.get('data', {}).get('quotes', [])
 
+        if not quotes:
+            print(f"Error: API returned no price data or in an unexpected format.")
+            return
+
+        # Process the data into [timestamp_in_seconds, close_price] format.
+        # The timestamp is at 'time_close', and the price is in 'quote' -> 'USD' -> 'close'.
+        processed_data = []
+        for q in quotes:
+            timestamp_str = q['time_close']
+            # Convert ISO 8601 timestamp string to Unix timestamp in seconds.
+            timestamp_dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            timestamp_sec = int(timestamp_dt.timestamp())
+            
+            close_price = q['quote']['USD']['close']
+            processed_data.append([timestamp_sec, close_price])
+
+        # Sort data by timestamp just in case it's not ordered.
+        processed_data.sort(key=lambda x: x[0])
+        
+        print(f"Successfully fetched {len(processed_data)} data points.")
+
+        with open(output_filename, 'w') as f:
+            json.dump(processed_data, f)
+            
+        print(f"Data successfully saved to {output_filename}")
+
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error occurred: {e}")
+        print(f"Response body: {e.response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while fetching data: {e}")
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Error processing data from the API response. Error: {e}")
+        print(f"Response was: {response.text}")
 
 if __name__ == "__main__":
     fetch_and_save_data()
