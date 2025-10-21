@@ -1,58 +1,85 @@
 import os
 import requests
 import json
+import time
 
 def fetch_and_save_data():
     """
-    Fetches historical price data from the CoinGecko API using an API key
-    and saves it to a JSON file.
+    Fetches the entire historical price data for TAOUSDT from the Binance API
+    by making multiple requests and saves it to a JSON file.
     """
-    api_key = os.getenv('COINGECKO_API_KEY')
-    if not api_key:
-        print("--- DIAGNOSTIC FAILURE ---")
-        print("Error: The COINGECKO_API_KEY secret was NOT found in the environment.")
-        return
-    else:
-        print("--- DIAGNOSTIC SUCCESS ---")
-        print("Successfully loaded the COINGECKO_API_KEY secret.")
+    api_url = "https://api.binance.com/api/v3/klines"
+    symbol = "TAOUSDT"
+    interval = "1d"
+    limit = 1000  # Binance API max limit per request
 
-    # --- FINAL CORRECTION ---
-    # The free CoinGecko API key limits historical data to the last 365 days.
-    # We are changing 'days=max' to 'days=365' to comply with this limitation.
-    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily&x_cg_demo_api_key={api_key}"
-    
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_filename = os.path.join(script_dir, "price_data.json")
 
-    print(f"Attempting GET request to CoinGecko for the last 365 days...")
+    print(f"Fetching full historical data for {symbol} from Binance...")
     
-    try:
-        response = requests.get(api_url, timeout=30)
-        response.raise_for_status()
-        
-        data = response.json().get('prices')
+    all_klines = []
+    end_time = None
 
-        if not isinstance(data, list):
-            print(f"Error: API returned an unexpected data format: {data}")
-            return
-        
-        # Convert timestamps from milliseconds (CoinGecko) to seconds.
-        processed_data = [[p[0] // 1000, p[1]] for p in data]
+    while True:
+        try:
+            params = {
+                'symbol': symbol,
+                'interval': interval,
+                'limit': limit
+            }
+            if end_time:
+                params['endTime'] = end_time
 
-        print(f"Successfully fetched {len(processed_data)} data points.")
-
-        with open(output_filename, 'w') as f:
-            json.dump(processed_data, f)
+            print(f"Fetching chunk ending at {end_time}...")
             
-        print(f"Data successfully saved to {output_filename}")
+            response = requests.get(api_url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            klines = response.json()
 
-    except requests.exceptions.HTTPError as e:
-        print(f"HTTP Error occurred: {e}")
-        print(f"Response body: {e.response.text}")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data: {e}")
-    except json.JSONDecodeError:
-        print(f"Error: Failed to decode JSON from the API response. Response was: {response.text}")
+            # If the API returns an empty list, we've reached the beginning of the history
+            if not klines:
+                print("Reached the beginning of the trading history.")
+                break
+
+            all_klines = klines + all_klines
+            
+            # Set the end_time for the next request to be just before the oldest candle we just received
+            end_time = klines[0][0] - 1
+
+            # Be respectful of the API rate limits
+            time.sleep(0.5)
+
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP Error occurred: {e}")
+            print(f"Response body: {e.response.text}")
+            return  # Stop the script on error
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred while fetching data: {e}")
+            return
+        except json.JSONDecodeError:
+            print(f"Error: Failed to decode JSON from the API response. Response was: {response.text}")
+            return
+            
+    if not all_klines:
+        print("No data was fetched. Aborting.")
+        return
+
+    # Sort data by timestamp and remove duplicates
+    all_klines = sorted(list({kline[0]: kline for kline in all_klines}.values()))
+
+    # Process the data into the [timestamp_in_seconds, price] format
+    # Binance provides [open_time_ms, open, high, low, close_price, ...]
+    processed_data = [[kline[0] // 1000, float(kline[4])] for kline in all_klines]
+
+    print(f"Successfully fetched a total of {len(processed_data)} data points.")
+
+    with open(output_filename, 'w') as f:
+        json.dump(processed_data, f)
+        
+    print(f"Data successfully saved to {output_filename}")
+
 
 if __name__ == "__main__":
     fetch_and_save_data()
