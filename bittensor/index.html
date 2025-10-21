@@ -82,8 +82,7 @@
                  if (!Array.isArray(data)) {
                     throw new Error("Invalid data format in JSON file");
                 }
-                // Convert data to a more usable format for both regression and charting.
-                // 'time' = raw timestamp for tooltips, 'x' = day number for log axis, 'y' = price
+                // Convert Taostats data format [timestamp_in_seconds, price] to the format our chart needs.
                 return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
             } catch (error) {
                 console.error("Error loading price data:", error);
@@ -113,18 +112,25 @@
             
             const priceData = await loadPriceData();
 
-            if (!priceData || priceData.length === 0) {
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or parse price_data.json.`;
+            if (!priceData) {
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load price_data.json.`;
                 modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and the GitHub Action has run successfully.</span>`;
                 loader.style.display = 'none';
                 return;
             }
             
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
-            
+
+            const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y).filter(y => y > 0);
+            const minTime = Math.min(...times);
+            const maxTime = Math.max(...times);
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
+
+            const timeDuration = maxTime - minTime;
+            const extendedMinTime = minTime; 
+            const extendedMaxTime = maxTime + timeDuration; 
 
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
@@ -140,25 +146,21 @@
 
             const n = priceData.length;
             const startIndex = 1;
-            const endIndex = n > 1 ? (n * 2) : 1; // Project forward
+            const endIndex = n > 1 ? (2 * n) - 1 : 1;
 
-            // Regression line data must also be plotted against the day number (x)
-            const regressionLineData = [
-                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
-            ];
+            const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
+            const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
             
-            // Price data is plotted against the day number (x) for correct log scaling
-            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
+            const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
+            const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
             
             loader.style.display = 'none';
-            
-            const startDate = new Date(priceData[0].time);
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = regressionLineData;
-                chart.options.scales.x.max = endIndex;
+                chart.options.scales.x.min = extendedMinTime;
+                chart.options.scales.x.max = extendedMaxTime;
                 chart.options.scales.y.min = extendedMinPrice;
                 chart.options.scales.y.max = extendedMaxPrice;
                 chart.update();
@@ -172,64 +174,10 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { labels: { color: '#d1d5db' } },
-                            tooltip: { 
-                                callbacks: { 
-                                    title: (tooltipItems) => {
-                                        const dataIndex = tooltipItems[0].dataIndex;
-                                        const time = priceData[dataIndex].time;
-                                        return new Date(time).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                                    },
-                                    label: (c) => `Price: $${c.parsed.y.toFixed(2)}`,
-                                    afterBody: (tooltipItems) => {
-                                        const dataIndex = tooltipItems[0].dataIndex;
-                                        return `Day: ${priceData[dataIndex].x}`;
-                                    }
-                                }
-                            } 
-                        },
+                        plugins: { legend: { labels: { color: '#d1d5db' } }, tooltip: { callbacks: { label: (c) => `Price: $${c.parsed.y.toFixed(2)}` } } },
                         scales: {
-                            x: { 
-                                type: 'logarithmic',
-                                min: 1,
-                                max: endIndex,
-                                title: { display: true, text: 'Time (Days since start, Log Scale)', color: '#9ca3af' }, 
-                                ticks: { 
-                                    color: '#9ca3af',
-                                    callback: function(value, index, ticks) {
-                                        // This callback formats labels to only show the start of years.
-                                        const tickDate = new Date(startDate.getTime());
-                                        tickDate.setDate(tickDate.getDate() + (value - 1));
-                                        const year = tickDate.getFullYear();
-                                        
-                                        // A heuristic to find the first label of a new year on a log scale.
-                                        if (this.getLabelForValue(value) !== this.getLabelForValue(value - 1)) {
-                                            const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : 0;
-                                            const prevDate = new Date(startDate.getTime());
-                                            prevDate.setDate(prevDate.getDate() + (prevTickValue - 1));
-                                            if (prevDate.getFullYear() < year) {
-                                                return year;
-                                            }
-                                        }
-                                        // Also show the very first year.
-                                        if (value === 1) return startDate.getFullYear();
-                                        return null;
-                                    },
-                                     maxRotation: 0,
-                                     minRotation: 0,
-                                     autoSkip: false,
-                                },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
-                            },
-                            y: { 
-                                type: 'logarithmic', 
-                                min: extendedMinPrice, 
-                                max: extendedMaxPrice, 
-                                title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
-                                ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, 
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
-                            }
+                            x: { type: 'logarithmic', min: extendedMinTime, max: extendedMaxTime, title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, ticks: { color: '#9ca3af', callback: (v) => new Date(v).toLocaleDateString() }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                            y: { type: 'logarithmic', min: extendedMinPrice, max: extendedMaxPrice, title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
                         }
                     }
                 });
@@ -256,4 +204,3 @@
     </script>
 </body>
 </html>
-
