@@ -73,9 +73,8 @@
         
         async function loadPriceData() {
             try {
-                // Fetch the static JSON file from the root of the repository.
-                // Add a cache-busting query parameter to ensure the latest version is always fetched.
-                const response = await fetch(`price_data.json?t=${new Date().getTime()}`);
+                // Fetch the static JSON file from the same directory as this HTML file.
+                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load data file: ${response.statusText}`);
                 }
@@ -205,4 +204,3 @@
     </script>
 </body>
 </html>
-
