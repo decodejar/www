@@ -29,13 +29,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Run fetch data script
+      # --- NEW VERBOSE DEBUGGING STEP ---
+      - name: Run fetch data script in Verbose Mode for Debugging
         env:
           # This passes the GitHub secret to the Python script.
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
-        run: python bittensor/fetch_data.py
+        run: python -v bittensor/fetch_data.py
 
-      # --- NEW DEBUGGING STEP ---
       - name: List files in workspace
         run: |
           echo "Listing all files in the repository workspace:"
