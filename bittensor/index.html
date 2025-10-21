@@ -37,7 +37,6 @@
         
         <header class="text-center mb-6">
             <h1 class="text-3xl md:text-4xl font-bold text-white">Bittensor Power Law Model</h1>
-            <p id="dataSourceDescription" class="text-gray-400 mt-2">Attempting to load live data...</p>
         </header>
 
         <!-- Controls -->
@@ -82,7 +81,6 @@
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
         const dataSourceRadios = document.querySelectorAll('.data-source-radio');
-        const dataSourceDescription = document.getElementById('dataSourceDescription');
         const refreshBtn = document.getElementById('refreshBtn');
         const downloadJsonBtn = document.getElementById('downloadJsonBtn');
         const statusDiv = document.getElementById('statusDiv');
@@ -170,7 +168,6 @@
             
             let selectedSource = document.querySelector('input[name="dataSource"]:checked').value;
             const selectedDays = 'max'; // Always fetch max data
-            dataSourceDescription.textContent = `Analyzing historical price data from ${selectedSource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
 
             let priceData;
             let sourceUsed = '';
@@ -192,7 +189,6 @@
                 
                 document.querySelector(`input[value="${secondarySource}"]`).checked = true;
                 selectedSource = secondarySource;
-                dataSourceDescription.textContent = `Analyzing historical price data from ${secondarySource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
 
                 priceData = await fetchFunctions[secondarySource](selectedDays);
 
@@ -311,3 +307,4 @@
     </script>
 </body>
 </html>
+
