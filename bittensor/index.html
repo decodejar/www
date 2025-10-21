@@ -119,28 +119,31 @@
         }
 
         async function fetchPriceDataFromCoinGecko(days) {
-            // Using a reliable CORS proxy to prevent cross-origin issues.
             const originalUrl = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
             const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
             try {
-                const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
+                const textResponse = await response.text();
+                // allorigins can sometimes return a JSON object with a 'contents' property
+                const parsedResponse = JSON.parse(textResponse);
+                const data = (typeof parsedResponse.contents === 'string') ? JSON.parse(parsedResponse.contents) : parsedResponse;
                 if (!data || !data.prices) throw new Error("Invalid data format from CoinGecko");
                 return data.prices.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
             } catch (error) { console.error("Fetch from CoinGecko failed:", error); return null; }
         }
         
         async function fetchPriceDataFromTaostats(days) {
-            // Using a reliable CORS proxy to prevent cross-origin issues.
             try {
                 if (!taostatsFullHistory) {
                     const originalUrl = `https://taostats.com/api/price/history`;
                     const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
-                    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const data = await response.json();
-                     if (!Array.isArray(data)) throw new Error("Invalid data format from Taostats");
+                    const textResponse = await response.text();
+                    const parsedResponse = JSON.parse(textResponse);
+                    const data = (typeof parsedResponse.contents === 'string') ? JSON.parse(parsedResponse.contents) : parsedResponse;
+                    if (!Array.isArray(data)) throw new Error("Invalid data format from Taostats");
                     taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
                 }
                 if (days === 'max') return taostatsFullHistory;
@@ -165,43 +168,37 @@
             return { slope, intercept };
         }
 
-        async function createOrUpdateChart() {
+        async function createOrUpdateChart(isInitialLoad = false) {
             loader.style.display = 'flex';
             refreshBtn.disabled = true;
             downloadJsonBtn.classList.add('hidden');
             if (chart) { chart.clear(); }
             
-            const selectedSourceRadio = document.querySelector('input[name="dataSource"]:checked');
-            const selectedSource = selectedSourceRadio ? selectedSourceRadio.value : 'taostats';
+            let selectedSource = document.querySelector('input[name="dataSource"]:checked').value;
             const selectedDays = document.querySelector('.time-range-btn.bg-indigo-600').dataset.days;
             dataSourceDescription.textContent = `Analyzing historical price data from ${selectedSource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
 
             let priceData;
             let sourceUsed = '';
 
-            // --- DATA FETCHING LOGIC ---
-            let primarySource = selectedSource;
-            
             const fetchFunctions = {
                 'taostats': fetchPriceDataFromTaostats,
                 'coingecko': fetchPriceDataFromCoinGecko
             };
 
-            updateStatus(`Fetching from ${primarySource}...`, 'yellow');
-            priceData = await fetchFunctions[primarySource](selectedDays);
+            updateStatus(`Fetching from ${selectedSource}...`, 'yellow');
+            priceData = await fetchFunctions[selectedSource](selectedDays);
 
             if (priceData) {
-                sourceUsed = `${primarySource.charAt(0).toUpperCase() + primarySource.slice(1)} (Live)`;
+                sourceUsed = `${selectedSource.charAt(0).toUpperCase() + selectedSource.slice(1)} (Live)`;
                 updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
-            } else {
-                // If primary fails, automatically switch radio and try the other source.
-                const secondarySource = (primarySource === 'taostats') ? 'coingecko' : 'taostats';
-                updateStatus(`${primarySource} failed. Switching to ${secondarySource}...`, 'yellow');
+            } else if (isInitialLoad) {
+                const secondarySource = (selectedSource === 'taostats') ? 'coingecko' : 'taostats';
+                updateStatus(`${selectedSource} failed. Switching to ${secondarySource}...`, 'yellow');
                 
-                // Switch the radio button in the UI
                 document.querySelector(`input[value="${secondarySource}"]`).checked = true;
+                selectedSource = secondarySource;
                 dataSourceDescription.textContent = `Analyzing historical price data from ${secondarySource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
-
 
                 priceData = await fetchFunctions[secondarySource](selectedDays);
 
@@ -213,6 +210,10 @@
                     sourceUsed = 'Error';
                     modelInfoDiv.innerHTML = `<span class="text-red-400">Could not load live data from any source.</span>`;
                 }
+            } else {
+                updateStatus(`Failed to fetch from ${selectedSource}. Try the other source or refresh.`, 'red');
+                sourceUsed = 'Error';
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Could not load live data from ${selectedSource}.</span>`;
             }
 
             if (sourceUsed.includes('Live')) {
@@ -224,14 +225,13 @@
             refreshBtn.disabled = false;
 
             if (!priceData || priceData.length < 2) {
-                if (chart) chart.destroy(); chart = null;
+                if (chart) { chart.destroy(); chart = null; }
                  if(sourceUsed !== 'Error') {
                     modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model. Please try a different time range or data source.</span>`;
                 }
                 return;
             }
 
-            // --- CHART RENDERING LOGIC ---
             const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y).filter(y => y > 0);
             const minTime = Math.min(...times);
@@ -316,15 +316,15 @@
             });
             e.target.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             e.target.classList.remove('bg-gray-700');
-            createOrUpdateChart();
+            createOrUpdateChart(false);
         }
 
         timeRangeButtons.forEach(button => button.addEventListener('click', handleTimeRangeChange));
-        dataSourceRadios.forEach(radio => radio.addEventListener('change', createOrUpdateChart));
-        refreshBtn.addEventListener('click', createOrUpdateChart);
+        dataSourceRadios.forEach(radio => radio.addEventListener('change', () => createOrUpdateChart(false)));
+        refreshBtn.addEventListener('click', () => createOrUpdateChart(false));
         downloadJsonBtn.addEventListener('click', downloadLatestData);
-        window.onload = createOrUpdateChart;
+        
+        window.onload = () => createOrUpdateChart(true);
     </script>
 </body>
 </html>
-
