@@ -62,7 +62,6 @@
         <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors">DecodeJar</a></p>
     </footer>
 
-
 <script>
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
@@ -122,7 +121,7 @@
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
 
             const times = priceData.map(p => p.time);
-            const prices = priceData.map(p => p.y); // No need to filter again
+            const prices = priceData.map(p => p.y);
             const minTime = Math.min(...times);
             const maxTime = Math.max(...times);
             const minPrice = Math.min(...prices);
@@ -204,31 +203,31 @@
                                 title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
                                 ticks: {
                                     color: '#9ca3af',
-                                    // The main callback is no longer needed as labels are generated below.
-                                    // We can keep a simple one for tooltips if necessary, but afterBuildTicks handles the axis labels.
                                 },
                                 afterBuildTicks: (axis) => {
                                     const newTicks = [];
-                                    const axisMin = axis.min; // The calculated minimum value of the chart axis
-                                    const axisMax = axis.max; // The calculated maximum value of the chart axis
+                                    const axisMin = axis.min;
+                                    const axisMax = axis.max;
                                     
-                                    // Start our tick generation at $10
-                                    let tickValue = 10; 
+                                    // Start tick generation at a low power of 10.
+                                    // This handles cases where price might start below $1.
+                                    let tickValue = 0.1; 
                                     
-                                    // Loop, doubling the tick value each time
+                                    // Loop by multiplying by 10 until we pass the max visible value of the axis
                                     while (tickValue <= axisMax) {
-                                        // Only add the tick if it's within the visible range of the axis
+                                        // Only add the tick if it's within the visible range.
+                                        // This prevents adding a $0.1 tick if the minimum price is $10.
                                         if (tickValue >= axisMin) {
                                             newTicks.push({
                                                 value: tickValue,
-                                                label: `$${tickValue.toLocaleString()}` // Format the label
+                                                label: `$${tickValue.toLocaleString()}`
                                             });
                                         }
-                                        // Double the value for the next iteration
-                                        tickValue *= 2;
+                                        // Go to the next power of 10
+                                        tickValue *= 10;
                                     }
                                     
-                                    // Replace the chart's default ticks with our new custom ones
+                                    // Replace the chart's default ticks with our new custom ones.
                                     axis.ticks = newTicks;
                                 },
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
@@ -258,5 +257,6 @@
         
         window.onload = () => createOrUpdateChart();
     </script>
+    
 </body>
 </html>
