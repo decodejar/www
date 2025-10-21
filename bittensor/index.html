@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bittensor Price Power Law Model</title>
+    <title>Bittensor Power Law Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -33,16 +33,16 @@
 </head>
 <body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-4xl bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
+    <div class="w-full max-w-6xl bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
         
         <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">Price Power Law Model for Bittensor (TAO)</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Bittensor Power Law Model</h1>
             <p id="dataSourceDescription" class="text-gray-400 mt-2">Attempting to load live data...</p>
         </header>
 
         <!-- Controls -->
-        <div class="bg-gray-900/50 p-4 rounded-lg">
-            <div class="flex flex-wrap justify-center items-center gap-6 text-gray-300">
+        <div class="bg-gray-900/50 p-4 rounded-lg flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-6 text-gray-300">
                 <span class="font-medium">Data Source:</span>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="dataSource" value="taostats" class="data-source-radio" checked> Taostats
@@ -51,31 +51,32 @@
                     <input type="radio" name="dataSource" value="coingecko" class="data-source-radio"> CoinGecko
                 </label>
             </div>
+            <div class="flex items-center gap-4">
+                <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
+                    <span class="status-dot bg-yellow-500"></span>Initializing...
+                </div>
+                <button id="downloadJsonBtn" class="hidden bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300">Download JSON</button>
+                <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg transition duration-300">Refresh Data</button>
+            </div>
         </div>
         
-        <!-- Status & Refresh -->
-        <div class="mt-4 bg-gray-900/50 p-3 rounded-lg flex items-center justify-between">
-            <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
-                <span class="status-dot bg-yellow-500"></span>Initializing...
-            </div>
-            <div class="flex items-center gap-2">
-                 <button id="downloadJsonBtn" class="hidden bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300">Download Live Data as JSON</button>
-                 <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg transition duration-300">Refresh Data</button>
-            </div>
-        </div>
-
         <!-- Chart Container -->
         <div class="bg-gray-900/50 p-4 rounded-lg relative mt-4">
             <div id="loader" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
-            <div class="relative h-96">
+            <div class="relative h-[40rem]">
                 <canvas id="powerLawChart"></canvas>
             </div>
             <div id="modelInfo" class="text-center mt-4 text-sm text-gray-400"></div>
         </div>
 
     </div>
+    
+    <footer class="text-center p-4 mt-4">
+        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors">DecodeJar</a></p>
+    </footer>
+
 
     <script>
         const modelInfoDiv = document.getElementById('modelInfo');
@@ -129,20 +130,18 @@
         
         async function fetchPriceDataFromTaostats(days) {
             try {
-                if (!taostatsFullHistory) {
-                    const originalUrl = `https://taostats.com/api/price/history`;
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
-                    const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const data = await response.json();
-                    if (!Array.isArray(data)) {
-                         console.error("Invalid data format from Taostats:", data);
-                        throw new Error("Invalid data format from Taostats");
-                    }
-                    taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
+                // Always refetch for 'max' to ensure it's up to date, don't rely on cache across refreshes.
+                const originalUrl = `https://taostats.com/api/price/history`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+                const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                     console.error("Invalid data format from Taostats:", data);
+                    throw new Error("Invalid data format from Taostats");
                 }
-                if (days === 'max') return taostatsFullHistory;
-                return taostatsFullHistory.slice(-parseInt(days, 10));
+                taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
+                return taostatsFullHistory;
             } catch (error) { console.error("Fetch from Taostats failed:", error); return null; }
         }
 
@@ -222,7 +221,7 @@
             if (!priceData || priceData.length < 2) {
                 if (chart) { chart.destroy(); chart = null; }
                  if(sourceUsed !== 'Error') {
-                    modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model. Please try a different time range or data source.</span>`;
+                    modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model.</span>`;
                 }
                 return;
             }
@@ -312,4 +311,3 @@
     </script>
 </body>
 </html>
-
