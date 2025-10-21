@@ -7,28 +7,24 @@ def fetch_and_save_data():
     Fetches historical price data from the CoinGecko API using an API key
     and saves it to a JSON file.
     """
-    # --- ENHANCED DEBUGGING ---
-    # Check for the secret and print status.
     api_key = os.getenv('COINGECKO_API_KEY')
     if not api_key:
         print("--- DIAGNOSTIC FAILURE ---")
         print("Error: The COINGECKO_API_KEY secret was NOT found in the environment.")
-        print("Please verify the secret exists under your repository's Settings > Secrets and variables > Actions page.")
-        print("Ensure it is a 'Repository secret' and not an 'Environment secret'.")
         return
     else:
         print("--- DIAGNOSTIC SUCCESS ---")
         print("Successfully loaded the COINGECKO_API_KEY secret.")
-        print(f"The key starts with: '{api_key[:5]}...' to confirm it is not empty.")
 
-
-    # CoinGecko API endpoint for historical market data.
-    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=max&interval=daily&x_cg_demo_api_key={api_key}"
+    # --- FINAL CORRECTION ---
+    # The free CoinGecko API key limits historical data to the last 365 days.
+    # We are changing 'days=max' to 'days=365' to comply with this limitation.
+    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily&x_cg_demo_api_key={api_key}"
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_filename = os.path.join(script_dir, "price_data.json")
 
-    print(f"Attempting GET request to CoinGecko: {api_url.split('?')[0]}")
+    print(f"Attempting GET request to CoinGecko for the last 365 days...")
     
     try:
         response = requests.get(api_url, timeout=30)
@@ -40,6 +36,7 @@ def fetch_and_save_data():
             print(f"Error: API returned an unexpected data format: {data}")
             return
         
+        # Convert timestamps from milliseconds (CoinGecko) to seconds.
         processed_data = [[p[0] // 1000, p[1]] for p in data]
 
         print(f"Successfully fetched {len(processed_data)} data points.")
