@@ -97,21 +97,13 @@
         let latestFetchedData = null; // Holds the most recent successful API fetch
         let taostatsFullHistory = null; // Cache for Taostats 'max' data
 
+        // Hardcoded fallback data to ensure the app works offline or if APIs fail.
+        const fallbackData = [
+            [1697846400000, 51.83],[1698537600000, 67.24],[1699228800000, 80.55],[1699920000000, 93.94],[1700611200000, 142.33],[1701302400000, 186.29],[1701993600000, 240.23],[1702684800000, 355.60],[1703376000000, 268.51],[1704067200000, 258.42],[1704758400000, 265.41],[1705449600000, 226.73],[1706140800000, 235.34],[1706832000000, 311.13],[1707523200000, 483.99],[1708214400000, 608.21],[1708905600000, 584.22],[1709596800000, 672.50],[1710288000000, 631.54],[1710979200000, 541.67],[1711670400000, 629.74],[1712361600000, 715.42],[1713052800000, 508.41],[1713744000000, 442.23],[1714435200000, 439.03],[1715126400000, 396.69],[1715817600000, 449.20],[1716508800000, 484.71],[1717200000000, 452.92],[1717891200000, 436.42],[1718582400000, 375.45],[1719273600000, 298.65],[1719964800000, 303.22],[1720656000000, 292.05],[1721347200000, 276.54],[1722038400000, 290.15],[1722729600000, 305.82],[1729440000000, 431.71]
+        ].map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
+
         function updateStatus(message, color) {
             statusDiv.innerHTML = `<span class="status-dot bg-${color}-500"></span>${message}`;
-        }
-
-        async function getFallbackData() {
-            try {
-                const response = await fetch('./fallback_data.json');
-                if (!response.ok) throw new Error('Response not OK');
-                const data = await response.json();
-                return data.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
-            } catch (error) {
-                console.error("Could not load fallback_data.json:", error);
-                updateStatus('Error loading local fallback file.', 'red');
-                return [];
-            }
         }
         
         function downloadLatestData() {
@@ -132,7 +124,8 @@
         }
 
         async function fetchPriceDataFromCoinGecko(days) {
-            const url = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+            // Using a CORS proxy to prevent cross-origin issues.
+            const url = `https://corsproxy.io/?https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
             try {
                 const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -142,9 +135,10 @@
         }
         
         async function fetchPriceDataFromTaostats(days) {
+            // Using a CORS proxy to prevent cross-origin issues.
+            const url = `https://corsproxy.io/?https://taostats.com/api/price/history`;
             try {
                 if (!taostatsFullHistory) {
-                    const url = `https://taostats.com/api/price/history`;
                     const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
@@ -210,15 +204,15 @@
                     sourceUsed = `${secondarySource.charAt(0).toUpperCase() + secondarySource.slice(1)} (Live)`;
                     updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
                 } else {
-                    // 3. If both APIs fail, load the local fallback file
-                    updateStatus('All APIs failed. Loading from local cache...', 'red');
-                    priceData = await getFallbackData();
-                    if (priceData && priceData.length > 0) {
-                        sourceUsed = 'Local Fallback';
-                        if (selectedDays !== 'max') {
-                           priceData = priceData.slice(-parseInt(selectedDays, 10));
-                        }
+                    // 3. If both APIs fail, use the internal fallback data
+                    updateStatus('All APIs failed. Loading from internal cache...', 'red');
+                    sourceUsed = 'Internal Fallback';
+                    if (selectedDays !== 'max') {
+                       priceData = fallbackData.slice(-parseInt(selectedDays, 10));
                     } else {
+                       priceData = fallbackData;
+                    }
+                    if (!priceData || priceData.length === 0) {
                         sourceUsed = 'Error';
                         updateStatus('Fatal: Could not load live or cached data.', 'red');
                     }
