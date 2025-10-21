@@ -4,7 +4,7 @@ import json
 
 def fetch_and_save_data():
     """
-    Fetches historical price data from the Taostats API using a header for authentication
+    Fetches historical price data from the Taostats API using form data for authentication
     and saves it to a JSON file in the same directory as the script.
     """
     api_key = os.getenv('TAOSTATS_API_KEY')
@@ -20,15 +20,14 @@ def fetch_and_save_data():
     print(f"Fetching data from Taostats API and saving to {output_filename}...")
     
     # --- CORRECTED AUTHENTICATION ---
-    # The API key should be sent as a request header, not in the body.
-    headers = {
-        'Content-Type': 'application/json',
-        'X-API-Key': api_key
+    # The API key should be sent as form data in the body of the POST request.
+    form_data = {
+        'api_key': api_key
     }
     
     try:
-        # A POST request is still used, but with the key in the headers.
-        response = requests.post(api_url, headers=headers, timeout=30)
+        # A POST request is still used, but with the key sent as form data.
+        response = requests.post(api_url, data=form_data, timeout=30)
         
         # This will raise an exception for HTTP error codes (e.g., 401, 403, 500).
         response.raise_for_status()
