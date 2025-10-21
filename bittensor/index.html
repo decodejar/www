@@ -180,9 +180,8 @@
             let sourceUsed = '';
 
             // --- DATA FETCHING LOGIC ---
-            const primarySource = selectedSource;
-            const secondarySource = (primarySource === 'taostats') ? 'coingecko' : 'taostats';
-
+            let primarySource = selectedSource;
+            
             const fetchFunctions = {
                 'taostats': fetchPriceDataFromTaostats,
                 'coingecko': fetchPriceDataFromCoinGecko
@@ -195,7 +194,15 @@
                 sourceUsed = `${primarySource.charAt(0).toUpperCase() + primarySource.slice(1)} (Live)`;
                 updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
             } else {
-                updateStatus(`${primarySource} failed. Trying ${secondarySource}...`, 'yellow');
+                // If primary fails, automatically switch radio and try the other source.
+                const secondarySource = (primarySource === 'taostats') ? 'coingecko' : 'taostats';
+                updateStatus(`${primarySource} failed. Switching to ${secondarySource}...`, 'yellow');
+                
+                // Switch the radio button in the UI
+                document.querySelector(`input[value="${secondarySource}"]`).checked = true;
+                dataSourceDescription.textContent = `Analyzing historical price data from ${secondarySource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
+
+
                 priceData = await fetchFunctions[secondarySource](selectedDays);
 
                 if (priceData) {
