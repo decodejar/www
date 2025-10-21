@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bittensor Price Power Law Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,9 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .loader {
             border: 4px solid rgba(255, 255, 255, 0.2);
             border-left-color: #4f46e5;
@@ -22,11 +20,14 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        input[type="radio"] {
-            accent-color: #4f46e5;
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input[type="radio"] { accent-color: #4f46e5; }
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
         }
     </style>
 </head>
@@ -36,20 +37,18 @@
         
         <header class="text-center mb-6">
             <h1 class="text-3xl md:text-4xl font-bold text-white">Price Power Law Model for Bittensor (TAO)</h1>
-            <p id="dataSourceDescription" class="text-gray-400 mt-2">Analyzing historical price data from CoinGecko to find a power law fit.</p>
+            <p id="dataSourceDescription" class="text-gray-400 mt-2">Attempting to load live data...</p>
         </header>
 
         <!-- Controls -->
         <div class="bg-gray-900/50 p-4 rounded-lg">
-            <div class="flex justify-center items-center gap-6 mb-4 text-gray-300">
+            <div class="flex flex-wrap justify-center items-center gap-6 mb-4 text-gray-300">
                 <span class="font-medium">Data Source:</span>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="dataSource" value="coingecko" class="data-source-radio" checked>
-                    CoinGecko
+                    <input type="radio" name="dataSource" value="taostats" class="data-source-radio" checked> Taostats
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="dataSource" value="taostats" class="data-source-radio">
-                    Taostats
+                    <input type="radio" name="dataSource" value="coingecko" class="data-source-radio"> CoinGecko
                 </label>
             </div>
             <div class="flex justify-center gap-2 border-t border-gray-700 pt-4">
@@ -59,17 +58,26 @@
             </div>
         </div>
         
+        <!-- Status & Refresh -->
+        <div class="mt-4 bg-gray-900/50 p-3 rounded-lg flex items-center justify-between">
+            <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
+                <span class="status-dot bg-yellow-500"></span>Initializing...
+            </div>
+            <div class="flex items-center gap-2">
+                 <button id="downloadJsonBtn" class="hidden bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300">Download Updated JSON</button>
+                 <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg transition duration-300">Refresh Data</button>
+            </div>
+        </div>
+
         <!-- Chart Container -->
-        <div class="bg-gray-900/50 p-4 rounded-lg relative mt-6">
-            <div id="loader" class="absolute inset-0 bg-gray-900/50 flex items-center justify-center z-10">
+        <div class="bg-gray-900/50 p-4 rounded-lg relative mt-4">
+            <div id="loader" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
             <div class="relative h-96">
                 <canvas id="powerLawChart"></canvas>
             </div>
-            <div id="modelInfo" class="text-center mt-4 text-sm text-gray-400">
-                <!-- Info about the regression line will be injected here -->
-            </div>
+            <div id="modelInfo" class="text-center mt-4 text-sm text-gray-400"></div>
         </div>
 
     </div>
@@ -80,17 +88,51 @@
         const timeRangeButtons = document.querySelectorAll('.time-range-btn');
         const dataSourceRadios = document.querySelectorAll('.data-source-radio');
         const dataSourceDescription = document.getElementById('dataSourceDescription');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+        const statusDiv = document.getElementById('statusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
-        let taostatsFullHistory = null; // Cache for Taostats data
+        let latestFetchedData = null; // Holds the most recent successful API fetch
+        let taostatsFullHistory = null; // Cache for Taostats 'max' data
 
-        // Fallback data in case the API fails
-        const fallbackData = [
-            [1697846400000, 51.83],[1698537600000, 67.24],[1699228800000, 80.55],[1699920000000, 93.94],[1700611200000, 142.33],[1701302400000, 186.29],[1701993600000, 240.23],[1702684800000, 355.60],[1703376000000, 268.51],[1704067200000, 258.42],[1704758400000, 265.41],[1705449600000, 226.73],[1706140800000, 235.34],[1706832000000, 311.13],[1707523200000, 483.99],[1708214400000, 608.21],[1708905600000, 584.22],[1709596800000, 672.50],[1710288000000, 631.54],[1710979200000, 541.67],[1711670400000, 629.74],[1712361600000, 715.42],[1713052800000, 508.41],[1713744000000, 442.23],[1714435200000, 439.03],[1715126400000, 396.69],[1715817600000, 449.20],[1716508800000, 484.71],[1717200000000, 452.92],[1717891200000, 436.42],[1718582400000, 375.45],[1719273600000, 298.65],[1719964800000, 303.22],[1720656000000, 292.05],[1721347200000, 276.54],[1722038400000, 290.15],[1722729600000, 305.82]
-        ].map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
+        function updateStatus(message, color) {
+            statusDiv.innerHTML = `<span class="status-dot bg-${color}-500"></span>${message}`;
+        }
 
-        // Function to fetch price data from CoinGecko
+        async function getFallbackData() {
+            try {
+                const response = await fetch('./fallback_data.json');
+                if (!response.ok) throw new Error('Response not OK');
+                const data = await response.json();
+                return data.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
+            } catch (error) {
+                console.error("Could not load fallback_data.json:", error);
+                updateStatus('Error loading local fallback file.', 'red');
+                return [];
+            }
+        }
+        
+        // Browser security prevents websites from directly writing to your local files.
+        // This function allows you to manually save the most recently fetched live data.
+        function downloadLatestData() {
+            if (!latestFetchedData) {
+                alert("No new data has been fetched to download.");
+                return;
+            }
+            const dataStr = JSON.stringify(latestFetchedData.map(d => [d.time, d.y]), null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'fallback_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         async function fetchPriceDataFromCoinGecko(days) {
             const url = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
             try {
@@ -98,33 +140,25 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 return data.prices.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
-            } catch (error) {
-                console.error("Failed to fetch from CoinGecko:", error);
-                return null;
-            }
+            } catch (error) { console.error("Fetch from CoinGecko failed:", error); return null; }
         }
         
-        // Function to fetch price data from Taostats
         async function fetchPriceDataFromTaostats(days) {
             try {
-                if (!taostatsFullHistory) {
+                if (!taostatsFullHistory) { // Fetch and cache only once
                     const url = `https://taostats.com/api/price/history`;
                     const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
                     taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
                 }
-
                 if (days === 'max') return taostatsFullHistory;
-                const numberOfDays = parseInt(days, 10);
-                return taostatsFullHistory.slice(-numberOfDays);
-            } catch (error) {
-                console.error("Failed to fetch from Taostats:", error);
-                return null;
-            }
+                return taostatsFullHistory.slice(-parseInt(days, 10));
+            } catch (error) { console.error("Fetch from Taostats failed:", error); return null; }
         }
 
         function linearRegression(data) {
+            // ... (rest of the function is unchanged)
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
             const validData = data.filter(p => p.y > 0 && p.x > 0);
             const n = validData.length;
@@ -143,43 +177,62 @@
 
         async function createOrUpdateChart() {
             loader.style.display = 'flex';
+            refreshBtn.disabled = true;
+            downloadJsonBtn.classList.add('hidden');
             
             const selectedSource = document.querySelector('input[name="dataSource"]:checked').value;
             const selectedDays = document.querySelector('.time-range-btn.bg-indigo-600').dataset.days;
-
-            dataSourceDescription.textContent = `Analyzing historical price data from ${selectedSource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'} to find a power law fit.`
+            dataSourceDescription.textContent = `Analyzing historical price data from ${selectedSource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
 
             let priceData;
-            let usingFallback = false;
+            let sourceUsed = '';
 
-            if (selectedSource === 'coingecko') {
-                priceData = await fetchPriceDataFromCoinGecko(selectedDays);
+            // --- DATA FETCHING LOGIC ---
+            updateStatus('Fetching from Taostats...', 'yellow');
+            priceData = await fetchPriceDataFromTaostats(selectedDays);
+            if (priceData) {
+                sourceUsed = 'Taostats (Live)';
+                updateStatus('Success! Loaded live data from Taostats.', 'green');
             } else {
-                priceData = await fetchPriceDataFromTaostats(selectedDays);
+                updateStatus('Taostats failed. Trying CoinGecko...', 'yellow');
+                priceData = await fetchPriceDataFromCoinGecko(selectedDays);
+                if (priceData) {
+                    sourceUsed = 'CoinGecko (Live)';
+                    updateStatus('Success! Loaded live data from CoinGecko.', 'green');
+                } else {
+                    updateStatus('All APIs failed. Loading from local cache...', 'red');
+                    priceData = await getFallbackData();
+                    if(priceData.length > 0) {
+                        sourceUsed = 'Local Fallback';
+                        // Filter fallback for time range
+                         if (selectedDays !== 'max') {
+                            priceData = priceData.slice(-parseInt(selectedDays, 10));
+                        }
+                    } else {
+                        sourceUsed = 'Error';
+                    }
+                }
             }
 
-            if (!priceData || priceData.length < 2) {
-                usingFallback = true;
-                if (selectedDays === 'max') {
-                    priceData = fallbackData;
-                } else {
-                    priceData = fallbackData.slice(-parseInt(selectedDays, 10));
-                }
+            if (sourceUsed.includes('Live')) {
+                latestFetchedData = priceData;
+                downloadJsonBtn.classList.remove('hidden');
             }
             
             loader.style.display = 'none';
+            refreshBtn.disabled = false;
 
             if (!priceData || priceData.length < 2) {
                 if (chart) chart.destroy(); chart = null;
-                modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model.</span>`;
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model. Please try a different time range or data source.</span>`;
                 return;
             }
 
+            // --- CHART RENDERING LOGIC ---
             const { slope, intercept } = linearRegression(priceData);
             const rSquared = calculateRSquared(priceData, slope, intercept);
-            
-            modelInfoDiv.innerHTML = (usingFallback ? `<span class="text-yellow-400">Could not load live data. Displaying cached data.</span><br>` : '') +
-                   `The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
+            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> ${sourceUsed}<br>
+                   The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             const firstPoint = priceData[0];
@@ -214,6 +267,7 @@
         }
         
         function calculateRSquared(data, slope, intercept) {
+            // ... (rest of the function is unchanged)
             let ss_tot = 0, ss_res = 0, y_mean = 0;
             const validData = data.filter(p => p.y > 0 && p.x > 0);
             if (validData.length < 2) return 0;
@@ -241,6 +295,8 @@
 
         timeRangeButtons.forEach(button => button.addEventListener('click', handleTimeRangeChange));
         dataSourceRadios.forEach(radio => radio.addEventListener('change', createOrUpdateChart));
+        refreshBtn.addEventListener('click', createOrUpdateChart);
+        downloadJsonBtn.addEventListener('click', downloadLatestData);
         window.onload = createOrUpdateChart;
     </script>
 </body>
