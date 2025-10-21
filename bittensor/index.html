@@ -124,8 +124,9 @@
         }
 
         async function fetchPriceDataFromCoinGecko(days) {
-            // Using a CORS proxy to prevent cross-origin issues.
-            const url = `https://corsproxy.io/?https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+            // Using a more reliable CORS proxy to prevent cross-origin issues.
+            const originalUrl = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
+            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
             try {
                 const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -135,10 +136,11 @@
         }
         
         async function fetchPriceDataFromTaostats(days) {
-            // Using a CORS proxy to prevent cross-origin issues.
-            const url = `https://corsproxy.io/?https://taostats.com/api/price/history`;
+            // Using a more reliable CORS proxy to prevent cross-origin issues.
             try {
                 if (!taostatsFullHistory) {
+                    const originalUrl = `https://taostats.com/api/price/history`;
+                    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
                     const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
