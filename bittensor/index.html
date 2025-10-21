@@ -127,23 +127,15 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
-            // --- START OF MODIFICATIONS ---
-
-            // 1. Modify the X-Axis (Time) Extension
             const timeDuration = maxTime - minTime;
             const extendedMinTime = minTime; 
-            // Extend the time axis by 33% of the current data's total duration
             const extendedMaxTime = maxTime + (timeDuration * 0.33); 
 
-            // 2. Modify the Y-Axis (Price) Extension
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const logPriceRange = logMaxPrice - logMinPrice;
-            // Extend the top and bottom of the price axis by a 33% buffer in log space
             const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
             const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
-
-            // --- END OF MODIFICATIONS ---
 
             const { slope, intercept } = linearRegression(priceData);
             const rSquared = calculateRSquared(priceData, slope, intercept);
@@ -151,11 +143,10 @@
                    The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
-            // The regression line calculation now needs to use the new, shorter extended time
             const n = priceData.length;
-            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration; // Calculate ratio for future point
+            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration;
             const startIndex = 1;
-            const endIndex = n * futureTimeIndexRatio; // Use the ratio to find a suitable future point
+            const endIndex = n * futureTimeIndexRatio;
 
             const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
             const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
@@ -184,7 +175,32 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { labels: { color: '#d1d5db' } }, tooltip: { callbacks: { label: (c) => `Price: $${c.parsed.y.toFixed(2)}` } } },
+                        // --- START OF TOOLTIP MODIFICATION ---
+                        plugins: { 
+                            legend: { labels: { color: '#d1d5db' } }, 
+                            tooltip: { 
+                                callbacks: {
+                                    // This function sets the title of the tooltip (the top line)
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const item = tooltipItems[0];
+                                            const timestamp = item.parsed.x;
+                                            const date = new Date(timestamp);
+                                            // Format the date into a readable string like "October 21, 2025"
+                                            return date.toLocaleDateString(undefined, { 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric' 
+                                            });
+                                        }
+                                        return '';
+                                    },
+                                    // This function sets the body of the tooltip
+                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
+                                } 
+                            } 
+                        },
+                        // --- END OF TOOLTIP MODIFICATION ---
                         scales: {
                             x: { 
                                 type: 'logarithmic', 
