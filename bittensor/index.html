@@ -127,15 +127,23 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
+            // --- START OF MODIFICATIONS ---
+
+            // 1. Modify the X-Axis (Time) Extension
             const timeDuration = maxTime - minTime;
             const extendedMinTime = minTime; 
-            const extendedMaxTime = maxTime + timeDuration; 
+            // Extend the time axis by 33% of the current data's total duration
+            const extendedMaxTime = maxTime + (timeDuration * 0.33); 
 
+            // 2. Modify the Y-Axis (Price) Extension
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
-            const priceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = priceRange > 0 ? Math.pow(10, logMinPrice - priceRange * 0.25) : minPrice * 0.9;
-            const extendedMaxPrice = priceRange > 0 ? Math.pow(10, logMaxPrice + priceRange * 0.25) : maxPrice * 1.1;
+            const logPriceRange = logMaxPrice - logMinPrice;
+            // Extend the top and bottom of the price axis by a 33% buffer in log space
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
+
+            // --- END OF MODIFICATIONS ---
 
             const { slope, intercept } = linearRegression(priceData);
             const rSquared = calculateRSquared(priceData, slope, intercept);
@@ -143,9 +151,11 @@
                    The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
+            // The regression line calculation now needs to use the new, shorter extended time
             const n = priceData.length;
+            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration; // Calculate ratio for future point
             const startIndex = 1;
-            const endIndex = n > 1 ? (2 * n) - 1 : 1;
+            const endIndex = n * futureTimeIndexRatio; // Use the ratio to find a suitable future point
 
             const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
             const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
@@ -195,7 +205,6 @@
                                 }, 
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
-                            // --- START OF Y-AXIS CHANGES ---
                             y: { 
                                 type: 'logarithmic', 
                                 min: extendedMinPrice, 
@@ -208,31 +217,20 @@
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
-                                    
-                                    // Start tick generation at a low power of 10.
-                                    // This handles cases where price might start below $1.
                                     let tickValue = 0.1; 
-                                    
-                                    // Loop by multiplying by 10 until we pass the max visible value of the axis
                                     while (tickValue <= axisMax) {
-                                        // Only add the tick if it's within the visible range.
-                                        // This prevents adding a $0.1 tick if the minimum price is $10.
                                         if (tickValue >= axisMin) {
                                             newTicks.push({
                                                 value: tickValue,
                                                 label: `$${tickValue.toLocaleString()}`
                                             });
                                         }
-                                        // Go to the next power of 10
                                         tickValue *= 10;
                                     }
-                                    
-                                    // Replace the chart's default ticks with our new custom ones.
                                     axis.ticks = newTicks;
                                 },
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             }
-                            // --- END OF Y-AXIS CHANGES ---
                         }
                     }
                 });
