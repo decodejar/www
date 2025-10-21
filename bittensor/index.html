@@ -42,7 +42,7 @@
 
         <!-- Controls -->
         <div class="bg-gray-900/50 p-4 rounded-lg">
-            <div class="flex flex-wrap justify-center items-center gap-6 mb-4 text-gray-300">
+            <div class="flex flex-wrap justify-center items-center gap-6 text-gray-300">
                 <span class="font-medium">Data Source:</span>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="dataSource" value="taostats" class="data-source-radio" checked> Taostats
@@ -50,11 +50,6 @@
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="dataSource" value="coingecko" class="data-source-radio"> CoinGecko
                 </label>
-            </div>
-            <div class="flex justify-center gap-2 border-t border-gray-700 pt-4">
-                 <button data-days="90" class="time-range-btn bg-gray-700 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">90 Days</button>
-                 <button data-days="365" class="time-range-btn bg-gray-700 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">1 Year</button>
-                 <button data-days="max" class="time-range-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Max</button>
             </div>
         </div>
         
@@ -85,7 +80,6 @@
     <script>
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
-        const timeRangeButtons = document.querySelectorAll('.time-range-btn');
         const dataSourceRadios = document.querySelectorAll('.data-source-radio');
         const dataSourceDescription = document.getElementById('dataSourceDescription');
         const refreshBtn = document.getElementById('refreshBtn');
@@ -176,7 +170,7 @@
             if (chart) { chart.clear(); }
             
             let selectedSource = document.querySelector('input[name="dataSource"]:checked').value;
-            const selectedDays = document.querySelector('.time-range-btn.bg-indigo-600').dataset.days;
+            const selectedDays = 'max'; // Always fetch max data
             dataSourceDescription.textContent = `Analyzing historical price data from ${selectedSource === 'coingecko' ? 'CoinGecko' : 'Taostats.com'}.`
 
             let priceData;
@@ -310,17 +304,6 @@
             return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
         }
         
-        function handleTimeRangeChange(e) {
-            timeRangeButtons.forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-                btn.classList.add('bg-gray-700');
-            });
-            e.target.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
-            e.target.classList.remove('bg-gray-700');
-            createOrUpdateChart(false);
-        }
-
-        timeRangeButtons.forEach(button => button.addEventListener('click', handleTimeRangeChange));
         dataSourceRadios.forEach(radio => radio.addEventListener('change', () => createOrUpdateChart(false)));
         refreshBtn.addEventListener('click', () => createOrUpdateChart(false));
         downloadJsonBtn.addEventListener('click', downloadLatestData);
