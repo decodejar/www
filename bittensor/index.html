@@ -6,13 +6,12 @@
     <title>Bittensor Power Law Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- We don't need the date-fns adapter if we are treating the X-axis as a log scale of timestamps -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Simple loader for visual feedback */
         .loader {
             border: 4px solid rgba(255, 255, 255, 0.2);
             border-left-color: #4f46e5;
@@ -22,7 +21,6 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* Status indicator dot */
         .status-dot {
             height: 10px;
             width: 10px;
@@ -38,10 +36,9 @@
         
         <header class="text-center mb-6">
             <h1 class="text-3xl md:text-4xl font-bold text-white">Bittensor Power Law Model</h1>
-            <p class="text-indigo-400 mt-2">Modeling price as a function of time on a log-log scale.</p>
         </header>
 
-        <!-- Controls/Status -->
+        <!-- Controls -->
         <div class="bg-gray-900/50 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4">
              <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
                 <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
@@ -50,14 +47,12 @@
         
         <!-- Chart Container -->
         <div class="bg-gray-900/50 p-4 rounded-lg relative mt-4">
-            <!-- Loading Overlay -->
-            <div id="loader" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center z-10 transition-opacity duration-300">
+            <div id="loader" class="absolute inset-0 bg-gray-900/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
             <div class="relative h-[40rem]">
                 <canvas id="powerLawChart"></canvas>
             </div>
-            <!-- Model Statistics -->
             <div id="modelInfo" class="text-center mt-4 text-sm text-gray-400"></div>
         </div>
 
@@ -68,289 +63,214 @@
     </footer>
 
 <script>
-    const modelInfoDiv = document.getElementById('modelInfo');
-    const loader = document.getElementById('loader');
-    const statusDiv = document.getElementById('statusDiv');
-    const ctx = document.getElementById('powerLawChart').getContext('2d');
+        const modelInfoDiv = document.getElementById('modelInfo');
+        const loader = document.getElementById('loader');
+        const statusDiv = document.getElementById('statusDiv');
+        const ctx = document.getElementById('powerLawChart').getContext('2d');
 
-    let chart;
-    let lastYear = 0; // State for controlling year display on X-axis
-    
-    // Fallback data structure for demonstration
-    // NOTE: In a real environment, you must have a 'price_data.json' file available
-    const FALLBACK_DATA = [
-        [1700000000, 15.0], [1700500000, 20.0], [1701000000, 25.0], [1701500000, 30.0],
-        [1702000000, 38.0], [1702500000, 50.0], [1703000000, 65.0], [1703500000, 80.0],
-        [1704000000, 100.0], [1704500000, 125.0], [1705000000, 150.0], [1705500000, 180.0],
-        [1706000000, 210.0], [1706500000, 250.0], [1707000000, 290.0], [1707500000, 330.0]
-    ];
-
-    async function loadPriceData() {
-        try {
-            // Attempt to load price_data.json relative to the current path
-            const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
-            if (!response.ok) {
-                 console.warn(`Failed to load data file from price_data.json. Using fallback data.`);
-                 const fallback = FALLBACK_DATA.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
-                 if (fallback.length < 2) throw new Error("Fallback data is insufficient.");
-                 return fallback;
+        let chart;
+        let lastYear = 0;
+        
+        async function loadPriceData() {
+            try {
+                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load data file: ${response.statusText}`);
+                }
+                const data = await response.json();
+                 if (!Array.isArray(data)) {
+                    throw new Error("Invalid data format in JSON file");
+                }
+                // Filter out any data points with a price of 0 or less, as they break the log scale.
+                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
+            } catch (error) {
+                console.error("Error loading price data:", error);
+                return null;
             }
-            const data = await response.json();
-            if (!Array.isArray(data)) {
-                throw new Error("Invalid data format in JSON file");
-            }
-            // Map data: p[0] is timestamp (s) -> time (ms), x is index (day count), y is price
-            return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
-        } catch (error) {
-            console.error("Error loading price data:", error);
-            // If the error is not related to the fetch (e.g., JSON parsing), use the internal fallback
-            if (error.message.includes('data file')) {
-                 const fallback = FALLBACK_DATA.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
-                 return fallback.length >= 2 ? fallback : null;
-            }
-            return null;
         }
-    }
-    
-    /**
-     * Performs linear regression on log-transformed data.
-     * log10(Y) = slope * log10(X) + intercept
-     */
-    function linearRegression(data) {
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        const validData = data.filter(p => p.y > 0 && p.x > 0);
-        const n = validData.length;
-        if (n < 2) return { slope: 0, intercept: 0 };
-
-        for (const { x, y } of validData) {
-            const logX = Math.log10(x); // Independent variable: log(day index)
-            const logY = Math.log10(y); // Dependent variable: log(price)
-            sumX += logX;
-            sumY += logY;
-            sumXY += logX * logY;
-            sumX2 += logX * logX;
+        
+        function linearRegression(data) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            const n = validData.length;
+            if (n < 2) return { slope: 0, intercept: 0 };
+            for (const { x, y } of validData) {
+                const logX = Math.log10(x);
+                const logY = Math.log10(y);
+                sumX += logX; sumY += logY; sumXY += logX * logY; sumX2 += logX * logX;
+            }
+            const denominator = (n * sumX2 - sumX * sumX);
+            if (denominator === 0) return { slope: 0, intercept: 0 };
+            const slope = (n * sumXY - sumX * sumY) / denominator;
+            const intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept };
         }
 
-        const denominator = (n * sumX2 - sumX * sumX);
-        if (denominator === 0) return { slope: 0, intercept: 0 };
-        
-        // slope (alpha) = (N*Σ(XY) - (ΣX)(ΣY)) / (N*Σ(X²) - (ΣX)²)
-        const slope = (n * sumXY - sumX * sumY) / denominator;
-        // intercept (log10(C)) = (ΣY - slope*ΣX) / N
-        const intercept = (sumY - slope * sumX) / n;
-        
-        return { slope, intercept };
-    }
-
-    /**
-     * Calculates the R-squared value for the log-log fit.
-     */
-    function calculateRSquared(data, slope, intercept) {
-        let ss_tot = 0, ss_res = 0, y_mean = 0;
-        const validData = data.filter(p => p.y > 0 && p.x > 0);
-        if (validData.length < 2) return 0;
-
-        // Calculate mean of logY
-        validData.forEach(p => y_mean += Math.log10(p.y));
-        y_mean /= validData.length;
-
-        validData.forEach(p => {
-            const logY = Math.log10(p.y);
-            const logX = Math.log10(p.x);
-            // Predicted logY
-            const predictedLogY = slope * logX + intercept;
+        async function createOrUpdateChart() {
+            loader.style.display = 'flex';
             
-            // Total sum of squares (variance of logY)
-            ss_tot += Math.pow(logY - y_mean, 2);
-            // Residual sum of squares (error)
-            ss_res += Math.pow(logY - predictedLogY, 2);
-        });
-        
-        return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
-    }
+            const priceData = await loadPriceData();
 
-    // Function to calculate the predicted Y value from the power law model (P = C * X^alpha)
-    function calculatePowerLawPrice(xIndex, slope, intercept) {
-        // log10(P) = slope * log10(X) + intercept
-        const logPrice = slope * Math.log10(xIndex) + intercept;
-        // P = 10^(log10(P))
-        return Math.pow(10, logPrice);
-    }
+            if (!priceData || priceData.length === 0) {
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
+                loader.style.display = 'none';
+                return;
+            }
+            
+            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
 
+            const times = priceData.map(p => p.time);
+            const prices = priceData.map(p => p.y);
+            const minTime = Math.min(...times);
+            const maxTime = Math.max(...times);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
 
-    async function createOrUpdateChart() {
-        loader.style.display = 'flex';
-        
-        const priceData = await loadPriceData();
+            const timeDuration = maxTime - minTime;
+            const extendedMinTime = minTime; 
+            const extendedMaxTime = maxTime + (timeDuration * 0.33); 
 
-        if (!priceData || priceData.length < 2) {
-            statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Not enough data points to run regression.`;
-            modelInfoDiv.innerHTML = `<span class="text-red-400">Please ensure 'price_data.json' has at least two data points with price > 0.</span>`;
+            const logMinPrice = Math.log10(minPrice);
+            const logMaxPrice = Math.log10(maxPrice);
+            const logPriceRange = logMaxPrice - logMinPrice;
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
+
+            const { slope, intercept } = linearRegression(priceData);
+            const rSquared = calculateRSquared(priceData, slope, intercept);
+            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
+                   The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
+                   <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+
+            const n = priceData.length;
+            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration;
+            const startIndex = 1;
+            const endIndex = n * futureTimeIndexRatio;
+
+            const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
+            const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
+            
+            const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
+            const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
+            
             loader.style.display = 'none';
-            return;
-        }
-        
-        statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
+            lastYear = 0;
 
-        const times = priceData.map(p => p.time);
-        const prices = priceData.map(p => p.y);
-        const minTime = Math.min(...times);
-        const maxTime = Math.max(...times);
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
-
-        const timeDuration = maxTime - minTime;
-        // Extend time axis by 33% into the future
-        const extendedMaxTime = maxTime + (timeDuration * 0.33); 
-
-        // Extend price axis by 33% on log scale
-        const logMinPrice = Math.log10(minPrice);
-        const logMaxPrice = Math.log10(maxPrice);
-        const logPriceRange = logMaxPrice - logMinPrice;
-        
-        const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
-        const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
-
-        // Perform Regression
-        const { slope, intercept } = linearRegression(priceData);
-        const rSquared = calculateRSquared(priceData, slope, intercept);
-        
-        modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Price Data<br>
-                                 The power law model suggests Price $\approx$ C $\times$ (Day Index) $^{\alpha}$.<br>
-                                 <strong>Calculated Power Law Exponent ($\alpha$):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
-
-        // --- CORRECTION FOR REGRESSION LINE PLOTTING ---
-        const n = priceData.length;
-        const xStart = 1; 
-        const xEndHistorical = n;
-        // Calculate the index for the projected max time (133% of historical duration)
-        const xProjection = n * 1.33; 
-
-        // Calculate Y values for the start and the projected end of the line
-        const yStart = calculatePowerLawPrice(xStart, slope, intercept);
-        const yProjection = calculatePowerLawPrice(xProjection, slope, intercept);
-        
-        // The regression line is drawn from the first recorded time (minTime) 
-        // to the projected max time (extendedMaxTime).
-        const regressionLineData = [
-            { x: minTime, y: yStart }, // Anchored at first timestamp (X-index 1)
-            { x: extendedMaxTime, y: yProjection } // Projected to future timestamp (X-index N*1.33)
-        ];
-        // ------------------------------------------------
-
-        const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
-        
-        loader.style.display = 'none';
-        lastYear = 0; // Reset lastYear for tick calculation
-
-        if (chart) {
-            chart.data.datasets[0].data = chartPriceData;
-            chart.data.datasets[1].data = regressionLineData;
-            chart.options.scales.x.min = minTime; // Use minTime (not extended) for log scale start
-            chart.options.scales.x.max = extendedMaxTime;
-            chart.options.scales.y.min = extendedMinPrice;
-            chart.options.scales.y.max = extendedMaxPrice;
-            chart.update();
-        } else {
-            chart = new Chart(ctx, {
-                data: {
-                    datasets: [
-                        { 
-                            type: 'line', 
-                            label: 'TAO Price', 
-                            data: chartPriceData, 
-                            backgroundColor: 'rgba(79, 70, 229, 0.1)', 
-                            borderColor: 'rgba(79, 70, 229, 0.8)', 
-                            pointRadius: 1, 
-                            pointHoverRadius: 5, 
-                            tension: 0.1, 
-                            fill: true,
-                            showLine: true
-                        },
-                        { 
-                            type: 'line', 
-                            label: 'Power Law Fit', 
-                            data: regressionLineData, 
-                            borderColor: '#f43f5e', 
-                            borderWidth: 2, 
-                            pointRadius: 0, 
-                            fill: false,
-                            borderDash: [5, 5] // Make the fit line dashed
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { labels: { color: '#d1d5db' } }, 
-                        tooltip: { 
-                            callbacks: {
-                                // Tooltip Title: Formats the raw timestamp into a date
-                                title: function(tooltipItems) {
-                                    if (tooltipItems.length > 0) {
-                                        const timestamp = tooltipItems[0].parsed.x;
-                                        const date = new Date(timestamp);
-                                        return date.toLocaleDateString(undefined, { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
-                                        });
-                                    }
-                                    return '';
-                                },
-                                // Tooltip Body: Formats the price value
-                                label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
-                            } 
-                        } 
+            if (chart) {
+                chart.data.datasets[0].data = chartPriceData;
+                chart.data.datasets[1].data = regressionLineData;
+                chart.options.scales.x.min = extendedMinTime;
+                chart.options.scales.x.max = extendedMaxTime;
+                chart.options.scales.y.min = extendedMinPrice;
+                chart.options.scales.y.max = extendedMaxPrice;
+                chart.update();
+            } else {
+                chart = new Chart(ctx, {
+                    data: {
+                        datasets: [
+                            { type: 'line', label: 'TAO Price', data: chartPriceData, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderColor: 'rgba(79, 70, 229, 0.8)', pointRadius: 1, pointHoverRadius: 5, tension: 0.1, fill: true },
+                            { type: 'line', label: 'Power Law Fit', data: regressionLineData, borderColor: '#f43f5e', borderWidth: 2, pointRadius: 0, fill: false }
+                        ]
                     },
-                    scales: {
-                        x: { 
-                            type: 'logarithmic', 
-                            min: minTime, // Start X-axis at the first actual date
-                            max: extendedMaxTime, 
-                            title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
-                            ticks: { 
-                                color: '#9ca3af', 
-                                // Custom tick callback to show only years
-                                callback: function(value, index, ticks) {
-                                    const date = new Date(value);
-                                    const year = date.getFullYear();
-                                    // Only show the year if it's different from the previous tick's year
-                                    if (year !== lastYear) {
-                                        lastYear = year;
-                                        return year;
-                                    }
-                                    return null;
-                                }
-                            }, 
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        // --- START OF TOOLTIP MODIFICATION ---
+                        plugins: { 
+                            legend: { labels: { color: '#d1d5db' } }, 
+                            tooltip: { 
+                                callbacks: {
+                                    // This function sets the title of the tooltip (the top line)
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const item = tooltipItems[0];
+                                            const timestamp = item.parsed.x;
+                                            const date = new Date(timestamp);
+                                            // Format the date into a readable string like "October 21, 2025"
+                                            return date.toLocaleDateString(undefined, { 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric' 
+                                            });
+                                        }
+                                        return '';
+                                    },
+                                    // This function sets the body of the tooltip
+                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
+                                } 
+                            } 
                         },
-                        y: { 
-                            type: 'logarithmic', 
-                            min: extendedMinPrice, 
-                            max: extendedMaxPrice, 
-                            title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
-                            ticks: {
-                                color: '#9ca3af',
-                                // Custom tick callback to show power-of-10 price lines
-                                callback: function(value, index, ticks) {
-                                    // Show $1, $10, $100, etc.
-                                    if (Math.log10(value) % 1 === 0) {
-                                        return `$${value.toLocaleString()}`;
+                        // --- END OF TOOLTIP MODIFICATION ---
+                        scales: {
+                            x: { 
+                                type: 'logarithmic', 
+                                min: extendedMinTime, 
+                                max: extendedMaxTime, 
+                                title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
+                                ticks: { 
+                                    color: '#9ca3af', 
+                                    callback: function(value, index, ticks) {
+                                        const date = new Date(value);
+                                        const year = date.getFullYear();
+                                        if (year !== lastYear) {
+                                            lastYear = year;
+                                            return year;
+                                        }
+                                        return null;
                                     }
-                                    return null;
-                                }
+                                }, 
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                            y: { 
+                                type: 'logarithmic', 
+                                min: extendedMinPrice, 
+                                max: extendedMaxPrice, 
+                                title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
+                                ticks: {
+                                    color: '#9ca3af',
+                                },
+                                afterBuildTicks: (axis) => {
+                                    const newTicks = [];
+                                    const axisMin = axis.min;
+                                    const axisMax = axis.max;
+                                    let tickValue = 0.1; 
+                                    while (tickValue <= axisMax) {
+                                        if (tickValue >= axisMin) {
+                                            newTicks.push({
+                                                value: tickValue,
+                                                label: `$${tickValue.toLocaleString()}`
+                                            });
+                                        }
+                                        tickValue *= 10;
+                                    }
+                                    axis.ticks = newTicks;
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         }
-    }
-    
-    window.onload = () => createOrUpdateChart();
-</script>
+        
+        function calculateRSquared(data, slope, intercept) {
+            let ss_tot = 0, ss_res = 0, y_mean = 0;
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            if (validData.length < 2) return 0;
+            validData.forEach(p => y_mean += Math.log10(p.y));
+            y_mean /= validData.length;
+            validData.forEach(p => {
+                const logY = Math.log10(p.y);
+                const logX = Math.log10(p.x);
+                const predictedLogY = slope * logX + intercept;
+                ss_tot += Math.pow(logY - y_mean, 2);
+                ss_res += Math.pow(logY - predictedLogY, 2);
+            });
+            return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
+        }
+        
+        window.onload = () => createOrUpdateChart();
+    </script>
     
 </body>
 </html>
