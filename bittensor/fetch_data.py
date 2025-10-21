@@ -7,14 +7,22 @@ def fetch_and_save_data():
     Fetches historical price data from the CoinGecko API using an API key
     and saves it to a JSON file.
     """
-    # The new secret name for the CoinGecko key will be COINGECKO_API_KEY.
+    # --- ENHANCED DEBUGGING ---
+    # Check for the secret and print status.
     api_key = os.getenv('COINGECKO_API_KEY')
     if not api_key:
-        print("Error: COINGECKO_API_KEY secret is not set in the GitHub repository.")
+        print("--- DIAGNOSTIC FAILURE ---")
+        print("Error: The COINGECKO_API_KEY secret was NOT found in the environment.")
+        print("Please verify the secret exists under your repository's Settings > Secrets and variables > Actions page.")
+        print("Ensure it is a 'Repository secret' and not an 'Environment secret'.")
         return
+    else:
+        print("--- DIAGNOSTIC SUCCESS ---")
+        print("Successfully loaded the COINGECKO_API_KEY secret.")
+        print(f"The key starts with: '{api_key[:5]}...' to confirm it is not empty.")
+
 
     # CoinGecko API endpoint for historical market data.
-    # The API key is passed as a URL parameter.
     api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=max&interval=daily&x_cg_demo_api_key={api_key}"
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,14 +34,12 @@ def fetch_and_save_data():
         response = requests.get(api_url, timeout=30)
         response.raise_for_status()
         
-        # The data is nested under the 'prices' key.
         data = response.json().get('prices')
 
         if not isinstance(data, list):
             print(f"Error: API returned an unexpected data format: {data}")
             return
         
-        # Convert timestamps from milliseconds (CoinGecko) to seconds (for the chart).
         processed_data = [[p[0] // 1000, p[1]] for p in data]
 
         print(f"Successfully fetched {len(processed_data)} data points.")
