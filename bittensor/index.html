@@ -70,7 +70,7 @@
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
-        let lastYear = 0; // CHANGE 1: Add a variable to track the last displayed year.
+        let lastYear = 0;
         
         async function loadPriceData() {
             try {
@@ -82,7 +82,8 @@
                  if (!Array.isArray(data)) {
                     throw new Error("Invalid data format in JSON file");
                 }
-                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
+                // Filter out any data points with a price of 0 or less, as they break the log scale.
+                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
             } catch (error) {
                 console.error("Error loading price data:", error);
                 return null;
@@ -111,9 +112,9 @@
             
             const priceData = await loadPriceData();
 
-            if (!priceData) {
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load price_data.json.`;
-                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and the GitHub Action has run successfully.</span>`;
+            if (!priceData || priceData.length === 0) {
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
                 loader.style.display = 'none';
                 return;
             }
@@ -121,7 +122,7 @@
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
 
             const times = priceData.map(p => p.time);
-            const prices = priceData.map(p => p.y).filter(y => y > 0);
+            const prices = priceData.map(p => p.y); // No need to filter again
             const minTime = Math.min(...times);
             const maxTime = Math.max(...times);
             const minPrice = Math.min(...prices);
@@ -154,7 +155,7 @@
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
             
             loader.style.display = 'none';
-            lastYear = 0; // CHANGE 2: Reset the tracker before drawing the chart.
+            lastYear = 0;
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
@@ -183,20 +184,56 @@
                                 title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
                                 ticks: { 
                                     color: '#9ca3af', 
-                                    // CHANGE 3: Implement the custom callback function.
                                     callback: function(value, index, ticks) {
                                         const date = new Date(value);
                                         const year = date.getFullYear();
                                         if (year !== lastYear) {
                                             lastYear = year;
-                                            return year; // Display just the year
+                                            return year;
                                         }
                                         return null;
                                     }
                                 }, 
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
-                            y: { type: 'logarithmic', min: extendedMinPrice, max: extendedMaxPrice, title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                            // --- START OF Y-AXIS CHANGES ---
+                            y: { 
+                                type: 'logarithmic', 
+                                min: extendedMinPrice, 
+                                max: extendedMaxPrice, 
+                                title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
+                                ticks: {
+                                    color: '#9ca3af',
+                                    // The main callback is no longer needed as labels are generated below.
+                                    // We can keep a simple one for tooltips if necessary, but afterBuildTicks handles the axis labels.
+                                },
+                                afterBuildTicks: (axis) => {
+                                    const newTicks = [];
+                                    const axisMin = axis.min; // The calculated minimum value of the chart axis
+                                    const axisMax = axis.max; // The calculated maximum value of the chart axis
+                                    
+                                    // Start our tick generation at $10
+                                    let tickValue = 10; 
+                                    
+                                    // Loop, doubling the tick value each time
+                                    while (tickValue <= axisMax) {
+                                        // Only add the tick if it's within the visible range of the axis
+                                        if (tickValue >= axisMin) {
+                                            newTicks.push({
+                                                value: tickValue,
+                                                label: `$${tickValue.toLocaleString()}` // Format the label
+                                            });
+                                        }
+                                        // Double the value for the next iteration
+                                        tickValue *= 2;
+                                    }
+                                    
+                                    // Replace the chart's default ticks with our new custom ones
+                                    axis.ticks = newTicks;
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                            }
+                            // --- END OF Y-AXIS CHANGES ---
                         }
                     }
                 });
