@@ -21,7 +21,6 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        input[type="radio"] { accent-color: #4f46e5; }
         .status-dot {
             height: 10px;
             width: 10px;
@@ -40,22 +39,9 @@
         </header>
 
         <!-- Controls -->
-        <div class="bg-gray-900/50 p-4 rounded-lg flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-6 text-gray-300">
-                <span class="font-medium">Data Source:</span>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="dataSource" value="taostats" class="data-source-radio" checked> Taostats
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="dataSource" value="coingecko" class="data-source-radio"> CoinGecko
-                </label>
-            </div>
-            <div class="flex items-center gap-4">
-                <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
-                    <span class="status-dot bg-yellow-500"></span>Initializing...
-                </div>
-                <button id="downloadJsonBtn" class="hidden bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300">Download JSON</button>
-                <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg transition duration-300">Refresh Data</button>
+        <div class="bg-gray-900/50 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4">
+             <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
+                <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
             </div>
         </div>
         
@@ -80,69 +66,31 @@
     <script>
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
-        const dataSourceRadios = document.querySelectorAll('.data-source-radio');
-        const refreshBtn = document.getElementById('refreshBtn');
-        const downloadJsonBtn = document.getElementById('downloadJsonBtn');
         const statusDiv = document.getElementById('statusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
-        let latestFetchedData = null; // Holds the most recent successful API fetch
-        let taostatsFullHistory = null; // Cache for Taostats 'max' data
-
-        function updateStatus(message, color) {
-            statusDiv.innerHTML = `<span class="status-dot bg-${color}-500"></span>${message}`;
-        }
         
-        function downloadLatestData() {
-            if (!latestFetchedData) {
-                alert("No new data has been fetched to download.");
-                return;
+        async function loadPriceData() {
+            try {
+                // Fetch the static JSON file from the root of the repository.
+                // Add a cache-busting query parameter to ensure the latest version is always fetched.
+                const response = await fetch(`price_data.json?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load data file: ${response.statusText}`);
+                }
+                const data = await response.json();
+                 if (!Array.isArray(data)) {
+                    throw new Error("Invalid data format in JSON file");
+                }
+                // Convert Taostats data format [timestamp_in_seconds, price] to the format our chart needs.
+                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
+            } catch (error) {
+                console.error("Error loading price data:", error);
+                return null;
             }
-            const dataStr = JSON.stringify(latestFetchedData.map(d => [d.time, d.y]), null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'bittensor_price_data.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        async function fetchPriceDataFromCoinGecko(days) {
-            const originalUrl = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
-            try {
-                const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                if (!data || !data.prices) {
-                    console.error("Invalid data format from CoinGecko:", data);
-                    throw new Error("Invalid data format from CoinGecko");
-                }
-                return data.prices.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
-            } catch (error) { console.error("Fetch from CoinGecko failed:", error); return null; }
         }
         
-        async function fetchPriceDataFromTaostats(days) {
-            try {
-                // Always refetch for 'max' to ensure it's up to date, don't rely on cache across refreshes.
-                const originalUrl = `https://taostats.com/api/price/history`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
-                const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                if (!Array.isArray(data)) {
-                     console.error("Invalid data format from Taostats:", data);
-                    throw new Error("Invalid data format from Taostats");
-                }
-                taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
-                return taostatsFullHistory;
-            } catch (error) { console.error("Fetch from Taostats failed:", error); return null; }
-        }
-
         function linearRegression(data) {
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
             const validData = data.filter(p => p.y > 0 && p.x > 0);
@@ -160,67 +108,19 @@
             return { slope, intercept };
         }
 
-        async function createOrUpdateChart(isInitialLoad = false) {
+        async function createOrUpdateChart() {
             loader.style.display = 'flex';
-            refreshBtn.disabled = true;
-            downloadJsonBtn.classList.add('hidden');
-            if (chart) { chart.clear(); }
             
-            let selectedSource = document.querySelector('input[name="dataSource"]:checked').value;
-            const selectedDays = 'max'; // Always fetch max data
+            const priceData = await loadPriceData();
 
-            let priceData;
-            let sourceUsed = '';
-
-            const fetchFunctions = {
-                'taostats': fetchPriceDataFromTaostats,
-                'coingecko': fetchPriceDataFromCoinGecko
-            };
-
-            updateStatus(`Fetching from ${selectedSource}...`, 'yellow');
-            priceData = await fetchFunctions[selectedSource](selectedDays);
-
-            if (priceData) {
-                sourceUsed = `${selectedSource.charAt(0).toUpperCase() + selectedSource.slice(1)} (Live)`;
-                updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
-            } else if (isInitialLoad) {
-                const secondarySource = (selectedSource === 'taostats') ? 'coingecko' : 'taostats';
-                updateStatus(`${selectedSource} failed. Switching to ${secondarySource}...`, 'yellow');
-                
-                document.querySelector(`input[value="${secondarySource}"]`).checked = true;
-                selectedSource = secondarySource;
-
-                priceData = await fetchFunctions[secondarySource](selectedDays);
-
-                if (priceData) {
-                    sourceUsed = `${secondarySource.charAt(0).toUpperCase() + secondarySource.slice(1)} (Live)`;
-                    updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
-                } else {
-                    updateStatus('All live sources failed. Please check connection and try again.', 'red');
-                    sourceUsed = 'Error';
-                    modelInfoDiv.innerHTML = `<span class="text-red-400">Could not load live data from any source.</span>`;
-                }
-            } else {
-                updateStatus(`Failed to fetch from ${selectedSource}. Try the other source or refresh.`, 'red');
-                sourceUsed = 'Error';
-                modelInfoDiv.innerHTML = `<span class="text-red-400">Could not load live data from ${selectedSource}.</span>`;
-            }
-
-            if (sourceUsed.includes('Live')) {
-                latestFetchedData = priceData;
-                downloadJsonBtn.classList.remove('hidden');
-            }
-            
-            loader.style.display = 'none';
-            refreshBtn.disabled = false;
-
-            if (!priceData || priceData.length < 2) {
-                if (chart) { chart.destroy(); chart = null; }
-                 if(sourceUsed !== 'Error') {
-                    modelInfoDiv.innerHTML = `<span class="text-red-400">Not enough data to create a model.</span>`;
-                }
+            if (!priceData) {
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load price_data.json.`;
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and the GitHub Action has run successfully.</span>`;
+                loader.style.display = 'none';
                 return;
             }
+            
+            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data from Taostats.`;
 
             const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y).filter(y => y > 0);
@@ -241,7 +141,7 @@
 
             const { slope, intercept } = linearRegression(priceData);
             const rSquared = calculateRSquared(priceData, slope, intercept);
-            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> ${sourceUsed}<br>
+            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Taostats (Daily Auto-Refresh)<br>
                    The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
@@ -254,6 +154,8 @@
             
             const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
+            
+            loader.style.display = 'none';
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
@@ -299,11 +201,7 @@
             return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
         }
         
-        dataSourceRadios.forEach(radio => radio.addEventListener('change', () => createOrUpdateChart(false)));
-        refreshBtn.addEventListener('click', () => createOrUpdateChart(false));
-        downloadJsonBtn.addEventListener('click', downloadLatestData);
-        
-        window.onload = () => createOrUpdateChart(true);
+        window.onload = () => createOrUpdateChart();
     </script>
 </body>
 </html>
