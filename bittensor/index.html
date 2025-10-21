@@ -286,39 +286,45 @@
             const maxPrice = Math.max(...prices);
             const logPrices = prices.map(y => Math.log10(y));
             const logMinPrice = Math.min(...logPrices);
-            const logMaxPrice = Math.max(...logPrices);
+            const logMaxPrice = Math.log10(Math.max(...prices)); // Recalculate based on current data, not the logPrices array
 
-            // Calculate Y-axis limits (Initial calculation, later updated in updateChartScales)
-            const priceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = priceRange > 0 ? Math.pow(10, logMinPrice - priceRange * 0.05) : minPrice * 0.9;
-            const extendedMaxPrice = priceRange > 0 ? Math.pow(10, logMaxPrice + priceRange * 0.15) : maxPrice * 1.15;
-
+            // Calculate Y-axis limits
             const { slope, intercept } = linearRegression(priceData);
+            
+            const n = priceData.length;
+            const startIndex = 1;
+            const extendedEndDay = Math.ceil(n * EXPANSION_FACTOR); 
+            
+            // Calculate projected price endpoint for Y-axis extension
+            const projectedEndPrice = Math.pow(10, slope * Math.log10(extendedEndDay) + intercept);
+            const currentMaxPrice = Math.max(...prices, projectedEndPrice);
+
+            // Calculate the log range from the minimum recorded price to the projected max price
+            const totalProjectedRange = Math.log10(currentMaxPrice) - logMinPrice;
+            
+            // Apply 33% extension to this range
+            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPENSION_FACTOR;
+            const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
+            
+            // Set the minimum just slightly below the actual data minimum (minimal visual buffer)
+            const finalExtendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
+
+
             const rSquared = calculateRSquared(priceData, slope, intercept);
             modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Taostats API (Baseline)<br>
                    The power law model suggests price ≈ C * (Day)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             // Initial chart setup (Log Scale)
-            const n = priceData.length;
-            const startIndex = 1;
-            const extendedEndDay = Math.ceil(n * EXPANSION_FACTOR); 
-            
             const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
             const regressionLineData = [
                 { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: extendedEndDay, y: Math.pow(10, slope * Math.log10(extendedEndDay) + intercept) }
+                { x: extendedEndDay, y: projectedEndPrice } // Use the calculated projected price
             ];
             
             loader.style.display = 'none';
             const startDate = new Date(priceData[0].time);
 
-            // Calculate the final Y-axis max based on the initial data range and projection
-            const projectedMaxPrice = regressionLineData[1].y;
-            const totalProjectedRange = Math.log10(projectedMaxPrice) - logMinPrice;
-            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
-            const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
-            const finalExtendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
             
             chart = new Chart(ctx, {
                 data: {
@@ -398,5 +404,6 @@
         
         window.onload = () => createOrUpdateChart();
     </script>
+    
 </body>
 </html>
