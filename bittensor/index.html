@@ -119,7 +119,7 @@
                 return;
             }
             
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data from Taostats.`;
+            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
 
             const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y).filter(y => y > 0);
@@ -140,7 +140,7 @@
 
             const { slope, intercept } = linearRegression(priceData);
             const rSquared = calculateRSquared(priceData, slope, intercept);
-            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Taostats (Daily Auto-Refresh)<br>
+            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
                    The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
@@ -204,3 +204,4 @@
     </script>
 </body>
 </html>
+
