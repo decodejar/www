@@ -4,48 +4,42 @@ import json
 
 def fetch_and_save_data():
     """
-    Fetches historical price data from the Taostats API using the correct,
-    lowercase 'x-tao-api-key' header for authentication.
+    Fetches historical price data from the CoinGecko API using an API key
+    and saves it to a JSON file.
     """
-    # Reads the secret named TAOSTATS_API_KEY from the GitHub environment.
-    api_key = os.getenv('TAOSTATS_API_KEY')
+    # The new secret name for the CoinGecko key will be COINGECKO_API_KEY.
+    api_key = os.getenv('COINGECKO_API_KEY')
     if not api_key:
-        print("Error: TAOSTATS_API_KEY secret is not set in the GitHub repository.")
+        print("Error: COINGECKO_API_KEY secret is not set in the GitHub repository.")
         return
 
-    # This is the endpoint for historical data.
-    api_url = "https://taostats.com/api/price/history"
+    # CoinGecko API endpoint for historical market data.
+    # The API key is passed as a URL parameter.
+    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=max&interval=daily&x_cg_demo_api_key={api_key}"
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_filename = os.path.join(script_dir, "price_data.json")
 
-    print(f"Attempting GET request to: {api_url}")
-    print(f"Using 'x-tao-api-key' header for authentication...")
+    print(f"Attempting GET request to CoinGecko: {api_url.split('?')[0]}")
     
     try:
-        # --- CORRECTED AUTHENTICATION PER OFFICIAL DOCUMENTATION ---
-        # The API requires a GET request with the key in the all-lowercase 'x-tao-api-key' header.
-        headers = {
-            'x-tao-api-key': api_key
-        }
-        
-        response = requests.get(api_url, headers=headers, timeout=30)
-        
-        # Raise an exception for HTTP error codes (e.g., 401, 403, 500).
+        response = requests.get(api_url, timeout=30)
         response.raise_for_status()
         
-        data = response.json()
+        # The data is nested under the 'prices' key.
+        data = response.json().get('prices')
 
         if not isinstance(data, list):
             print(f"Error: API returned an unexpected data format: {data}")
             return
+        
+        # Convert timestamps from milliseconds (CoinGecko) to seconds (for the chart).
+        processed_data = [[p[0] // 1000, p[1]] for p in data]
 
-        data.sort(key=lambda x: x[0])
-
-        print(f"Successfully fetched {len(data)} data points.")
+        print(f"Successfully fetched {len(processed_data)} data points.")
 
         with open(output_filename, 'w') as f:
-            json.dump(data, f)
+            json.dump(processed_data, f)
             
         print(f"Data successfully saved to {output_filename}")
 
