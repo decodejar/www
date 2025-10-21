@@ -186,45 +186,45 @@
             let sourceUsed = '';
 
             // --- DATA FETCHING LOGIC ---
-            if (selectedSource === 'taostats') {
-                updateStatus('Fetching from Taostats...', 'yellow');
-                priceData = await fetchPriceDataFromTaostats(selectedDays);
+            const primarySource = selectedSource;
+            const secondarySource = (primarySource === 'taostats') ? 'coingecko' : 'taostats';
+
+            const fetchFunctions = {
+                'taostats': fetchPriceDataFromTaostats,
+                'coingecko': fetchPriceDataFromCoinGecko
+            };
+
+            // 1. Try the primary selected source
+            updateStatus(`Fetching from ${primarySource}...`, 'yellow');
+            priceData = await fetchFunctions[primarySource](selectedDays);
+
+            if (priceData) {
+                sourceUsed = `${primarySource.charAt(0).toUpperCase() + primarySource.slice(1)} (Live)`;
+                updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
+            } else {
+                // 2. If primary fails, try the secondary source
+                updateStatus(`${primarySource} failed. Trying ${secondarySource}...`, 'yellow');
+                priceData = await fetchFunctions[secondarySource](selectedDays);
+
                 if (priceData) {
-                    sourceUsed = 'Taostats (Live)';
-                    updateStatus('Success! Loaded live data from Taostats.', 'green');
-                }
-            }
-            
-            if (!priceData && selectedSource === 'coingecko') {
-                 updateStatus('Fetching from CoinGecko...', 'yellow');
-                priceData = await fetchPriceDataFromCoinGecko(selectedDays);
-                if (priceData) {
-                    sourceUsed = 'CoinGecko (Live)';
-                    updateStatus('Success! Loaded live data from CoinGecko.', 'green');
-                }
-            }
-            
-            // Fallback chain if primary fails or isn't selected
-            if (!priceData) {
-                updateStatus('Primary source failed. Trying secondary...', 'yellow');
-                const secondaryFetch = selectedSource === 'taostats' ? fetchPriceDataFromCoinGecko : fetchPriceDataFromTaostats;
-                priceData = await secondaryFetch(selectedDays);
-                 if (priceData) {
-                    sourceUsed = (selectedSource === 'taostats' ? 'CoinGecko' : 'Taostats') + ' (Live)';
-                    updateStatus(`Success! Loaded live data from fallback API.`, 'green');
+                    sourceUsed = `${secondarySource.charAt(0).toUpperCase() + secondarySource.slice(1)} (Live)`;
+                    updateStatus(`Success! Loaded live data from ${sourceUsed}.`, 'green');
                 } else {
+                    // 3. If both APIs fail, load the local fallback file
                     updateStatus('All APIs failed. Loading from local cache...', 'red');
                     priceData = await getFallbackData();
-                    if(priceData.length > 0) {
+                    if (priceData && priceData.length > 0) {
                         sourceUsed = 'Local Fallback';
                         if (selectedDays !== 'max') {
                            priceData = priceData.slice(-parseInt(selectedDays, 10));
                         }
                     } else {
                         sourceUsed = 'Error';
+                        updateStatus('Fatal: Could not load live or cached data.', 'red');
                     }
                 }
             }
+
 
             if (sourceUsed.includes('Live')) {
                 latestFetchedData = priceData;
