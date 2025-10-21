@@ -44,7 +44,7 @@
                 <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
             </div>
             
-            <!-- New Checkbox Control -->
+            <!-- Checkbox Control -->
             <div class="flex items-center space-x-2">
                 <input type="checkbox" id="logTimeToggle" checked class="h-4 w-4 text-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500 cursor-pointer">
                 <label for="logTimeToggle" class="text-sm font-medium text-gray-300 select-none cursor-pointer">Use Logarithmic Time Axis</label>
@@ -79,6 +79,9 @@
         let chart;
         let priceData = [];
         let isLogTimeScale = true; // Default to log scale
+
+        // Define the expansion factor for axes (33% extension)
+        const EXPANSION_FACTOR = 1.33;
 
         // --- Core Power Law Math Functions ---
         
@@ -146,9 +149,9 @@
 
             const n = priceData.length;
             const startIndex = 1;
-            const endIndex = n > 1 ? (n * 2) : 1; 
-
-            // Calculate the regression line data
+            // Calculate extended end day for 33% extension of the x-axis
+            const extendedEndDay = Math.ceil(n * EXPANSION_FACTOR); 
+            
             const { slope, intercept } = linearRegression(priceData);
 
             // 1. Determine which X-value to use for plotting (Day Number or Timestamp)
@@ -159,25 +162,36 @@
 
             // 2. Determine the regression line points
             const regressionLinePoints = [];
+            
+            // Calculate base time difference for extrapolation in linear mode
+            const dailyStep = n > 1 ? (priceData[n - 1].time - priceData[n - 2].time) : 86400000;
+            
+            // X-Axis bounds for the regression line
+            const regressionStartDay = startIndex;
+            const regressionEndDay = extendedEndDay;
+            
             if (isLogTimeScale) {
                 // Log scale plots against Day Number (x)
-                regressionLinePoints.push({ x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) });
-                regressionLinePoints.push({ x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) });
+                regressionLinePoints.push({ x: regressionStartDay, y: Math.pow(10, slope * Math.log10(regressionStartDay) + intercept) });
+                regressionLinePoints.push({ x: regressionEndDay, y: Math.pow(10, slope * Math.log10(regressionEndDay) + intercept) });
+
+                // Set min/max X values for log time (Day Number based)
+                chart.options.scales.x.min = startIndex;
+                chart.options.scales.x.max = regressionEndDay;
+
             } else {
                 // Linear scale plots against Millisecond Timestamp (time)
-                // The power law curve is calculated directly from the day number (x)
                 
-                // --- Curve Approximation Points ---
-                // We use a higher density of points to draw a smooth curve for the linear scale
+                // Use a higher density of points to draw a smooth curve
                 const steps = 50;
-                const dailyStep = priceData[n-1].time - priceData[n-2].time; // Time in MS for a single day
-                const projectedDays = endIndex - n;
+                
+                // Determine the end timestamp for the chart (33% time extension)
+                const endTimestamp = priceData[n - 1].time + (extendedEndDay - n) * dailyStep;
 
-                for (let i = startIndex; i <= n + projectedDays; i += Math.ceil((n + projectedDays) / steps)) {
-                    const day = i;
+                for (let day = startIndex; day <= regressionEndDay; day += Math.ceil(regressionEndDay / steps)) {
+                    
                     const price = Math.pow(10, slope * Math.log10(day) + intercept);
                     
-                    // Determine the correct X-axis value (timestamp) for this day number
                     let timeX = priceData.find(p => p.x === day)?.time;
                     if (!timeX) {
                         // Extrapolate time for projected days (x > n)
@@ -189,9 +203,9 @@
                     }
                 }
                 
-                // Add the last day exactly
-                const lastDayPrice = Math.pow(10, slope * Math.log10(endIndex) + intercept);
-                const lastDayTime = priceData[n - 1].time + (endIndex - n) * dailyStep;
+                // Add the absolute last day point to ensure the projection reaches the end boundary
+                const lastDayPrice = Math.pow(10, slope * Math.log10(regressionEndDay) + intercept);
+                const lastDayTime = priceData[n - 1].time + (regressionEndDay - n) * dailyStep;
                 regressionLinePoints.push({x: lastDayTime, y: lastDayPrice});
 
                 // Set min/max axis for linear time (timestamp based)
@@ -206,6 +220,31 @@
             chart.options.scales.x.type = isLogTimeScale ? 'logarithmic' : 'time';
             chart.options.scales.x.time = isLogTimeScale ? undefined : { unit: 'day' };
             chart.options.scales.x.title.text = isLogTimeScale ? 'Time (Days since start, Log Scale)' : 'Time (Linear Scale - Date)';
+            
+            // Y-axis updates (always log scale, applying 33% extension)
+            const prices = priceData.map(p => p.y).filter(y => y > 0);
+            const logMinPrice = Math.log10(Math.min(...prices));
+            const logMaxPrice = Math.log10(Math.max(...prices));
+            
+            // Calculate min/max price for the projection period
+            const projectedStartPrice = regressionLinePoints[0].y;
+            const projectedEndPrice = regressionLinePoints[regressionLinePoints.length - 1].y;
+            const projectedMaxPrice = Math.max(projectedEndPrice, maxPrice);
+
+            // Calculate the total range required for the projection period
+            const totalProjectedRange = Math.log10(projectedMaxPrice) - logMinPrice;
+            
+            // Apply 33% (or 1.33 factor) extension to the visual price range.
+            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
+            const extendedMaxPrice = Math.pow(10, newLogMaxPrice);
+            
+            // We use a small buffer for the minimum rather than expanding the minimum by 33%
+            // This prevents the minimum from dropping too low and wasting vertical space.
+            const extendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
+
+            chart.options.scales.y.min = extendedMinPrice;
+            chart.options.scales.y.max = extendedMaxPrice;
+            
             chart.options.scales.x.ticks.callback = isLogTimeScale ? function(value, index, ticks) {
                 const startDate = new Date(priceData[0].time);
                 const tickDate = new Date(startDate.getTime());
@@ -221,18 +260,8 @@
                 }
                 return null;
             } : function(value, index, values) {
-                // Formatting for Linear/Time scale
                 return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
             };
-            
-            // Re-set min/max X values based on the scale type
-            if (isLogTimeScale) {
-                chart.options.scales.x.min = startIndex;
-                chart.options.scales.x.max = endIndex;
-            }
-
-            // Update button text
-            logTimeToggle.checked = isLogTimeScale;
             
             chart.update();
         }
@@ -259,7 +288,7 @@
             const logMinPrice = Math.min(...logPrices);
             const logMaxPrice = Math.max(...logPrices);
 
-            // Calculate Y-axis limits
+            // Calculate Y-axis limits (Initial calculation, later updated in updateChartScales)
             const priceRange = logMaxPrice - logMinPrice;
             const extendedMinPrice = priceRange > 0 ? Math.pow(10, logMinPrice - priceRange * 0.05) : minPrice * 0.9;
             const extendedMaxPrice = priceRange > 0 ? Math.pow(10, logMaxPrice + priceRange * 0.15) : maxPrice * 1.15;
@@ -271,18 +300,26 @@
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             // Initial chart setup (Log Scale)
-            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
             const n = priceData.length;
             const startIndex = 1;
-            const endIndex = n > 1 ? (n * 2) : 1; 
+            const extendedEndDay = Math.ceil(n * EXPANSION_FACTOR); 
+            
+            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
             const regressionLineData = [
                 { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
+                { x: extendedEndDay, y: Math.pow(10, slope * Math.log10(extendedEndDay) + intercept) }
             ];
             
             loader.style.display = 'none';
             const startDate = new Date(priceData[0].time);
 
+            // Calculate the final Y-axis max based on the initial data range and projection
+            const projectedMaxPrice = regressionLineData[1].y;
+            const totalProjectedRange = Math.log10(projectedMaxPrice) - logMinPrice;
+            const newLogMaxPrice = logMinPrice + totalProjectedRange * EXPANSION_FACTOR;
+            const finalExtendedMaxPrice = Math.pow(10, newLogMaxPrice);
+            const finalExtendedMinPrice = Math.pow(10, logMinPrice * 0.99); 
+            
             chart = new Chart(ctx, {
                 data: {
                     datasets: [
@@ -316,7 +353,7 @@
                         x: { 
                             type: 'logarithmic',
                             min: startIndex,
-                            max: endIndex,
+                            max: extendedEndDay, // X-axis extends 33%
                             title: { display: true, text: 'Time (Days since start, Log Scale)', color: '#9ca3af' }, 
                             ticks: { 
                                 color: '#9ca3af',
@@ -343,8 +380,8 @@
                         },
                         y: { 
                             type: 'logarithmic', 
-                            min: extendedMinPrice, 
-                            max: extendedMaxPrice, 
+                            min: finalExtendedMinPrice, 
+                            max: finalExtendedMaxPrice, 
                             title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
                             ticks: { color: '#9ca3af', callback: (v) => `$${Number(v.toPrecision(2)).toLocaleString()}` }, 
                             grid: { color: 'rgba(255, 255, 255, 0.1)' } 
