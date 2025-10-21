@@ -4,32 +4,33 @@ import json
 
 def fetch_and_save_data():
     """
-    Fetches historical price data from the Taostats API using a Bearer Token
-    for authentication and saves it to a JSON file.
+    Fetches historical price data from the Taostats API using the correct
+    X-TAO-API-KEY header for authentication.
     """
     api_key = os.getenv('TAOSTATS_API_KEY')
     if not api_key:
         print("Error: TAOSTATS_API_KEY secret is not set in the GitHub repository.")
         return
 
+    # This is the endpoint for historical data.
     api_url = "https://taostats.com/api/price/history"
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_filename = os.path.join(script_dir, "price_data.json")
 
-    print(f"Fetching data from Taostats API and saving to {output_filename}...")
+    print(f"Attempting GET request to: {api_url}")
+    print(f"Using X-TAO-API-KEY header for authentication...")
     
     try:
-        # --- CORRECTED AUTHENTICATION ---
-        # The API requires a Bearer token in the Authorization header.
+        # --- CORRECTED AUTHENTICATION PER OFFICIAL DOCUMENTATION ---
+        # The API requires a GET request with the key in the 'X-TAO-API-KEY' header.
         headers = {
-            'Authorization': f'Bearer {api_key}'
+            'X-TAO-API-KEY': api_key
         }
         
-        # Use a POST request with the correct authentication headers.
-        response = requests.post(api_url, headers=headers, timeout=30)
+        response = requests.get(api_url, headers=headers, timeout=30)
         
-        # This will raise an exception for HTTP error codes (e.g., 401, 403, 500).
+        # Raise an exception for HTTP error codes (e.g., 401, 403, 500).
         response.raise_for_status()
         
         data = response.json()
@@ -45,7 +46,7 @@ def fetch_and_save_data():
         with open(output_filename, 'w') as f:
             json.dump(data, f)
             
-        print(f"Data successfully saved.")
+        print(f"Data successfully saved to {output_filename}")
 
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error occurred: {e}")
