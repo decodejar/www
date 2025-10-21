@@ -47,7 +47,7 @@
             <!-- Checkbox Control -->
             <div class="flex items-center space-x-2">
                 <input type="checkbox" id="logTimeToggle" checked class="h-4 w-4 text-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500 cursor-pointer">
-                <label for="logTimeToggle" class="text-sm font-medium text-gray-300 select-none cursor-pointer">Use Logarithmic Time Axis (Base 2)</label>
+                <label for="logTimeToggle" class="text-sm font-medium text-gray-300 select-none cursor-pointer">Use Logarithmic Time Axis (Base 1.5)</label>
             </div>
         </div>
         
@@ -280,28 +280,43 @@
                 return null;
             };
 
-            // Custom X-axis Ticks (Updated for Log Scale to show Year/Month clearly)
+            // Custom X-axis Ticks (Updated to show ONLY Year on Power-of-Base Ticks)
             chart.options.scales.x.ticks.callback = isLogTimeScale ? function(value, index, ticks) {
-                // Check if the custom log value is a clean integer (e.g., 0, 1, 2, 3, 4...)
-                // These correspond to Day Numbers that are powers of the LOG_BASE (1, 2, 4, 8, 16...)
+                // Check if the custom log value is close to a whole number (i.e., a power of LOG_BASE: 1.5^0, 1.5^1, 1.5^2, etc.)
+                // This ensures we only label the mathematically significant points on the log scale.
                 const isPowerOfBaseTick = Math.abs(value - Math.round(value)) < 0.1;
                 
                 if (isPowerOfBaseTick) {
-                    // Convert the custom log value back to the actual day number
                     const dayNumber = Math.round(fromCustomLog(value));
                     
                     if (dayNumber > 0) {
                         const startDate = new Date(priceData[0].time);
                         const tickDate = new Date(startDate.getTime());
                         tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
+                        const year = tickDate.getFullYear();
                         
-                        // Show the date with year and month, and the day number for clarity
-                        return tickDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) + ` (Day ${dayNumber})`;
+                        if (index === 0) return year; // Always show the first year
+
+                        // Get the previous tick's value
+                        const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                        
+                        if (prevTickValue !== null) {
+                            const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
+                            
+                            // Calculate previous date to check if the year changed
+                            const prevDate = new Date(startDate.getTime());
+                            prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
+                            
+                            if (prevDate.getFullYear() < year) {
+                                return year; // Only show year if it's different from the previous labeled tick
+                            }
+                        }
                     }
                 }
-                return null; // Hide non-significant/non-integer ticks
+                return null; // Hide the tick
                 
             } : function(value, index, values) {
+                // Linear Scale: Show Month and Year
                 return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
             };
             
@@ -418,23 +433,37 @@
                             ticks: { 
                                 color: '#9ca3af',
                                 callback: function(value, index, ticks) {
-                                    // Check if the custom log value is a clean integer (e.g., 0, 1, 2, 3, 4...)
+                                    // Check if the custom log value is close to a whole number 
                                     const isPowerOfBaseTick = Math.abs(value - Math.round(value)) < 0.1;
                                     
                                     if (isPowerOfBaseTick) {
-                                        // Convert the custom log value back to the actual day number
                                         const dayNumber = Math.round(fromCustomLog(value));
                                         
                                         if (dayNumber > 0) {
                                             const startDate = new Date(priceData[0].time);
                                             const tickDate = new Date(startDate.getTime());
                                             tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
+                                            const year = tickDate.getFullYear();
                                             
-                                            // Show the date with year and month, and the day number for clarity
-                                            return tickDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) + ` (Day ${dayNumber})`;
+                                            if (index === 0) return year; // Always show the first year
+
+                                            // Get the previous tick's value
+                                            const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
+                                            
+                                            if (prevTickValue !== null) {
+                                                const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
+                                                
+                                                // Calculate previous date to check if the year changed
+                                                const prevDate = new Date(startDate.getTime());
+                                                prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
+                                                
+                                                if (prevDate.getFullYear() < year) {
+                                                    return year; // Only show year if it's different from the previous labeled tick
+                                                }
+                                            }
                                         }
                                     }
-                                    return null; // Hide non-significant/non-integer ticks
+                                    return null; // Hide the tick
                                 },
                                  maxRotation: 0,
                                  minRotation: 0,
