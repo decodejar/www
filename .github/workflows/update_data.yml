@@ -35,9 +35,16 @@ jobs:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
         run: python bittensor/fetch_data.py
 
+      # --- NEW DEBUGGING STEP ---
+      - name: List files in workspace
+        run: |
+          echo "Listing all files in the repository workspace:"
+          ls -R
+
       - name: Commit and push if data changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automated update of bittensor/price_data.json"
           # The file pattern now points to the file inside the bittensor subfolder.
           file_pattern: "bittensor/price_data.json"
+
