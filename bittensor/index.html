@@ -47,7 +47,7 @@
             <!-- Checkbox Control -->
             <div class="flex items-center space-x-2">
                 <input type="checkbox" id="logTimeToggle" checked class="h-4 w-4 text-indigo-500 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500 cursor-pointer">
-                <label for="logTimeToggle" class="text-sm font-medium text-gray-300 select-none cursor-pointer">Log-Log Plot</label>
+                <label for="logTimeToggle" class="text-sm font-medium text-gray-300 select-none cursor-pointer">Use Logarithmic Time Axis (Base 1.2)</label>
             </div>
         </div>
         
@@ -82,8 +82,8 @@
 
         // Define the expansion factor for axes (33% extension)
         const EXPANSION_FACTOR = 1.33;
-        // NEW: Define the custom log base for the X-axis to reduce compression
-        const LOG_BASE = 1.1; 
+        // FIX 1: Set a smaller base (1.2) to visibly decompress the timeline.
+        const LOG_BASE = 1.2; 
 
 
         // --- Custom Log Base Functions (Used for X-Axis display/mapping) ---
@@ -280,7 +280,7 @@
                 return null;
             };
 
-            // Custom X-axis Ticks (FIXED to show ONLY Year when the calendar year changes)
+            // FIX 2: Custom X-axis Ticks (Revised for reliable year labeling)
             chart.options.scales.x.ticks.callback = isLogTimeScale ? function(value, index, ticks) {
                 // 1. Calculate the actual Day Number from the Chart's X value (which is custom logged)
                 const dayNumber = Math.round(fromCustomLog(value));
@@ -290,9 +290,9 @@
                     const tickDate = new Date(startDate.getTime());
                     // Calculate the date corresponding to this day number
                     tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
-                    const year = tickDate.getFullYear();
+                    const currentYear = tickDate.getFullYear();
                     
-                    if (index === 0) return year; // Always show the first year
+                    if (index === 0) return currentYear; // Always show the first year
 
                     // 2. Look up the value of the previous tick that Chart.js generated
                     const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
@@ -300,12 +300,17 @@
                     if (prevTickValue !== null) {
                         // Calculate the day number and date for the previous tick
                         const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
-                        const prevDate = new Date(startDate.getTime());
-                        prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
                         
-                        // 3. Compare the current year to the previous tick's year
-                        if (prevDate.getFullYear() < year) {
-                            return year; // Only show year if it's different from the previous tick's date
+                        // Prevent error if dayNumber is 0
+                        if (prevDayNumber > 0) {
+                            const prevDate = new Date(startDate.getTime());
+                            prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
+                            const prevYear = prevDate.getFullYear();
+                            
+                            // 3. Compare the current year to the previous tick's year
+                            if (prevYear < currentYear) {
+                                return currentYear; // Only show year if it has advanced
+                            }
                         }
                     }
                 }
@@ -437,9 +442,9 @@
                                         const tickDate = new Date(startDate.getTime());
                                         // Calculate the date corresponding to this day number
                                         tickDate.setDate(tickDate.getDate() + (dayNumber - 1));
-                                        const year = tickDate.getFullYear();
+                                        const currentYear = tickDate.getFullYear();
                                         
-                                        if (index === 0) return year; // Always show the first year
+                                        if (index === 0) return currentYear; // Always show the first year
 
                                         // 2. Look up the value of the previous tick that Chart.js generated
                                         const prevTickValue = ticks[index - 1] ? ticks[index - 1].value : null;
@@ -447,12 +452,17 @@
                                         if (prevTickValue !== null) {
                                             // Calculate the day number and date for the previous tick
                                             const prevDayNumber = Math.round(fromCustomLog(prevTickValue));
-                                            const prevDate = new Date(startDate.getTime());
-                                            prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
                                             
-                                            // 3. Compare the current year to the previous tick's year
-                                            if (prevDate.getFullYear() < year) {
-                                                return year; // Only show year if it's different from the previous tick's date
+                                            // Prevent error if dayNumber is 0
+                                            if (prevDayNumber > 0) {
+                                                const prevDate = new Date(startDate.getTime());
+                                                prevDate.setDate(prevDate.getDate() + (prevDayNumber - 1));
+                                                const prevYear = prevDate.getFullYear();
+                                                
+                                                // 3. Compare the current year to the previous tick's year
+                                                if (prevYear < currentYear) {
+                                                    return currentYear; // Only show year if it has advanced
+                                                }
                                             }
                                         }
                                     }
