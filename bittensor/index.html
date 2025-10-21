@@ -120,15 +120,15 @@
 
         async function fetchPriceDataFromCoinGecko(days) {
             const originalUrl = `https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days=${days}&interval=daily`;
-            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
             try {
-                const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+                const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const textResponse = await response.text();
-                // allorigins can sometimes return a JSON object with a 'contents' property
-                const parsedResponse = JSON.parse(textResponse);
-                const data = (typeof parsedResponse.contents === 'string') ? JSON.parse(parsedResponse.contents) : parsedResponse;
-                if (!data || !data.prices) throw new Error("Invalid data format from CoinGecko");
+                const data = await response.json();
+                if (!data || !data.prices) {
+                    console.error("Invalid data format from CoinGecko:", data);
+                    throw new Error("Invalid data format from CoinGecko");
+                }
                 return data.prices.map((p, i) => ({ time: p[0], x: i + 1, y: p[1] }));
             } catch (error) { console.error("Fetch from CoinGecko failed:", error); return null; }
         }
@@ -137,13 +137,14 @@
             try {
                 if (!taostatsFullHistory) {
                     const originalUrl = `https://taostats.com/api/price/history`;
-                    const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`;
-                    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`;
+                    const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const textResponse = await response.text();
-                    const parsedResponse = JSON.parse(textResponse);
-                    const data = (typeof parsedResponse.contents === 'string') ? JSON.parse(parsedResponse.contents) : parsedResponse;
-                    if (!Array.isArray(data)) throw new Error("Invalid data format from Taostats");
+                    const data = await response.json();
+                    if (!Array.isArray(data)) {
+                         console.error("Invalid data format from Taostats:", data);
+                        throw new Error("Invalid data format from Taostats");
+                    }
                     taostatsFullHistory = data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] }));
                 }
                 if (days === 'max') return taostatsFullHistory;
