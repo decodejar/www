@@ -242,12 +242,12 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
-            const logMinTime = Math.log10(minTime);
-            const logMaxTime = Math.log10(maxTime);
-            const timeRange = logMaxTime - logMinTime;
-            const extendedMinTime = timeRange > 0 ? Math.pow(10, logMinTime - timeRange * 0.25) : minTime * 0.9;
-            const extendedMaxTime = timeRange > 0 ? Math.pow(10, logMaxTime + timeRange * 0.25) : maxTime * 1.1;
+            // New X-axis projection logic
+            const timeDuration = maxTime - minTime;
+            const extendedMinTime = minTime; // Start axis at the first data point
+            const extendedMaxTime = maxTime + timeDuration; // Project forward by the total duration of the data
 
+            // Y-axis extension logic (padding by 25% on each side of the log range)
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const priceRange = logMaxPrice - logMinPrice;
@@ -261,12 +261,14 @@
                    <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             const n = priceData.length;
-            const avgTimeStep = n > 1 ? (maxTime - minTime) / (n - 1) : 86400000;
-            const startIndex = n > 1 && avgTimeStep > 0 ? 1 - (minTime - extendedMinTime) / avgTimeStep : 0.5;
-            const endIndex = n > 1 && avgTimeStep > 0 ? n + (extendedMaxTime - maxTime) / avgTimeStep : 1.5;
+            // The regression model uses x-indices (1, 2, ..., n)
+            const startIndex = 1;
+            // Projecting the duration of n-1 steps forward means the end index is n + (n-1) = 2n-1
+            const endIndex = n > 1 ? (2 * n) - 1 : 1;
 
-            const y1 = Math.pow(10, slope * Math.log10(Math.max(0.1, startIndex)) + intercept);
-            const y2 = Math.pow(10, slope * Math.log10(Math.max(0.1, endIndex)) + intercept);
+            const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
+            const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
+            
             const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
 
