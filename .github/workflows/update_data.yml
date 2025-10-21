@@ -1,7 +1,7 @@
 # This workflow runs a Python script to fetch data from the bittensor subfolder
 # and commits the resulting data file back to the same subfolder.
 
-name: update-bittensor-price-data
+name: Update Bittensor Price Data
 
 on:
   schedule:
@@ -29,12 +29,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      # --- NEW VERBOSE DEBUGGING STEP ---
-      - name: Run fetch data script in Verbose Mode for Debugging
+      - name: Run fetch data script
         env:
-          # This passes the GitHub secret to the Python script.
-          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
-        run: python -v bittensor/fetch_data.py
+          # This passes the new CoinGecko API key secret to the Python script.
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+        run: python bittensor/fetch_data.py
 
       - name: List files in workspace
         run: |
