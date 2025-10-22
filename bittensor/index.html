@@ -67,6 +67,12 @@
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
+        
+        // --- MODEL MODIFICATION ---
+        // Add an offset to the day number to prevent the log(1) issue
+        // This makes the log scale spacing more gradual.
+        const DAY_OFFSET = 100;
+        // --- END MODIFICATION ---
 
         let chart;
         
@@ -81,7 +87,10 @@
                      throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
-                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
+                // --- X-VALUE MODIFICATION ---
+                // Add the DAY_OFFSET to the index (i + 1)
+                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
+                // --- END MODIFICATION ---
             } catch (error) {
                 console.error("Error loading price data:", error);
                 return null;
@@ -90,6 +99,8 @@
         
         function linearRegression(data) {
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            // The data 'x' values now have the offset included, so the regression
+            // automatically calculates based on log(x + DAY_OFFSET)
             const validData = data.filter(p => p.y > 0 && p.x > 0);
             const n = validData.length;
             if (n < 2) return { slope: 0, intercept: 0 };
@@ -111,7 +122,7 @@
             if (validData.length === 0) return 0;
 
             const residuals = validData.map(p => {
-                const logX = Math.log10(p.x);
+                const logX = Math.log10(p.x); // x already includes offset
                 const logY = Math.log10(p.y);
                 const predictedLogY = slope * logX + intercept;
                 return logY - predictedLogY;
@@ -150,15 +161,18 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
-            // --- X-AXIS RANGE CALCULATION (NOW DAY-BASED) ---
+            // --- X-AXIS RANGE CALCULATION (DAY-BASED WITH OFFSET) ---
             const n = priceData.length;
+            const firstDayNum = priceData[0].x; // This is (1 + DAY_OFFSET)
             const timeDuration = maxTime - minTime;
             const extendedMaxTime = maxTime + (timeDuration * 0.4); // 40% projection
             // Find the ratio of projection
             const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration; // This is 1.4
             
-            const extendedMinDay = 1; // Start from day 1
-            const extendedMaxDay = n * futureTimeIndexRatio; // Project day number by the same ratio
+            const projectedDayCount = n * futureTimeIndexRatio; // e.g., 1000 days * 1.4 = 1400
+            
+            const extendedMinDay = firstDayNum; // Start from the first day number (e.g., 101)
+            const extendedMaxDay = firstDayNum + projectedDayCount - 1; // e.g., 101 + 1400 - 1 = 1500
             // --- END X-AXIS RANGE ---
 
             const logMinPrice = Math.log10(minPrice);
@@ -181,23 +195,27 @@
             
             modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
                 The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
-                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}<br>
+                <span class="text-xs text-gray-500">Model: Price ≈ C * (Day + ${DAY_OFFSET})<sup>α</sup></span>`;
 
-            // --- REGRESSION LINE DATA (NOW DAY-BASED) ---
-            const startIndex = 1;
-            const endIndex = extendedMaxDay; // Use the projected max day
+            // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
+            const startIndex = extendedMinDay; // Use the new min day
+            const endIndex = extendedMaxDay; // Use the new max day
             const y1 = Math.pow(10, slope * Math.log10(startIndex) + medianIntercept);
             const y2 = Math.pow(10, slope * Math.log10(endIndex) + medianIntercept);
             const regressionLineData = [{ x: startIndex, y: y1 }, { x: endIndex, y: y2 }];
             // --- END REGRESSION LINE DATA ---
 
-            // --- CHART PRICE DATA (NOW DAY-BASED) ---
+            // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
             const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
             // --- END CHART PRICE DATA ---
             
             loader.style.display = 'none';
 
             // --- DEFINE THE X-AXIS TICK BUILDER ---
+            // This function doesn't need to change. It correctly uses the
+            // offset 'x' values from priceData and calculates ratios, so it
+            // will still work perfectly.
             const xAxisAfterBuildTicks = (axis) => {
                 const newTicks = [];
                 const axisMinDay = axis.min;
@@ -210,9 +228,9 @@
             
                 // Estimate the max year based on a linear interpolation of day_number vs. time
                 // This is an approximation but good for finding the end year.
-                const dayRange = lastDay.x - firstDay.x;
+                const dayRange = lastDay.x - firstDay.x; // e.g., (1000 + 100) - (1 + 100) = 999
                 const timeRange = lastDay.time - firstDay.time;
-                const dayRatio = (axisMaxDay - firstDay.x) / dayRange;
+                const dayRatio = (axisMaxDay - firstDay.x) / dayRange; // e.g., (1500 - 101) / 999 = 1.4
                 const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
                 
                 const minYear = new Date(firstDay.time).getFullYear();
@@ -279,7 +297,7 @@
                                     title: function(tooltipItems) {
                                         if (tooltipItems.length > 0) {
                                             const item = tooltipItems[0];
-                                            const dayNumber = item.parsed.x;
+                                            const dayNumber = item.parsed.x; // This is day + offset
                                             
                                             // For the price data, find the matching date
                                             if (item.dataset.label === 'TAO Price') {
@@ -294,7 +312,8 @@
                                                 }
                                             }
                                             // For the regression line or missing data, show the day number
-                                            return `Day ${dayNumber.toFixed(0)}`;
+                                            // (subtracting the offset for a human-readable day number)
+                                            return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
                                         }
                                         return '';
                                     },
@@ -310,7 +329,7 @@
                                 min: extendedMinDay, 
                                 max: extendedMaxDay, 
                                 // --- END MODIFICATION ---
-                                title: { display: true, text: 'Days Since Start (Log Scale)', color: '#9ca3af' }, 
+                                title: { display: true, text: `Days Since Start + ${DAY_OFFSET} (Log Scale)`, color: '#9ca3af' }, 
                                 ticks: { 
                                     color: '#9ca3af',
                                     autoSkip: false, 
