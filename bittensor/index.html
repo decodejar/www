@@ -69,7 +69,6 @@
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
-        // lastYear variable is no longer needed
         
         async function loadPriceData() {
             try {
@@ -206,10 +205,12 @@
                 for (let year = minYear; year <= maxYear; year++) {
                     // Find the first data point in this year
                     let firstDataPointTime = 0;
-                    for (const p of priceData) { // `priceData` is in scope
-                        if (new Date(p.time).getFullYear() === year) {
-                            firstDataPointTime = p.time;
-                            break; // Found the first one
+                    if (priceData && priceData.length > 0) {
+                        for (const p of priceData) { // `priceData` is in scope
+                            if (new Date(p.time).getFullYear() === year) {
+                                firstDataPointTime = p.time;
+                                break; // Found the first one
+                            }
                         }
                     }
 
@@ -230,7 +231,8 @@
                         });
                     }
                 }
-                axis.ticks = newTicks; // Set the new ticks
+                // Completely replace the old ticks with our new ones
+                axis.ticks = newTicks;
             };
             // --- END OF TICK BUILDER DEFINITION ---
 
@@ -281,13 +283,16 @@
                                 min: extendedMinTime, 
                                 max: extendedMaxTime, 
                                 title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
+                                // --- X-AXIS TICKS MODIFICATION ---
                                 ticks: { 
                                     color: '#9ca3af',
-                                    // The old callback is removed
+                                    // This callback returns null, hiding all default ticks.
+                                    // The afterBuildTicks function will add the *only* visible ticks.
+                                    callback: () => null, 
+                                    autoSkip: false, // Ensure we have full control
                                 }, 
-                                // --- NEW X-AXIS TICKS LOGIC ---
+                                // --- END MODIFICATION ---
                                 afterBuildTicks: xAxisAfterBuildTicks,
-                                // --- END NEW X-AXIS TICKS LOGIC ---
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
                             y: { 
@@ -306,7 +311,6 @@
                                     
                                     // Start from the power of 10 at or just below the axis min
                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; } // Safety for extreme negatives
                                     
                                     // We need to start from one tick *before* the min, just in case.
                                     tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
