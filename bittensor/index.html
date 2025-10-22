@@ -150,9 +150,16 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
+            // --- X-AXIS RANGE CALCULATION (NOW DAY-BASED) ---
+            const n = priceData.length;
             const timeDuration = maxTime - minTime;
-            const extendedMinTime = minTime; 
-            const extendedMaxTime = maxTime + (timeDuration * 0.4); 
+            const extendedMaxTime = maxTime + (timeDuration * 0.4); // 40% projection
+            // Find the ratio of projection
+            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration; // This is 1.4
+            
+            const extendedMinDay = 1; // Start from day 1
+            const extendedMaxDay = n * futureTimeIndexRatio; // Project day number by the same ratio
+            // --- END X-AXIS RANGE ---
 
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
@@ -176,63 +183,69 @@
                 The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
                 <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
-            const n = priceData.length;
-            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration;
+            // --- REGRESSION LINE DATA (NOW DAY-BASED) ---
             const startIndex = 1;
-            const endIndex = n * futureTimeIndexRatio;
-
-            // 4. Use the new medianIntercept to draw the line
+            const endIndex = extendedMaxDay; // Use the projected max day
             const y1 = Math.pow(10, slope * Math.log10(startIndex) + medianIntercept);
             const y2 = Math.pow(10, slope * Math.log10(endIndex) + medianIntercept);
-            
-            const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
-            const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
+            const regressionLineData = [{ x: startIndex, y: y1 }, { x: endIndex, y: y2 }];
+            // --- END REGRESSION LINE DATA ---
+
+            // --- CHART PRICE DATA (NOW DAY-BASED) ---
+            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
+            // --- END CHART PRICE DATA ---
             
             loader.style.display = 'none';
 
             // --- DEFINE THE X-AXIS TICK BUILDER ---
-            // This function will have access to the `priceData` variable from its parent scope
             const xAxisAfterBuildTicks = (axis) => {
                 const newTicks = [];
-                const axisMin = axis.min;
-                const axisMax = axis.max;
+                const axisMinDay = axis.min;
+                const axisMaxDay = axis.max;
+            
+                if (!priceData || priceData.length === 0) return;
+            
+                const firstDay = priceData[0];
+                const lastDay = priceData[priceData.length - 1];
+            
+                // Estimate the max year based on a linear interpolation of day_number vs. time
+                // This is an approximation but good for finding the end year.
+                const dayRange = lastDay.x - firstDay.x;
+                const timeRange = lastDay.time - firstDay.time;
+                const dayRatio = (axisMaxDay - firstDay.x) / dayRange;
+                const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
+                
+                const minYear = new Date(firstDay.time).getFullYear();
+                const maxYear = new Date(estimatedMaxTime).getFullYear();
 
-                // Determine the year range from the axis's min/max timestamps
-                const minYear = new Date(axisMin).getFullYear();
-                const maxYear = new Date(axisMax).getFullYear();
-
-                // Loop through every year in the chart's range
-                for (let year = minYear; year <= maxYear; year++) {
-                    // Find the first data point in this year
-                    let firstDataPointTime = 0;
-                    if (priceData && priceData.length > 0) {
-                        for (const p of priceData) { // `priceData` is in scope
-                            if (new Date(p.time).getFullYear() === year) {
-                                firstDataPointTime = p.time;
-                                break; // Found the first one
-                            }
+                let lastYearFound = minYear - 1; // Start one before
+            
+                // Find the first day_number for each year *in the data*
+                for (const p of priceData) {
+                    const year = new Date(p.time).getFullYear();
+                    if (year > lastYearFound) {
+                        if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                            newTicks.push({ value: p.x, label: year.toString() });
                         }
-                    }
-
-                    let tickValue = 0;
-                    if (firstDataPointTime) {
-                        // Use the first data point's timestamp for the tick
-                        tickValue = firstDataPointTime;
-                    } else {
-                        // If no data (e.g., future year), use Jan 1st
-                        tickValue = new Date(year, 0, 1).getTime();
-                    }
-
-                    // Only add the tick if it's within the visible axis range
-                    if (tickValue >= axisMin && tickValue <= axisMax) {
-                        newTicks.push({
-                            value: tickValue,
-                            label: year.toString()
-                        });
+                        lastYearFound = year;
                     }
                 }
-                // Completely replace the old ticks with our new ones
-                // by clearing the array first, then pushing.
+            
+                // Add ticks for future years (that are not in the data)
+                const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
+                if (dayRange > 0 && timeRange > 0) { // Avoid division by zero
+                    for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                        // Estimate the day_number for Jan 1st of this future year
+                        const yearStartTime = new Date(year, 0, 1).getTime();
+                        const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                        const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+            
+                        if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                            newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                        }
+                    }
+                }
+            
                 axis.ticks.length = 0;
                 axis.ticks.push(...newTicks);
             };
@@ -241,8 +254,8 @@
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = regressionLineData;
-                chart.options.scales.x.min = extendedMinTime;
-                chart.options.scales.x.max = extendedMaxTime;
+                chart.options.scales.x.min = extendedMinDay;
+                chart.options.scales.x.max = extendedMaxDay;
                 chart.options.scales.y.min = extendedMinPrice;
                 chart.options.scales.y.max = extendedMaxPrice;
                 // Re-assign the callback to ensure it closes over the *newest* priceData
@@ -261,41 +274,51 @@
                         plugins: { 
                             legend: { labels: { color: '#d1d5db' } }, 
                             tooltip: { 
+                                // --- TOOLTIP MODIFICATION ---
                                 callbacks: {
                                     title: function(tooltipItems) {
                                         if (tooltipItems.length > 0) {
                                             const item = tooltipItems[0];
-                                            const timestamp = item.parsed.x;
-                                            const date = new Date(timestamp);
-                                            return date.toLocaleDateString(undefined, { 
-                                                year: 'numeric', 
-                                                month: 'long', 
-                                                day: 'numeric' 
-                                            });
+                                            const dayNumber = item.parsed.x;
+                                            
+                                            // For the price data, find the matching date
+                                            if (item.dataset.label === 'TAO Price') {
+                                                const dataPoint = priceData.find(p => p.x === dayNumber);
+                                                if (dataPoint) {
+                                                    const date = new Date(dataPoint.time);
+                                                    return date.toLocaleDateString(undefined, { 
+                                                        year: 'numeric', 
+                                                        month: 'long', 
+                                                        day: 'numeric' 
+                                                    });
+                                                }
+                                            }
+                                            // For the regression line or missing data, show the day number
+                                            return `Day ${dayNumber.toFixed(0)}`;
                                         }
                                         return '';
                                     },
                                     label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
                                 } 
+                                // --- END TOOLTIP MODIFICATION ---
                             } 
                         },
                         scales: {
                             x: { 
                                 type: 'logarithmic', 
-                                min: extendedMinTime, 
-                                max: extendedMaxTime, 
-                                title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
-                                // --- X-AXIS TICKS MODIFICATION ---
+                                // --- X-AXIS MIN/MAX MODIFICATION ---
+                                min: extendedMinDay, 
+                                max: extendedMaxDay, 
+                                // --- END MODIFICATION ---
+                                title: { display: true, text: 'Days Since Start (Log Scale)', color: '#9ca3af' }, 
                                 ticks: { 
                                     color: '#9ca3af',
-                                    autoSkip: false, // Ensure we have full control
-                                    // This callback now reads the 'label' from the tick object
+                                    autoSkip: false, 
                                     callback: function(value, index, ticks) {
                                         const tick = ticks[index];
                                         return tick ? tick.label : null;
                                     }
                                 }, 
-                                // --- END MODIFICATION ---
                                 afterBuildTicks: xAxisAfterBuildTicks,
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
@@ -306,25 +329,21 @@
                                 title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
                                 ticks: {
                                     color: '#9ca3af',
-                                    // We need the same logic for the Y-axis!
                                     callback: function(value, index, ticks) {
                                         const tick = ticks[index];
                                         return tick ? tick.label : null;
                                     }
                                 },
-                                // --- Y-AXIS TICKS LOGIC UPDATED ---
                                 afterBuildTicks: (axis) => {
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
                                     
-                                    // We need to start from one tick *before* the min, just in case.
                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { tickValue = 0.000001; } // Handle log(0)
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; } // Handle very small numbers
+                                    if (tickValue === 0) { tickValue = 0.000001; } 
+                                    if (tickValue < 0.000001) { tickValue = 0.000001; } 
 
                                     while (tickValue <= axisMax) {
-                                        // Only add ticks that are actually within the axis range
                                         if (tickValue >= axisMin) {
                                             newTicks.push({
                                                 value: tickValue,
@@ -333,15 +352,12 @@
                                         }
                                         
                                         let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue) { // Safety break for float errors
-                                            break;
-                                        }
+                                        if (nextTick <= tickValue) { break; }
                                         tickValue = nextTick;
                                     }
                                     axis.ticks.length = 0;
                                     axis.ticks.push(...newTicks);
                                 },
-                                // --- END OF Y-AXIS TICKS LOGIC UPDATE ---
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             }
                         }
