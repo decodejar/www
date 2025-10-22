@@ -262,39 +262,58 @@
                                 ticks: {
                                     color: '#9ca3af',
                                 },
+                                // --- Y-AXIS TICKS LOGIC UPDATED ---
                                 afterBuildTicks: (axis) => {
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
-                                    let tickValue = 0.01; 
-                                    // Find the first tick value >= min
+                                    
+                                    // Start from the power of 10 just below the axis min to ensure all powers of 10 are considered
+                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
+                                    if (tickValue === 0) { // Avoid starting at 0 in a log scale
+                                        tickValue = 0.000001; // Or some other small number, adjust if needed
+                                    }
                                     while (tickValue < axisMin) {
                                         tickValue *= 10;
                                     }
-                                    // Start from one order of magnitude less if possible, to ensure bottom label
-                                    if (tickValue > 0.01 && tickValue / 10 >= axisMin) {
-                                        tickValue /= 10;
-                                    } else if (tickValue === 0.01 && axisMin <= 0.01) {
-                                        // special case for 0.01
-                                    } else {
-                                        // reset to first tick value >= min
-                                        tickValue = 0.01;
-                                        while (tickValue < axisMin) {
-                                            tickValue *= 10;
-                                        }
+                                    // At this point, tickValue is the first power of 10 >= axisMin
+                                    // Let's go back one step to include the tick just before, if it's needed
+                                    if (tickValue > Math.pow(10, Math.floor(Math.log10(axisMin)))) {
+                                         tickValue /= 10;
                                     }
+                                    // This logic is getting complex, let's simplify.
+                                    
+                                    // Reset to a simpler, more robust logic:
+                                    // Start from the power of 10 at or just below the axis min
+                                    tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
+                                    if (tickValue < 0.000001) { tickValue = 0.000001; } // Safety for extreme negatives
+                                    
+                                    // If axisMin is 12, floor(log10(12)) is 1, tickValue is 10.
+                                    // If axisMin is 7, floor(log10(7)) is 0, tickValue is 1.
+                                    
+                                    // We need to start from one tick *before* the min, just in case.
+                                    tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
+                                    if (tickValue === 0) { tickValue = 0.000001; } // Handle log(0)
+                                    if (tickValue < 0.000001) { tickValue = 0.000001; } // Handle very small numbers
 
                                     while (tickValue <= axisMax) {
+                                        // Only add ticks that are actually within the axis range
                                         if (tickValue >= axisMin) {
                                             newTicks.push({
                                                 value: tickValue,
                                                 label: `$${tickValue.toLocaleString()}`
                                             });
                                         }
-                                        tickValue *= 10;
+                                        
+                                        let nextTick = tickValue * 10;
+                                        if (nextTick <= tickValue) { // Safety break for float errors
+                                            break;
+                                        }
+                                        tickValue = nextTick;
                                     }
                                     axis.ticks = newTicks;
                                 },
+                                // --- END OF Y-AXIS TICKS LOGIC UPDATE ---
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             }
                         }
@@ -324,3 +343,4 @@
     
 </body>
 </html>
+
