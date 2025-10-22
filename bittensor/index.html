@@ -193,9 +193,8 @@
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
             
             modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
-                The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
-                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}<br>
-                <span class="text-xs text-gray-400">Model: Price ≈ C * (Day + ${DAY_OFFSET})<sup>α</sup></span>`;
+                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
+                <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
             const startIndex = extendedMinDay; // Use the new min day
@@ -281,7 +280,7 @@
                               backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill
                               borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
                               pointRadius: 1, pointHoverRadius: 5, tension: 0.1, fill: true },
-                            { type: 'line', label: 'Power Law Fit (50th Percentile)', data: regressionLineData, 
+                            { type: 'line', label: 'Power Law', data: regressionLineData, 
                               borderColor: '#ff6d00', // Orange line
                               borderWidth: 2, pointRadius: 0, fill: false }
                         ]
