@@ -154,13 +154,15 @@
 
             const timeDuration = maxTime - minTime;
             const extendedMinTime = minTime; 
-            const extendedMaxTime = maxTime + (timeDuration * 0.33); 
+            // --- PADDING MODIFICATION (X-AXIS) ---
+            const extendedMaxTime = maxTime + (timeDuration * 0.4); // Changed from 0.33 to 0.4
 
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const logPriceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
+            // --- PADDING MODIFICATION (Y-AXIS) ---
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; // Changed from 0.33 to 0.1
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; // Changed from 0.33 to 0.4 and 1.1 to 1.4
 
             // --- MODIFICATION START ---
             // 1. Calculate the mean regression first to get the slope
