@@ -41,7 +41,7 @@
         <!-- Controls -->
         <div class="bg-gray-900/50 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4">
              <div id="statusDiv" class="text-sm text-gray-400 flex items-center">
-                <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
+                 <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
             </div>
         </div>
         
@@ -79,8 +79,8 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                    throw new Error("Invalid data format in JSON file");
-                }
+                     throw new Error("Invalid data format in JSON file");
+                 }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1, y: p[1] })).filter(p => p.y > 0);
             } catch (error) {
@@ -104,6 +104,31 @@
             const slope = (n * sumXY - sumX * sumY) / denominator;
             const intercept = (sumY - slope * sumX) / n;
             return { slope, intercept };
+        }
+
+        // --- NEW FUNCTION ---
+        // Calculates the median of the residuals (logY - predictedLogY)
+        function calculateMedianResidual(data, slope, intercept) {
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            if (validData.length === 0) return 0;
+
+            const residuals = validData.map(p => {
+                const logX = Math.log10(p.x);
+                const logY = Math.log10(p.y);
+                const predictedLogY = slope * logX + intercept;
+                return logY - predictedLogY;
+            });
+
+            residuals.sort((a, b) => a - b);
+
+            const mid = Math.floor(residuals.length / 2);
+            if (residuals.length % 2 !== 0) {
+                // Odd number of elements
+                return residuals[mid];
+            } else {
+                // Even number of elements
+                return (residuals[mid - 1] + residuals[mid]) / 2;
+            }
         }
 
         async function createOrUpdateChart() {
@@ -137,19 +162,32 @@
             const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.33) : minPrice * 0.9;
             const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.33) : maxPrice * 1.1;
 
-            const { slope, intercept } = linearRegression(priceData);
-            const rSquared = calculateRSquared(priceData, slope, intercept);
+            // --- MODIFICATION START ---
+            // 1. Calculate the mean regression first to get the slope
+            const { slope, intercept: meanIntercept } = linearRegression(priceData);
+            
+            // 2. Calculate the median of the residuals from the mean regression
+            const medianResidual = calculateMedianResidual(priceData, slope, meanIntercept);
+            
+            // 3. Create the new 50th percentile (median) intercept by shifting the mean intercept
+            const medianIntercept = meanIntercept + medianResidual;
+            
+            // R-squared is still calculated based on the original mean regression line's fit
+            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
+            
             modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
-                   The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
-                   <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+                The power law model suggests price ≈ C * (time)<sup>α</sup>. On a log-log plot, this is a straight line.<br>
+                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)} | <strong>Goodness of Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             const n = priceData.length;
             const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration;
             const startIndex = 1;
             const endIndex = n * futureTimeIndexRatio;
 
-            const y1 = Math.pow(10, slope * Math.log10(startIndex) + intercept);
-            const y2 = Math.pow(10, slope * Math.log10(endIndex) + intercept);
+            // 4. Use the new medianIntercept to draw the line
+            const y1 = Math.pow(10, slope * Math.log10(startIndex) + medianIntercept);
+            const y2 = Math.pow(10, slope * Math.log10(endIndex) + medianIntercept);
+            // --- MODIFICATION END ---
             
             const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
@@ -170,23 +208,20 @@
                     data: {
                         datasets: [
                             { type: 'line', label: 'TAO Price', data: chartPriceData, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderColor: 'rgba(79, 70, 229, 0.8)', pointRadius: 1, pointHoverRadius: 5, tension: 0.1, fill: true },
-                            { type: 'line', label: 'Power Law Fit', data: regressionLineData, borderColor: '#f43f5e', borderWidth: 2, pointRadius: 0, fill: false }
+                            { type: 'line', label: 'Power Law Fit (50th Percentile)', data: regressionLineData, borderColor: '#f43f5e', borderWidth: 2, pointRadius: 0, fill: false }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        // --- START OF TOOLTIP MODIFICATION ---
                         plugins: { 
                             legend: { labels: { color: '#d1d5db' } }, 
                             tooltip: { 
                                 callbacks: {
-                                    // This function sets the title of the tooltip (the top line)
                                     title: function(tooltipItems) {
                                         if (tooltipItems.length > 0) {
                                             const item = tooltipItems[0];
                                             const timestamp = item.parsed.x;
                                             const date = new Date(timestamp);
-                                            // Format the date into a readable string like "October 21, 2025"
                                             return date.toLocaleDateString(undefined, { 
                                                 year: 'numeric', 
                                                 month: 'long', 
@@ -195,12 +230,10 @@
                                         }
                                         return '';
                                     },
-                                    // This function sets the body of the tooltip
                                     label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
                                 } 
                             } 
                         },
-                        // --- END OF TOOLTIP MODIFICATION ---
                         scales: {
                             x: { 
                                 type: 'logarithmic', 
@@ -233,7 +266,24 @@
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
-                                    let tickValue = 0.1; 
+                                    let tickValue = 0.01; 
+                                    // Find the first tick value >= min
+                                    while (tickValue < axisMin) {
+                                        tickValue *= 10;
+                                    }
+                                    // Start from one order of magnitude less if possible, to ensure bottom label
+                                    if (tickValue > 0.01 && tickValue / 10 >= axisMin) {
+                                        tickValue /= 10;
+                                    } else if (tickValue === 0.01 && axisMin <= 0.01) {
+                                        // special case for 0.01
+                                    } else {
+                                        // reset to first tick value >= min
+                                        tickValue = 0.01;
+                                        while (tickValue < axisMin) {
+                                            tickValue *= 10;
+                                        }
+                                    }
+
                                     while (tickValue <= axisMax) {
                                         if (tickValue >= axisMin) {
                                             newTicks.push({
