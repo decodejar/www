@@ -14,7 +14,7 @@
         body { font-family: 'Inter', sans-serif; }
         .loader {
             border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #f97316; /* Orange */
+            border-left-color: #ff6d00; /* Orange */
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -278,11 +278,11 @@
                     data: {
                         datasets: [
                             { type: 'line', label: 'TAO Price', data: chartPriceData, 
-                              backgroundColor: 'rgba(30, 64, 175, 0.1)', // Dark Blue fill
-                              borderColor: 'rgba(30, 64, 175, 0.8)', // Dark Blue line
+                              backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill
+                              borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
                               pointRadius: 1, pointHoverRadius: 5, tension: 0.1, fill: true },
                             { type: 'line', label: 'Power Law Fit (50th Percentile)', data: regressionLineData, 
-                              borderColor: '#f97316', // Orange line
+                              borderColor: '#ff6d00', // Orange line
                               borderWidth: 2, pointRadius: 0, fill: false }
                         ]
                     },
