@@ -231,12 +231,10 @@
                         });
                     }
                 }
-                // --- MODIFICATION ---
                 // Completely replace the old ticks with our new ones
                 // by clearing the array first, then pushing.
                 axis.ticks.length = 0;
                 axis.ticks.push(...newTicks);
-                // --- END MODIFICATION ---
             };
             // --- END OF TICK BUILDER DEFINITION ---
 
@@ -290,10 +288,12 @@
                                 // --- X-AXIS TICKS MODIFICATION ---
                                 ticks: { 
                                     color: '#9ca3af',
-                                    // The problematic callback: () => null has been removed.
-                                    // Chart.js will now use the .label property from the tick objects
-                                    // we generate in afterBuildTicks.
                                     autoSkip: false, // Ensure we have full control
+                                    // This callback now reads the 'label' from the tick object
+                                    callback: function(value, index, ticks) {
+                                        const tick = ticks[index];
+                                        return tick ? tick.label : null;
+                                    }
                                 }, 
                                 // --- END MODIFICATION ---
                                 afterBuildTicks: xAxisAfterBuildTicks,
@@ -306,6 +306,11 @@
                                 title: { display: true, text: 'Price in USD (Log Scale)', color: '#9ca3af' }, 
                                 ticks: {
                                     color: '#9ca3af',
+                                    // We need the same logic for the Y-axis!
+                                    callback: function(value, index, ticks) {
+                                        const tick = ticks[index];
+                                        return tick ? tick.label : null;
+                                    }
                                 },
                                 // --- Y-AXIS TICKS LOGIC UPDATED ---
                                 afterBuildTicks: (axis) => {
