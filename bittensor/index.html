@@ -69,7 +69,7 @@
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
         let chart;
-        let lastYear = 0;
+        // lastYear variable is no longer needed
         
         async function loadPriceData() {
             try {
@@ -106,7 +106,6 @@
             return { slope, intercept };
         }
 
-        // --- NEW FUNCTION ---
         // Calculates the median of the residuals (logY - predictedLogY)
         function calculateMedianResidual(data, slope, intercept) {
             const validData = data.filter(p => p.y > 0 && p.x > 0);
@@ -154,17 +153,14 @@
 
             const timeDuration = maxTime - minTime;
             const extendedMinTime = minTime; 
-            // --- PADDING MODIFICATION (X-AXIS) ---
-            const extendedMaxTime = maxTime + (timeDuration * 0.4); // Changed from 0.33 to 0.4
+            const extendedMaxTime = maxTime + (timeDuration * 0.4); 
 
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const logPriceRange = logMaxPrice - logMinPrice;
-            // --- PADDING MODIFICATION (Y-AXIS) ---
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; // Changed from 0.33 to 0.1
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; // Changed from 0.33 to 0.4 and 1.1 to 1.4
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; 
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; 
 
-            // --- MODIFICATION START ---
             // 1. Calculate the mean regression first to get the slope
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
             
@@ -189,13 +185,54 @@
             // 4. Use the new medianIntercept to draw the line
             const y1 = Math.pow(10, slope * Math.log10(startIndex) + medianIntercept);
             const y2 = Math.pow(10, slope * Math.log10(endIndex) + medianIntercept);
-            // --- MODIFICATION END ---
             
             const regressionLineData = [{ x: extendedMinTime, y: y1 }, { x: extendedMaxTime, y: y2 }];
             const chartPriceData = priceData.map(p => ({ x: p.time, y: p.y }));
             
             loader.style.display = 'none';
-            lastYear = 0;
+
+            // --- DEFINE THE X-AXIS TICK BUILDER ---
+            // This function will have access to the `priceData` variable from its parent scope
+            const xAxisAfterBuildTicks = (axis) => {
+                const newTicks = [];
+                const axisMin = axis.min;
+                const axisMax = axis.max;
+
+                // Determine the year range from the axis's min/max timestamps
+                const minYear = new Date(axisMin).getFullYear();
+                const maxYear = new Date(axisMax).getFullYear();
+
+                // Loop through every year in the chart's range
+                for (let year = minYear; year <= maxYear; year++) {
+                    // Find the first data point in this year
+                    let firstDataPointTime = 0;
+                    for (const p of priceData) { // `priceData` is in scope
+                        if (new Date(p.time).getFullYear() === year) {
+                            firstDataPointTime = p.time;
+                            break; // Found the first one
+                        }
+                    }
+
+                    let tickValue = 0;
+                    if (firstDataPointTime) {
+                        // Use the first data point's timestamp for the tick
+                        tickValue = firstDataPointTime;
+                    } else {
+                        // If no data (e.g., future year), use Jan 1st
+                        tickValue = new Date(year, 0, 1).getTime();
+                    }
+
+                    // Only add the tick if it's within the visible axis range
+                    if (tickValue >= axisMin && tickValue <= axisMax) {
+                        newTicks.push({
+                            value: tickValue,
+                            label: year.toString()
+                        });
+                    }
+                }
+                axis.ticks = newTicks; // Set the new ticks
+            };
+            // --- END OF TICK BUILDER DEFINITION ---
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
@@ -204,6 +241,8 @@
                 chart.options.scales.x.max = extendedMaxTime;
                 chart.options.scales.y.min = extendedMinPrice;
                 chart.options.scales.y.max = extendedMaxPrice;
+                // Re-assign the callback to ensure it closes over the *newest* priceData
+                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
                 chart.update();
             } else {
                 chart = new Chart(ctx, {
@@ -243,17 +282,12 @@
                                 max: extendedMaxTime, 
                                 title: { display: true, text: 'Time (Log Scale)', color: '#9ca3af' }, 
                                 ticks: { 
-                                    color: '#9ca3af', 
-                                    callback: function(value, index, ticks) {
-                                        const date = new Date(value);
-                                        const year = date.getFullYear();
-                                        if (year !== lastYear) {
-                                            lastYear = year;
-                                            return year;
-                                        }
-                                        return null;
-                                    }
+                                    color: '#9ca3af',
+                                    // The old callback is removed
                                 }, 
+                                // --- NEW X-AXIS TICKS LOGIC ---
+                                afterBuildTicks: xAxisAfterBuildTicks,
+                                // --- END NEW X-AXIS TICKS LOGIC ---
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
                             },
                             y: { 
@@ -270,28 +304,9 @@
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
                                     
-                                    // Start from the power of 10 just below the axis min to ensure all powers of 10 are considered
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { // Avoid starting at 0 in a log scale
-                                        tickValue = 0.000001; // Or some other small number, adjust if needed
-                                    }
-                                    while (tickValue < axisMin) {
-                                        tickValue *= 10;
-                                    }
-                                    // At this point, tickValue is the first power of 10 >= axisMin
-                                    // Let's go back one step to include the tick just before, if it's needed
-                                    if (tickValue > Math.pow(10, Math.floor(Math.log10(axisMin)))) {
-                                         tickValue /= 10;
-                                    }
-                                    // This logic is getting complex, let's simplify.
-                                    
-                                    // Reset to a simpler, more robust logic:
                                     // Start from the power of 10 at or just below the axis min
-                                    tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
+                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
                                     if (tickValue < 0.000001) { tickValue = 0.000001; } // Safety for extreme negatives
-                                    
-                                    // If axisMin is 12, floor(log10(12)) is 1, tickValue is 10.
-                                    // If axisMin is 7, floor(log10(7)) is 0, tickValue is 1.
                                     
                                     // We need to start from one tick *before* the min, just in case.
                                     tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
