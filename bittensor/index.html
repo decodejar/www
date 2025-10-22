@@ -38,12 +38,7 @@
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Bittensor Power Law</h1>
         </header>
 
-        <!-- Controls -->
-        <div class="bg-gray-50 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4">
-             <div id="statusDiv" class="text-sm text-gray-600 flex items-center">
-                 <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
-            </div>
-        </div>
+        <!-- Controls div removed from here -->
         
         <!-- Chart Container -->
         <div class="bg-white p-4 rounded-lg relative mt-4">
@@ -53,6 +48,14 @@
             <div class="relative h-[24rem] sm:h-[30rem] md:h-[40rem]">
                 <canvas id="powerLawChart"></canvas>
             </div>
+
+            <!-- Controls (Moved from above) -->
+            <div class="bg-gray-50 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4 mt-4">
+                <div id="statusDiv" class="text-sm text-gray-600 flex items-center">
+                    <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
+                </div>
+            </div>
+            
             <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
         </div>
 
@@ -397,4 +400,5 @@
     
 </body>
 </html>
+
 
