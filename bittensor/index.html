@@ -192,8 +192,7 @@
             // R-squared is still calculated based on the original mean regression line's fit
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
             
-            modelInfoDiv.innerHTML = `<strong>Data Source:</strong> Auto-Refreshed Daily<br>
-                <strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
+            modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
                 <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
