@@ -231,8 +231,12 @@
                         });
                     }
                 }
+                // --- MODIFICATION ---
                 // Completely replace the old ticks with our new ones
-                axis.ticks = newTicks;
+                // by clearing the array first, then pushing.
+                axis.ticks.length = 0;
+                axis.ticks.push(...newTicks);
+                // --- END MODIFICATION ---
             };
             // --- END OF TICK BUILDER DEFINITION ---
 
@@ -286,9 +290,9 @@
                                 // --- X-AXIS TICKS MODIFICATION ---
                                 ticks: { 
                                     color: '#9ca3af',
-                                    // This callback returns null, hiding all default ticks.
-                                    // The afterBuildTicks function will add the *only* visible ticks.
-                                    callback: () => null, 
+                                    // The problematic callback: () => null has been removed.
+                                    // Chart.js will now use the .label property from the tick objects
+                                    // we generate in afterBuildTicks.
                                     autoSkip: false, // Ensure we have full control
                                 }, 
                                 // --- END MODIFICATION ---
@@ -309,11 +313,8 @@
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
                                     
-                                    // Start from the power of 10 at or just below the axis min
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
-                                    
                                     // We need to start from one tick *before* the min, just in case.
-                                    tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
+                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
                                     if (tickValue === 0) { tickValue = 0.000001; } // Handle log(0)
                                     if (tickValue < 0.000001) { tickValue = 0.000001; } // Handle very small numbers
 
@@ -332,7 +333,8 @@
                                         }
                                         tickValue = nextTick;
                                     }
-                                    axis.ticks = newTicks;
+                                    axis.ticks.length = 0;
+                                    axis.ticks.push(...newTicks);
                                 },
                                 // --- END OF Y-AXIS TICKS LOGIC UPDATE ---
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' } 
