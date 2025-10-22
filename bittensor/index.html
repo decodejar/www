@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bittensor Power Law</title>
+    <title>Bittensor Power Law Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -282,7 +282,7 @@
                               backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill
                               borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
                               pointRadius: 1, pointHoverRadius: 5, tension: 0.1, fill: true },
-                            { type: 'line', label: 'Power Law', data: regressionLineData, 
+                            { type: 'line', label: 'Linear Regression', data: regressionLineData, 
                               borderColor: '#ff6d00', // Orange line
                               borderWidth: 2, pointRadius: 0, fill: false }
                         ]
@@ -322,7 +322,7 @@
                                 type: 'logarithmic', 
                                 min: extendedMinDay, 
                                 max: extendedMaxDay, 
-                                title: { display: true, text: `Days Since Start + ${DAY_OFFSET} (Log Scale)`, color: '#4b5563' }, // Gray text
+                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' }, // Gray text
                                 ticks: { 
                                     color: '#4b5563', // Gray text
                                     autoSkip: false, 
@@ -338,7 +338,7 @@
                                 type: 'logarithmic', 
                                 min: extendedMinPrice, 
                                 max: extendedMaxPrice, 
-                                title: { display: true, text: 'Price in USD (Log Scale)', color: '#4b5563' }, // Gray text
+                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' }, // Gray text
                                 ticks: {
                                     color: '#4b5563', // Gray text
                                     callback: function(value, index, ticks) {
