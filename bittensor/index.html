@@ -274,6 +274,7 @@
             const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; 
 
             // 1. Calculate the mean regression first to get the slope
+            //    This 'meanIntercept' is for the standard (mean) regression.
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
             
             // 2. Calculate all residuals from the mean regression line
@@ -285,6 +286,7 @@
             const p99Residual = getPercentile(sortedResiduals, 99);
             
             // 4. Calculate intercepts for each percentile line by shifting the mean intercept
+            //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
@@ -304,6 +306,8 @@
                 { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
             ]);
 
+            // *** ADDED: Calculate data for both mean and median lines ***
+            const meanLineData = calculateLinePoints(meanIntercept);
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
@@ -374,6 +378,11 @@
                 // Update 1st and 99th percentile lines
                 chart.data.datasets[2].data = p1LineData;
                 chart.data.datasets[3].data = p99LineData;
+                // *** ADDED: Update mean line data ***
+                chart.data.datasets[4].data = meanLineData;
+
+                // *** ADDED: Update label for 50th percentile line ***
+                chart.data.datasets[1].label = '50th Percentile Regression';
 
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
@@ -400,7 +409,8 @@
                             },
                             { 
                                 type: 'line', 
-                                label: '50th Percentile Log-Log Regression', 
+                                // *** CHANGED: Renamed label ***
+                                label: '50th Percentile Regression', 
                                 data: medianLineData, 
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2, 
@@ -431,6 +441,18 @@
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line' // Use a line in the legend
+                            },
+                            // *** ADDED: New Mean Regression Line ***
+                            {
+                                type: 'line',
+                                label: 'Mean Regression',
+                                data: meanLineData,
+                                borderColor: 'rgba(22, 163, 74, 1)', // Green
+                                borderWidth: 2,
+                                borderDash: [10, 5], // Different dash style
+                                pointRadius: 0,
+                                fill: false,
+                                pointStyle: 'line'
                             }
                         ]
                     },
@@ -620,5 +642,4 @@
     
 </body>
 </html>
-
 
