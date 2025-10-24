@@ -1,140 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bittensor Power Law Model</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #ff6d00; /* Orange */
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-    /* When body has a child in fullscreen, stop centering it */
-        body:has(#mainContainer:fullscreen) {
-            display: block; /* Override body's flex and items-center */
-        }
-
-        /* When the main container goes fullscreen... */
-        #mainContainer:fullscreen {
-            width: 100vw;
-            height: 100vh;
-            max-width: none !important; /* Override max-w-6xl */
-            border-radius: 0 !important; /* Override rounded-2xl */
-            
-            /* Use flex to manage the inner layout */
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Make the chart's parent card grow to fill the space */
-        #mainContainer:fullscreen #chartCard {
-            flex-grow: 1; /* This card will expand */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Make the chart's wrapper (with the fixed height) grow */
-        #mainContainer:fullscreen #chartWrapper {
-            /* Override the h-[40rem] class and make it grow */
-            height: 100% !important; 
-            flex-grow: 1;
-        }
-        
-        /* Hide the footer when fullscreen */
-        body:has(#mainContainer:fullscreen) footer {
-            display: none;
-        }
-    </style>
-</head>
-<!-- 
-    FIX: Changed min-h-screen to h-screen.
-    This makes the body's height match the viewport exactly, 
-    allowing it to shrink and fixing the vertical scaling bug.
--->
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
-
-    <!-- 
-      This container has all scaling rules:
-      - flex-grow: Grow to fill the body
-      - max-w-[1600px]: Max width
-      - max-h-[900px]: Max height
-      - min-h-[30rem]: Min height
-    -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
-        <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
-            <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-            </svg>
-            <svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
-            </svg>
-        </button>
-        <header class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">Bittensor Power Law Model</h1>
-        </header>
-
-        <!-- *** MOVED STATUS BAR HERE *** -->
-        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
-             <div id="statusDiv" class="flex items-center">
-                 <span class="status-dot bg-yellow-500"></span>Loading latest data...
-             </div>
-             <div id="lastUpdateDiv" class="hidden sm:block"> 
-                 <!-- Placeholder for last update time -->
-             </div>
-              <div id="lastPriceDiv" class="hidden sm:block">
-                  <!-- Placeholder for last price -->
-             </div>
-        </div>
-
-        <!-- 
-          Chart Container
-          - flex-grow: Fills the main container
-          - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        -->
-        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
-            <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                <div class="loader"></div>
-            </div>
-            <!-- 
-              Chart Wrapper
-              - flex-grow: Fills the chart card
-              - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            -->
-            <div id="chartWrapper" class="relative flex-grow min-h-0">
-                <canvas id="powerLawChart"></canvas>
-            </div>
-
-            <!-- Controls (Moved to top) -->
-            
-            <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
-        </div>
-
-    </div>
-    
-    <footer class="text-center p-4 mt-4">
-        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
-    </footer>
-
-<script>
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
@@ -152,13 +15,14 @@
         
         async function loadPriceData() {
             try {
+                // Fetch the local JSON file. Added cache-busting query param.
                 const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load data file: ${response.statusText}`);
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                     throw new Error("Invalid data format in JSON file");
+                      throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -167,6 +31,9 @@
                 // --- END MODIFICATION ---
             } catch (error) {
                 console.error("Error loading price data:", error);
+                // Update status on error
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading price_data.json.`;
+                loader.style.display = 'none';
                 return null;
             }
         }
@@ -226,7 +93,7 @@
 
             if (!priceData || priceData.length === 0) {
                 statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
-                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
+                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in the same directory and contains valid data.</span>`;
                 loader.style.display = 'none';
                 return;
             }
@@ -395,7 +262,8 @@
                                 pointRadius: 0, 
                                 pointHoverRadius: 5, 
                                 tension: 0.1, 
-                                fill: false // *** MODIFICATION: Removed fill by setting to false ***
+                                fill: false, // *** MODIFICATION: Removed fill by setting to false ***
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             { 
                                 type: 'line', 
@@ -404,7 +272,8 @@
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2, 
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             // *** MODIFICATION: Added 1st Percentile line ***
                             { 
@@ -415,7 +284,8 @@
                                 borderWidth: 1, 
                                 borderDash: [5, 5], // Dashed line
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             // *** MODIFICATION: Added 99th Percentile line ***
                             { 
@@ -426,14 +296,20 @@
                                 borderWidth: 1, 
                                 borderDash: [5, 5], // Dashed line
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: { 
-                            legend: { labels: { color: '#374151' } }, // Dark gray text
+                            legend: { 
+                                labels: { 
+                                    color: '#374151',
+                                    usePointStyle: true // Use the pointStyle (which we set to 'line')
+                                } 
+                            }, // Dark gray text
                             tooltip: { 
                                 callbacks: {
                                     title: function(tooltipItems) {
@@ -453,11 +329,17 @@
                                                     });
                                                 }
                                             }
+                                            // For regression lines, show the day number (minus offset)
                                             return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
                                         }
                                         return '';
                                     },
-                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
+                                    label: (context) => {
+                                        if (context.parsed.y) {
+                                            return `Price: $${context.parsed.y.toFixed(2)}`
+                                        }
+                                        return '';
+                                    }
                                 } 
                             } 
                         },
@@ -470,12 +352,13 @@
                                 ticks: { 
                                     color: '#4b5563', // Gray text
                                     autoSkip: false, 
+                                    // The callback now just reads the label generated by afterBuildTicks
                                     callback: function(value, index, ticks) {
                                         const tick = ticks[index];
                                         return tick ? tick.label : null;
                                     }
                                 }, 
-                                afterBuildTicks: xAxisAfterBuildTicks,
+                                afterBuildTicks: xAxisAfterBuildTicks, // Custom tick builder
                                 grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
                             },
                             y: { 
@@ -492,14 +375,15 @@
                                     }
 
                                 },
+                                // Custom tick builder for powers of 10
                                 afterBuildTicks: (axis) => {
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
                                     
                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { tickValue = 0.000001; } 
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; } 
+                                    if (tickValue === 0) { tickValue = 0.000001; } // Handle log(0) issues
+                                    if (tickValue < 0.000001) { tickValue = 0.000001; } // Set a floor
 
                                     while (tickValue <= axisMax) {
                                         if (tickValue >= axisMin) {
@@ -585,7 +469,7 @@
                 // We are NOT in fullscreen mode
                 fsIconEnter.classList.remove('hidden');
                 fsIconExit.classList.add('hidden');
-               fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                 
                 // Force the chart to resize to its container
                 if (chart) {
@@ -604,8 +488,5 @@
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
         
-        // --- END OF ADDITIONS ---    
-    </script>
+        // --- END OF ADDITIONS ---      
     
-</body>
-</html>
