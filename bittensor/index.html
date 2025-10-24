@@ -94,7 +94,8 @@
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
-        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
+        <!-- *** MODIFIED: Added w-[80%] and mx-auto *** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 w-[80%] mx-auto">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
@@ -127,7 +128,8 @@
 
             <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
             <!-- This bar now holds the model info and status, styled like the top bar -->
-            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+            <!-- *** MODIFIED: Added w-[80%] and mx-auto *** -->
+            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600 w-[80%] mx-auto">
                 <!-- NEW: Split modelInfo into separate divs for single-row layout -->
                 <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
@@ -174,7 +176,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                       throw new Error("Invalid data format in JSON file");
+                        throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -647,7 +649,7 @@
                 // We are NOT in fullscreen mode
                 fsIconEnter.classList.remove('hidden');
                 fsIconExit.classList.add('hidden');
-               fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                 
                 // Force the chart to resize to its container
                 if (chart) {
@@ -671,4 +673,3 @@
     
 </body>
 </html>
-
