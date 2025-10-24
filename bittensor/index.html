@@ -304,7 +304,7 @@
             const modelFitGood = rSquared >= 0.9;
 
             // *** NEW: Update Power Law Status Div ***
-            powerLawStatusDiv.innerHTML = `<strong>Power Law:</strong> <span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>`;
+            powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span> Power Law`;
             powerLawStatusDiv.classList.remove('hidden');
 
             // *** UPDATED: Renamed "Calculated Power Law Exponent" to "Growth Exponent" ***
