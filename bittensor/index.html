@@ -69,8 +69,7 @@
     FIX: Changed min-h-screen to h-screen.
     This makes the body's height match the viewport exactly, 
     allowing it to shrink and fixing the vertical scaling bug.
--->
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
+--><body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
 
     <!-- 
       This container has all scaling rules:
@@ -78,8 +77,7 @@
       - max-w-[1600px]: Max width
       - max-h-[900px]: Max height
       - min-h-[30rem]: Min height
-    -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
+    --><div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -92,14 +90,11 @@
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Bittensor Power Law Model</h1>
         </header>
 
-        <!-- Controls div removed from here -->
-        
-        <!-- 
+        <!-- Controls div removed from here --><!-- 
           Chart Container
           - flex-grow: Fills the main container
           - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        -->
-        <div id="chartCard" class="bg-white p-4 rounded-lg relative mt-4 flex-grow flex flex-col min-h-0">
+        --><div id="chartCard" class="bg-white p-4 rounded-lg relative mt-4 flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -107,13 +102,11 @@
               Chart Wrapper
               - flex-grow: Fills the chart card
               - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            -->
-            <div id="chartWrapper" class="relative flex-grow min-h-0">
+            --><div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Controls (Moved from above) -->
-            <div class="bg-gray-100 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4 mt-4">
+            <!-- Controls (Moved from above) --><div class="bg-gray-100 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4 mt-4">
                 <div id="statusDiv" class="text-sm text-gray-600 flex items-center">
                     <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
                 </div>
@@ -181,27 +174,32 @@
             return { slope, intercept };
         }
 
-        // Calculates the median of the residuals (logY - predictedLogY)
-        function calculateMedianResidual(data, slope, intercept) {
+        // Calculates the residuals (logY - predictedLogY)
+        function calculateResiduals(data, slope, intercept) {
             const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length === 0) return 0;
+            if (validData.length === 0) return [];
 
-            const residuals = validData.map(p => {
+            return validData.map(p => {
                 const logX = Math.log10(p.x); // x already includes offset
                 const logY = Math.log10(p.y);
                 const predictedLogY = slope * logX + intercept;
                 return logY - predictedLogY;
-            });
+            }).sort((a, b) => a - b); // Sort residuals for percentile calculation
+        }
 
-            residuals.sort((a, b) => a - b);
-
-            const mid = Math.floor(residuals.length / 2);
-            if (residuals.length % 2 !== 0) {
-                // Odd number of elements
-                return residuals[mid];
+        // Calculates a specific percentile from a sorted list of residuals
+        function getPercentile(sortedResiduals, percentile) {
+            if (!sortedResiduals || sortedResiduals.length === 0) return 0;
+            const index = (percentile / 100) * (sortedResiduals.length - 1);
+            const lowerIndex = Math.floor(index);
+            const upperIndex = Math.ceil(index);
+            
+            if (lowerIndex === upperIndex) {
+                 return sortedResiduals[lowerIndex];
             } else {
-                // Even number of elements
-                return (residuals[mid - 1] + residuals[mid]) / 2;
+                 // Linear interpolation between the two closest indices
+                 const weight = index - lowerIndex;
+                 return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
             }
         }
 
@@ -249,11 +247,18 @@
             // 1. Calculate the mean regression first to get the slope
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
             
-            // 2. Calculate the median of the residuals from the mean regression
-            const medianResidual = calculateMedianResidual(priceData, slope, meanIntercept);
+            // 2. Calculate all residuals from the mean regression line
+            const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
+
+            // 3. Calculate 1st, 50th (median), and 99th percentile residuals
+            const medianResidual = getPercentile(sortedResiduals, 50);
+            const p1Residual = getPercentile(sortedResiduals, 1);
+            const p99Residual = getPercentile(sortedResiduals, 99);
             
-            // 3. Create the new 50th percentile (median) intercept by shifting the mean intercept
+            // 4. Calculate intercepts for each percentile line by shifting the mean intercept
             const medianIntercept = meanIntercept + medianResidual;
+            const p1Intercept = meanIntercept + p1Residual;
+            const p99Intercept = meanIntercept + p99Residual;
             
             // R-squared is still calculated based on the original mean regression line's fit
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
@@ -264,9 +269,15 @@
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
             const startIndex = extendedMinDay; // Use the new min day
             const endIndex = extendedMaxDay; // Use the new max day
-            const y1 = Math.pow(10, slope * Math.log10(startIndex) + medianIntercept);
-            const y2 = Math.pow(10, slope * Math.log10(endIndex) + medianIntercept);
-            const regressionLineData = [{ x: startIndex, y: y1 }, { x: endIndex, y: y2 }];
+            
+            const calculateLinePoints = (intercept) => ([
+                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
+                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
+            ]);
+
+            const medianLineData = calculateLinePoints(medianIntercept);
+            const p1LineData = calculateLinePoints(p1Intercept);
+            const p99LineData = calculateLinePoints(p99Intercept);
             // --- END REGRESSION LINE DATA ---
 
             // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
@@ -330,7 +341,11 @@
 
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
-                chart.data.datasets[1].data = regressionLineData;
+                chart.data.datasets[1].data = medianLineData;
+                // Update 1st and 99th percentile lines
+                chart.data.datasets[2].data = p1LineData;
+                chart.data.datasets[3].data = p99LineData;
+
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
                 chart.options.scales.y.min = extendedMinPrice;
@@ -341,13 +356,49 @@
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
-                            { type: 'line', label: 'TAO Price', data: chartPriceData, 
-                              backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill
-                              borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
-                              borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.1, fill: true },
-                            { type: 'line', label: '50th Percentile Log-Log Regression', data: regressionLineData, 
-                              borderColor: '#ff6d00', // Orange line
-                              borderWidth: 2, pointRadius: 0, fill: false }
+                            { 
+                                type: 'line', 
+                                label: 'TAO Price', 
+                                data: chartPriceData, 
+                                backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill (not used if fill:false)
+                                borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
+                                borderWidth: 2, 
+                                pointRadius: 0, 
+                                pointHoverRadius: 5, 
+                                tension: 0.1, 
+                                fill: false // *** MODIFICATION: Removed fill by setting to false ***
+                            },
+                            { 
+                                type: 'line', 
+                                label: '50th Percentile Log-Log Regression', 
+                                data: medianLineData, 
+                                borderColor: '#ff6d00', // Orange line
+                                borderWidth: 2, 
+                                pointRadius: 0, 
+                                fill: false 
+                            },
+                            // *** MODIFICATION: Added 1st Percentile line ***
+                            { 
+                                type: 'line', 
+                                label: '1st Percentile Regression', 
+                                data: p1LineData, 
+                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                                borderWidth: 1, 
+                                borderDash: [5, 5], // Dashed line
+                                pointRadius: 0, 
+                                fill: false 
+                            },
+                            // *** MODIFICATION: Added 99th Percentile line ***
+                            { 
+                                type: 'line', 
+                                label: '99th Percentile Regression', 
+                                data: p99LineData, 
+                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                                borderWidth: 1, 
+                                borderDash: [5, 5], // Dashed line
+                                pointRadius: 0, 
+                                fill: false 
+                            }
                         ]
                     },
                     options: {
@@ -361,7 +412,8 @@
                                             const item = tooltipItems[0];
                                             const dayNumber = item.parsed.x; // This is day + offset
                                             
-                                            if (item.dataset.label === 'TAO Price') {
+                                            // Only show date for the actual TAO Price dataset (index 0)
+                                            if (item.datasetIndex === 0) { 
                                                 const dataPoint = priceData.find(p => p.x === dayNumber);
                                                 if (dataPoint) {
                                                     const date = new Date(dataPoint.time);
@@ -406,7 +458,7 @@
                                     color: '#4b5563', // Gray text
                                     callback: function(value, index, ticks) {
                                         const tick = ticks[index];
-                                        return tick ? tick.label : null;
+                                        return tick ? `$${tick.value.toLocaleString()}` : null;
                                     }
 
                                 },
@@ -527,3 +579,4 @@
     
 </body>
 </html>
+
