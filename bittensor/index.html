@@ -69,7 +69,8 @@
     FIX: Changed min-h-screen to h-screen.
     This makes the body's height match the viewport exactly, 
     allowing it to shrink and fixing the vertical scaling bug.
---><body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
+-->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
 
     <!-- 
       This container has all scaling rules:
@@ -77,7 +78,8 @@
       - max-w-[1600px]: Max width
       - max-h-[900px]: Max height
       - min-h-[30rem]: Min height
-    --><div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
+    -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -90,21 +92,25 @@
             <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">Bittensor Power Law Model</h1>
         </header>
 
-        <!-- *** MOVED STATUS BAR HERE *** --><div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
+        <!-- *** MOVED STATUS BAR HERE *** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
              <div id="lastUpdateDiv" class="hidden sm:block"> 
-                 <!-- Placeholder for last update time --></div>
+                 <!-- Placeholder for last update time -->
+             </div>
               <div id="lastPriceDiv" class="hidden sm:block">
-                  <!-- Placeholder for last price --></div>
+                  <!-- Placeholder for last price -->
+             </div>
         </div>
 
         <!-- 
           Chart Container
           - flex-grow: Fills the main container
           - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        --><div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
+        -->
+        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -112,11 +118,14 @@
               Chart Wrapper
               - flex-grow: Fills the chart card
               - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            --><div id="chartWrapper" class="relative flex-grow min-h-0">
+            -->
+            <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Controls (Moved to top) --><div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
+            <!-- Controls (Moved to top) -->
+            
+            <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
         </div>
 
     </div>
@@ -389,37 +398,35 @@
                                 type: 'line', 
                                 label: '$TAO Price', 
                                 data: chartPriceData, 
-                                backgroundColor: 'rgba(24, 72, 204, 0.05)', // Dark Blue fill (not used if fill:false)
-                                borderColor: 'rgba(24, 72, 204, 1)', // Dark Blue line
+                                backgroundColor: 'rgba(24, 72, 204, 0.05)', 
+                                borderColor: 'rgba(24, 72, 204, 1)', 
                                 borderWidth: 2, 
                                 pointRadius: 0, 
                                 pointHoverRadius: 5, 
                                 tension: 0.1, 
-                                fill: false, // *** MODIFICATION: Removed fill by setting to false ***
-                                pointStyle: 'line' // Use a line in the legend
+                                fill: false,
+                                pointStyle: 'line' 
                             },
                             {
                                 type: 'line',
                                 label: 'Mean Regression',
                                 data: meanLineData,
-                                borderColor: 'rgba(107, 114, 128, 1)', // Medium Gray (tailwind gray-500 equivalent)
+                                borderColor: 'rgba(107, 114, 128, 1)', // Medium Gray
                                 borderWidth: 1,
                                 pointRadius: 0,
                                 fill: false,
                                 pointStyle: 'line'
-                            }
+                            },
                             { 
                                 type: 'line', 
-                                // *** CHANGED: Renamed label ***
                                 label: '50th Percentile Regression', 
                                 data: medianLineData, 
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' // Use a line in the legend
+                                pointStyle: 'line' 
                             },
-                            // *** MODIFICATION: Added 1st Percentile line ***
                             { 
                                 type: 'line', 
                                 label: '1st Percentile', 
@@ -428,9 +435,8 @@
                                 borderWidth: 1, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' // Use a line in the legend
+                                pointStyle: 'line' 
                             },
-                            // *** MODIFICATION: Added 99th Percentile line ***
                             { 
                                 type: 'line', 
                                 label: '99th Percentile', 
@@ -439,9 +445,8 @@
                                 borderWidth: 1, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' // Use a line in the legend
-                            },
-                            // *** ADDED: New Mean Regression Line ***
+                                pointStyle: 'line' 
+                            }
                         ]
                     },
                     options: {
@@ -630,4 +635,3 @@
     
 </body>
 </html>
-
