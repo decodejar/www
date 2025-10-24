@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decode Bittensor Price Model</title>
+    <title>Bittensor Log-Log Regression Model</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -89,7 +89,7 @@
             </svg>
         </button>
         <header class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">Decode Bittensor Price Model</h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">Bittensor Log-Log Regression Model</h1>
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
@@ -304,15 +304,13 @@
             const modelFitGood = rSquared >= 0.9;
 
             // *** NEW: Update Power Law Status Div ***
-            powerLawStatusDiv.innerHTML = `<strong>Power Law Fit:</strong> <span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>${rSquared.toFixed(4)}`;
+            powerLawStatusDiv.innerHTML = `<strong>Power Law:</strong> <span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>`;
             powerLawStatusDiv.classList.remove('hidden');
 
             // *** UPDATED: Conditionally show Exponent based on model fit ***
-            if (modelFitGood) {
-                modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}`;
-            } else {
-                modelInfoDiv.innerHTML = `<span class="text-gray-500">Model fit (R² < 0.9) too low to display power law.</span>`;
-            }
+            // *** REVERTED: Show both Model Fit and Exponent regardless of fit ***
+            modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
+                  <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
@@ -663,4 +661,5 @@
     
 </body>
 </html>
+
 
