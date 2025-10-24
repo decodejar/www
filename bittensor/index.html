@@ -302,18 +302,14 @@
             // 3. Calculate 1st, 50th (median), and 99th percentile residuals
             const medianResidual = getPercentile(sortedResiduals, 50);
             const p1Residual = getPercentile(sortedResiduals, 1);
-            // *** NEW ***
-            const p20Residual = getPercentile(sortedResiduals, 20);
-            const p80Residual = getPercentile(sortedResiduals, 80); // <-- ADDED 80th
+            // *** REMOVED: p20Residual and p80Residual ***
             const p99Residual = getPercentile(sortedResiduals, 99);
             
             // 4. Calculate intercepts for each percentile line by shifting the mean intercept
             //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
-            // *** NEW ***
-            const p20Intercept = meanIntercept + p20Residual;
-            const p80Intercept = meanIntercept + p80Residual; // <-- ADDED 80th
+            // *** REMOVED: p20Intercept and p80Intercept ***
             const p99Intercept = meanIntercept + p99Residual;
             
             // R-squared is still calculated based on the original mean regression line's fit
@@ -346,9 +342,7 @@
             // *** UPDATED: Calculate median and percentile lines ***
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
-            // *** NEW ***
-            const p20LineData = calculateLinePoints(p20Intercept);
-            const p80LineData = calculateLinePoints(p80Intercept); // <-- ADDED 80th
+            // *** REMOVED: p20LineData and p80LineData ***
             const p99LineData = calculateLinePoints(p99Intercept);
             // --- END REGRESSION LINE DATA ---
 
@@ -422,51 +416,13 @@
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
 
-                // *** NEW: Add/Update 20th Percentile ***
-                const p20Dataset = { 
-                    type: 'line', 
-                    label: '20th Percentile', 
-                    data: p20LineData, 
-                    borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
-                    borderWidth: 1, 
-                    borderDash: [5, 5], // Dashed
-                    pointRadius: 0, 
-                    fill: false,
-                    pointStyle: 'line'
-                };
-                
-                if (chart.data.datasets.length < 5) {
-                    // Add the new dataset at the correct position
-                    chart.data.datasets.splice(3, 0, p20Dataset);
-                } else {
-                    // Update the existing dataset
-                    chart.data.datasets[3] = p20Dataset;
+                // *** REMOVED: 20th and 80th percentile logic ***
+                if (chart.data.datasets.length > 4) {
+                    chart.data.datasets.splice(3, 2); // Remove old 20th and 80th
                 }
-                // *** END NEW ***
+                // *** END REMOVED ***
 
-                // *** NEW: Add/Update 80th Percentile ***
-                const p80Dataset = { 
-                    type: 'line', 
-                    label: '80th Percentile', 
-                    data: p80LineData, 
-                    borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
-                    borderWidth: 1, 
-                    borderDash: [5, 5], // Dashed
-                    pointRadius: 0, 
-                    fill: false,
-                    pointStyle: 'line'
-                };
-                
-                if (chart.data.datasets.length < 6) { // Check if 80th is missing
-                    // Add the new dataset at the correct position
-                    chart.data.datasets.splice(4, 0, p80Dataset);
-                } else {
-                    // Update the existing dataset
-                    chart.data.datasets[4] = p80Dataset;
-                }
-                // *** END NEW ***
-
-                chart.data.datasets[5].data = p99LineData;     // 99th Percentile (now at index 5)
+                chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
 
 
                 // *** FIX: Update correct label ***
@@ -529,33 +485,8 @@
                                 pointStyle: 'line'
                                 // hidden: !showLines // *** REVERTED ***
                             },
-                            // *** NEW 20th PERCENTILE DATASET ***
-                            { 
-                                type: 'line', 
-                                label: '20th Percentile', 
-                                data: p20LineData, 
-                                borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
-                                borderWidth: 1, 
-                                borderDash: [5, 5], // Dashed
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line'
-                                // hidden: !showLines // *** REVERTED ***
-                            },
-                            // *** NEW 80th PERCENTILE DATASET ***
-                            { 
-                                type: 'line', 
-                                label: '80th Percentile', 
-                                data: p80LineData, 
-                                borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
-                                borderWidth: 1, 
-                                borderDash: [5, 5], // Dashed
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line'
-                                // hidden: !showLines // *** REVERTED ***
-                            },
-                            // *** END NEW DATASET ***
+                            // *** REMOVED: 20th PERCENTILE DATASET ***
+                            // *** REMOVED: 80th PERCENTILE DATASET ***
                             { 
                                 type: 'line', 
                                 label: '99th Percentile', 
