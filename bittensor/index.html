@@ -69,7 +69,8 @@
     FIX: Changed min-h-screen to h-screen.
     This makes the body's height match the viewport exactly, 
     allowing it to shrink and fixing the vertical scaling bug.
---><body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
+-->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
 
     <!-- 
         This container has all scaling rules:
@@ -77,7 +78,8 @@
         - max-w-[1600px]: Max width
         - max-h-[900px]: Max height
         - min-h-[30rem]: Min height
-    --><div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
+    -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -91,26 +93,32 @@
             <p class="text-gray-600 mt-1">Modelling Bittensor in Log-Log Regression</p>
         </header>
 
-        <!-- *** MOVED STATUS BAR HERE *** --><!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** --><div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
+        <!-- *** MOVED STATUS BAR HERE *** -->
+        <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
              <div id="lastUpdateDiv" class="hidden sm:block"> 
-                 <!-- Placeholder for last update time --></div>
+                 <!-- Placeholder for last update time -->
+             </div>
               <div id="lastPriceDiv" class="hidden sm:block">
-                 <!-- Placeholder for last price --></div>
+                 <!-- Placeholder for last price -->
+             </div>
              <!-- *** NEW Price Zone Div *** -->
              <div id="priceZoneDiv" class="flex items-center hidden sm:block">
                 <!-- Content injected by JS -->
              </div>
              <!-- *** END NEW Div *** -->
-             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** --></div>
+             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
+        </div>
 
         <!-- 
             Chart Container
             - flex-grow: Fills the main container
             - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        --><div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
+        -->
+        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -118,17 +126,25 @@
                 Chart Wrapper
                 - flex-grow: Fills the chart card
                 - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            --><div id="chartWrapper" class="relative flex-grow min-h-0">
+            -->
+            <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- *** CONSOLIDATED MODEL INFO BAR *** --><!-- This bar now holds the model info and status, styled like the top bar --><!-- *** MODIFIED: Removed explicit width class*** --><div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
-                <!-- NEW: Split modelInfo into separate divs for single-row layout --><div id="growthExponentDiv"></div>
+            <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
+            <!-- This bar now holds the model info and status, styled like the top bar -->
+            <!-- *** MODIFIED: Removed explicit width class*** -->
+            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+                <!-- NEW: Split modelInfo into separate divs for single-row layout -->
+                <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
 
-                <!-- powerLawStatusDiv: content injected by JS --><!-- Added flex items-center to align the status dot --><div id="powerLawStatusDiv" class="flex items-center"></div>
+                <!-- powerLawStatusDiv: content injected by JS -->
+                <!-- Added flex items-center to align the status dot -->
+                <div id="powerLawStatusDiv" class="flex items-center"></div>
             </div>
-            <!-- *** END CONSOLIDATED BAR *** --></div>
+            <!-- *** END CONSOLIDATED BAR *** -->
+        </div>
 
     </div>
     
@@ -289,15 +305,14 @@
             const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
 
             // 3. Calculate 1st, 50th (median), and 99th percentile residuals
-            const medianResidual = getPercentile(sortedResiduals, 50);
+            const medianResidual = getPercentile(sortedResiduals, 50); // This is p50
             const p1Residual = getPercentile(sortedResiduals, 1);
-            // *** REMOVED: p20Residual and p80Residual ***
             const p99Residual = getPercentile(sortedResiduals, 99);
             
             // *** NEW: Calculate percentiles for Price Zone ***
             const p20Residual = getPercentile(sortedResiduals, 20);
-            const p40Residual = getPercentile(sortedResiduals, 40);
-            const p60Residual = getPercentile(sortedResiduals, 60);
+            // *** REMOVED: p40Residual ***
+            // *** REMOVED: p60Residual ***
             const p80Residual = getPercentile(sortedResiduals, 80);
     
             // *** NEW: Calculate last data point's residual ***
@@ -306,22 +321,19 @@
             const predictedLastLogY = slope * lastLogX + meanIntercept;
             const lastResidual = lastLogY - predictedLastLogY;
     
-            // *** NEW: Determine Price Zone ***
+            // *** UPDATED: Determine Price Zone based on new rules ***
             let priceZone = "";
             let priceZoneColor = "";
             if (lastResidual > p80Residual) {
-                priceZone = "Bubble";
+                priceZone = "Very Expensive";
                 priceZoneColor = "bg-red-500";
-            } else if (lastResidual > p60Residual) {
+            } else if (lastResidual > medianResidual) { // Use p50 (medianResidual)
                 priceZone = "Expensive";
                 priceZoneColor = "bg-orange-500";
-            } else if (lastResidual > p40Residual) {
-                priceZone = "Fair Value";
-                priceZoneColor = "bg-green-500";
             } else if (lastResidual > p20Residual) {
-                priceZone = "Cheap";
-                priceZoneColor = "bg-blue-500";
-            } else {
+                priceZone = "Good Value";
+                priceZoneColor = "bg-green-500";
+            } else { // < p20
                 priceZone = "Deep Value";
                 priceZoneColor = "bg-purple-500";
             }
@@ -334,7 +346,6 @@
             //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
-            // *** REMOVED: p20Intercept and p80Intercept ***
             const p99Intercept = meanIntercept + p99Residual;
             
             // R-squared is still calculated based on the original mean regression line's fit
@@ -360,14 +371,10 @@
                 { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
                 { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
             ]);
-
-            // *** REMOVED: Mean line data calculation ***
-            // const meanLineData = calculateLinePoints(meanIntercept); 
             
             // *** UPDATED: Calculate median and percentile lines ***
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
-            // *** REMOVED: p20LineData and p80LineData ***
             const p99LineData = calculateLinePoints(p99Intercept);
             // --- END REGRESSION LINE DATA ---
 
@@ -431,34 +438,20 @@
             // --- END OF TICK BUILDER DEFINITION ---
 
             if (chart) {
-                // *** REMOVED: Faulty splice logic ***
-                // if (chart.data.datasets.length > 3) {
-                //      chart.data.datasets.splice(1, 1);
-                // }
-
                 // *** FIX: Update correct dataset indices ***
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
 
-                // *** REMOVED: 20th and 80th percentile logic ***
                 if (chart.data.datasets.length > 3) { // If 99th is at index 3, and there were more before
                     chart.data.datasets.splice(3, chart.data.datasets.length - 4); // Remove any datasets after index 2
                 }
-                // *** END REMOVED ***
-
+                
                 chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
 
 
                 // *** FIX: Update correct label ***
                 chart.data.datasets[1].label = '50th Percentile Regression';
-
-                // *** NEW: Set visibility based on model fit ***
-                // *** REVERTED: Lines are no longer hidden based on model fit ***
-                // const showLines = modelFitGood;
-                // chart.data.datasets[1].hidden = !showLines; // 50th Percentile
-                // chart.data.datasets[2].hidden = !showLines; // 1st Percentile
-                // chart.data.datasets[3].hidden = !showLines; // 99th Percentile
 
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
@@ -467,10 +460,6 @@
                 chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
                 chart.update();
             } else {
-                // *** NEW: Determine line visibility for creation ***
-                // *** REVERTED: Lines are no longer hidden based on model fit ***
-                // const showLines = modelFitGood;
-
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
@@ -487,7 +476,6 @@
                                 fill: false,
                                 pointStyle: 'line' 
                             },
-                            // *** REMOVED: Mean Regression Dataset ***
                             { 
                                 type: 'line', 
                                 label: '50th Percentile Regression', 
@@ -497,7 +485,6 @@
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line'
-                                // hidden: !showLines // *** REVERTED ***
                             },
                             { 
                                 type: 'line', 
@@ -508,10 +495,7 @@
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line'
-                                // hidden: !showLines // *** REVERTED ***
                             },
-                            // *** REMOVED: 20th PERCENTILE DATASET ***
-                            // *** REMOVED: 80th PERCENTILE DATASET ***
                             { 
                                 type: 'line', 
                                 label: '99th Percentile', 
@@ -521,7 +505,6 @@
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line'
-                                // hidden: !showLines // *** REVERTED ***
                             }
                         ]
                     },
@@ -711,5 +694,4 @@
     
 </body>
 </html>
-
 
