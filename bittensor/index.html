@@ -479,11 +479,21 @@
                 fsIconExit.classList.remove('hidden');
                 fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
             } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-            }
+                // We are NOT in fullscreen mode
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+               fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                
+                // --- ADD THIS ---
+                // Force the chart to resize to its container
+                if (chart) {
+                    // Use a short timeout to let the DOM layout settle first
+                     setTimeout(() => {
+                            chart.resize();
+                        }, 50); // 50ms delay
+                }
+                // --- END OF ADDITION ---
+         }
         }
 
         // Listen for fullscreen changes to keep the icon in sync
