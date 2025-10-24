@@ -94,8 +94,8 @@
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
-        <!-- *** MODIFIED: REMOVED px-4 from the class list to match the width of the bottom bar *** -->
-        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
+        <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
@@ -347,9 +347,6 @@
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
-            // *** NEW: Calculate intercepts for dotted lines ***
-            const p20Intercept = meanIntercept + p20Residual;
-            const p80Intercept = meanIntercept + p80Residual;
             
             // R-squared is still calculated based on the original mean regression line's fit
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
@@ -379,9 +376,6 @@
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
-            // *** NEW: Calculate line data for dotted lines ***
-            const p20LineData = calculateLinePoints(p20Intercept);
-            const p80LineData = calculateLinePoints(p80Intercept);
             // --- END REGRESSION LINE DATA ---
 
             // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
@@ -448,48 +442,12 @@
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
-                chart.data.datasets[3].data = p99LineData;     // 99th Percentile
 
-                // *** NEW: Add or update P20 dotted line ***
-                if (chart.data.datasets.length > 4) {
-                    chart.data.datasets[4].data = p20LineData;
-                } else {
-                    chart.data.datasets.push({ 
-                        type: 'line', 
-                        label: '', // Empty label to hide from legend
-                        data: p20LineData, 
-                        borderColor: 'rgba(156, 163, 175, 0.7)', // Faint gray
-                        borderWidth: 1, 
-                        borderDash: [5, 5], // Dotted
-                        pointRadius: 0, 
-                        fill: false,
-                        pointStyle: 'line',
-                        plugins: { tooltip: { enabled: false } } // Disable tooltips
-                    });
+                if (chart.data.datasets.length > 3) { // If 99th is at index 3, and there were more before
+                    chart.data.datasets.splice(3, chart.data.datasets.length - 4); // Remove any datasets after index 2
                 }
-
-                // *** NEW: Add or update P80 dotted line ***
-                if (chart.data.datasets.length > 5) {
-                    chart.data.datasets[5].data = p80LineData;
-                } else {
-                    chart.data.datasets.push({ 
-                        type: 'line', 
-                        label: '', // Empty label to hide from legend
-                        data: p80LineData, 
-                        borderColor: 'rgba(156, 163, 175, 0.7)', // Faint gray
-                        borderWidth: 1, 
-                        borderDash: [5, 5], // Dotted
-                        pointRadius: 0, 
-                        fill: false,
-                        pointStyle: 'line',
-                        plugins: { tooltip: { enabled: false } } // Disable tooltips
-                    });
-                }
-
-                // *** NEW: Clean up any extra datasets (if any were added in error) ***
-                if (chart.data.datasets.length > 6) {
-                    chart.data.datasets.splice(6, chart.data.datasets.length - 6);
-                }
+                
+                chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
 
 
                 // *** FIX: Update correct label ***
@@ -547,32 +505,6 @@
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line'
-                            },
-                            // *** NEW: 20th Percentile Dotted Line ***
-                            { 
-                                type: 'line', 
-                                label: '', // Empty label to hide from legend
-                                data: p20LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Faint gray
-                                borderWidth: 1, 
-                                borderDash: [5, 5], // Dotted
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line',
-                                plugins: { tooltip: { enabled: false } } // Disable tooltips
-                            },
-                            // *** NEW: 80th Percentile Dotted Line ***
-                            { 
-                                type: 'line', 
-                                label: '', // Empty label to hide from legend
-                                data: p80LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Faint gray
-                                borderWidth: 1, 
-                                borderDash: [5, 5], // Dotted
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line',
-                                plugins: { tooltip: { enabled: false } } // Disable tooltips
                             }
                         ]
                     },
@@ -588,9 +520,6 @@
                                 } 
                             }, // Dark gray text
                             tooltip: { 
-                                // *** NEW: Show tooltip on hover, not just on point ***
-                                intersect: false,
-                                mode: 'index',
                                 callbacks: {
                                     title: function(tooltipItems) {
                                         if (tooltipItems.length > 0) {
@@ -609,33 +538,11 @@
                                                     });
                                                 }
                                             }
-                                            // Fallback for regression lines
-                                            // Find the *closest* data point by 'x' value for a date estimate
-                                            // This might be slow, but it's only on tooltip
-                                            let closestDataPoint = priceData.reduce((prev, curr) => {
-                                                return (Math.abs(curr.x - dayNumber) < Math.abs(prev.x - dayNumber) ? curr : prev);
-                                            });
-
-                                            if (closestDataPoint) {
-                                                 const date = new Date(closestDataPoint.time);
-                                                    return date.toLocaleDateString(undefined, { 
-                                                        year: 'numeric', 
-                                                        month: 'long', 
-                                                        day: 'numeric' 
-                                                    }) + " (Est.)";
-                                            }
-                                            
                                             return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
                                         }
                                         return '';
                                     },
-                                    label: (context) => {
-                                        // *** NEW: Check if label is empty, if so, don't show label ***
-                                        if (!context.dataset.label) {
-                                            return null;
-                                        }
-                                        return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-                                    }
+                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
                                 } 
                             } 
                         },
