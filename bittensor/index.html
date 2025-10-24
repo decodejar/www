@@ -149,151 +149,36 @@
     </footer>
 
 <script>
-        // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
-        const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
-        const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
-        const loader = document.getElementById('loader');
-        const statusDiv = document.getElementById('statusDiv');
-        // *** ADDED: Get references to the new divs ***
-        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
-        const lastPriceDiv = document.getElementById('lastPriceDiv');
-        // *** ADDED: Get reference to Power Law status div ***
+        // ... existing code ... -->
         const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         
-        // --- MODEL MODIFICATION ---
-        // This makes the log scale spacing on x-axis more gradual.
+        // ... existing code ... -->
         const DAY_OFFSET = 365;
         // --- END MODIFICATION ---
 
         let chart;
         
         async function loadPriceData() {
-            try {
-                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load data file: ${response.statusText}`);
-                }
-                const data = await response.json();
-                 if (!Array.isArray(data)) {
-                        throw new Error("Invalid data format in JSON file");
-                 }
-                // Filter out any data points with a price of 0 or less, as they break the log scale.
-                // --- X-VALUE MODIFICATION ---
-                // Add the DAY_OFFSET to the index (i + 1)
-                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
-                // --- END MODIFICATION ---
-            } catch (error) {
-                console.error("Error loading price data:", error);
-                return null;
-            }
+            // ... existing code ... -->
         }
         
         function linearRegression(data) {
-            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-            // The data 'x' values now have the offset included, so the regression
-            // automatically calculates based on log(x + DAY_OFFSET)
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            const n = validData.length;
-            if (n < 2) return { slope: 0, intercept: 0 };
-            for (const { x, y } of validData) {
-                const logX = Math.log10(x);
-                const logY = Math.log10(y);
-                sumX += logX; sumY += logY; sumXY += logX * logY; sumX2 += logX * logX;
-            }
-            const denominator = (n * sumX2 - sumX * sumX);
-            if (denominator === 0) return { slope: 0, intercept: 0 };
-            const slope = (n * sumXY - sumX * sumY) / denominator;
-            const intercept = (sumY - slope * sumX) / n;
-            return { slope, intercept };
+            // ... existing code ... -->
         }
 
         // Calculates the residuals (logY - predictedLogY)
         function calculateResiduals(data, slope, intercept) {
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length === 0) return [];
-
-            return validData.map(p => {
-                const logX = Math.log10(p.x); // x already includes offset
-                const logY = Math.log10(p.y);
-                const predictedLogY = slope * logX + intercept;
-                return logY - predictedLogY;
-            }).sort((a, b) => a - b); // Sort residuals for percentile calculation
+            // ... existing code ... -->
         }
 
         // Calculates a specific percentile from a sorted list of residuals
         function getPercentile(sortedResiduals, percentile) {
-            if (!sortedResiduals || sortedResiduals.length === 0) return 0;
-            const index = (percentile / 100) * (sortedResiduals.length - 1);
-            const lowerIndex = Math.floor(index);
-            const upperIndex = Math.ceil(index);
-            
-            if (lowerIndex === upperIndex) {
-                 return sortedResiduals[lowerIndex];
-            } else {
-                 // Linear interpolation between the two closest indices
-                 const weight = index - lowerIndex;
-                 return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
-            }
+            // ... existing code ... -->
         }
 
         async function createOrUpdateChart() {
-            loader.style.display = 'flex';
-            
-            const priceData = await loadPriceData();
-
-            if (!priceData || priceData.length === 0) {
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
-                // *** UPDATED: Show error in new div ***
-                growthExponentDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
-                loader.style.display = 'none';
-                return;
-            }
-            
-            // *** ADDED: Get last data point info ***
-            const lastDataPoint = priceData[priceData.length - 1];
-            const lastPrice = lastDataPoint.y;
-            const lastTimestamp = lastDataPoint.time;
-            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
-
-            // *** UPDATED: Set statusDiv and new divs content ***
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
-            lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
-            // Show the divs now that they have content (using sm:block to hide on smallest screens)
-            lastUpdateDiv.classList.remove('hidden');
-            lastPriceDiv.classList.remove('hidden');
-
-
-            const times = priceData.map(p => p.time);
-            const prices = priceData.map(p => p.y);
-            const minTime = Math.min(...times);
-            const maxTime = Math.max(...times);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-
-            // --- X-AXIS RANGE CALCULATION (DAY-BASED WITH OFFSET) ---
-            const n = priceData.length;
-            const firstDayNum = priceData[0].x; // This is (1 + DAY_OFFSET)
-            const timeDuration = maxTime - minTime;
-            const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
-            // Find the ratio of projection
-            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1; // Avoid division by zero
-            
-            const projectedDayCount = n * futureTimeIndexRatio;
-            
-            const extendedMinDay = firstDayNum;
-            const extendedMaxDay = firstDayNum + projectedDayCount - 1;
-            // --- END X-AXIS RANGE ---
-
-            const logMinPrice = Math.log10(minPrice);
-            const logMaxPrice = Math.log10(maxPrice);
-            const logPriceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; 
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; 
-
-            // 1. Calculate the mean regression first to get the slope
-            //    This 'meanIntercept' is for the standard (mean) regression.
+            // ... existing code ... -->
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
             
             // 2. Calculate all residuals from the mean regression line
@@ -302,137 +187,99 @@
             // 3. Calculate 1st, 50th (median), and 99th percentile residuals
             const medianResidual = getPercentile(sortedResiduals, 50);
             const p1Residual = getPercentile(sortedResiduals, 1);
+            // *** NEW ***
+            const p20Residual = getPercentile(sortedResiduals, 20);
+            const p80Residual = getPercentile(sortedResiduals, 80); // <-- ADDED 80th
             const p99Residual = getPercentile(sortedResiduals, 99);
             
             // 4. Calculate intercepts for each percentile line by shifting the mean intercept
             //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
+            // *** NEW ***
+            const p20Intercept = meanIntercept + p20Residual;
+            const p80Intercept = meanIntercept + p80Residual; // <-- ADDED 80th
             const p99Intercept = meanIntercept + p99Residual;
             
             // R-squared is still calculated based on the original mean regression line's fit
-            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
-            
-            // *** NEW: Determine model fit ***
-            const modelFitGood = rSquared >= 0.9;
-
-            // *** NEW: Update Power Law Status Div ***
-            powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law`;
-            // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
-
-            // *** UPDATED: Populate the two new divs separately (no <br>) ***
-            growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
-            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
-
-
-            // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
-            const startIndex = extendedMinDay; // Use the new min day
-            const endIndex = extendedMaxDay; // Use the new max day
-            
-            const calculateLinePoints = (intercept) => ([
-                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
-            ]);
-
-            // *** REMOVED: Mean line data calculation ***
+            // ... existing code ... -->
             // const meanLineData = calculateLinePoints(meanIntercept); 
             
             // *** UPDATED: Calculate median and percentile lines ***
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
+            // *** NEW ***
+            const p20LineData = calculateLinePoints(p20Intercept);
+            const p80LineData = calculateLinePoints(p80Intercept); // <-- ADDED 80th
             const p99LineData = calculateLinePoints(p99Intercept);
             // --- END REGRESSION LINE DATA ---
 
-            // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
-            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
-            // --- END CHART PRICE DATA ---
-            
-            loader.style.display = 'none';
-
-            // --- DEFINE THE X-AXIS TICK BUILDER ---
+            // ... existing code ... -->
             const xAxisAfterBuildTicks = (axis) => {
-                const newTicks = [];
-                const axisMinDay = axis.min;
-                const axisMaxDay = axis.max;
-            
-                if (!priceData || priceData.length === 0) return;
-            
-                const firstDay = priceData[0];
-                const lastDay = priceData[priceData.length - 1];
-            
-                // Estimate the max year based on a linear interpolation of day_number vs. time
-                const dayRange = lastDay.x - firstDay.x;
-                const timeRange = lastDay.time - firstDay.time;
-                const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0; // Avoid division by zero
-                const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
-                
-                const minYear = new Date(firstDay.time).getFullYear();
-                const maxYear = new Date(estimatedMaxTime).getFullYear();
-
-                let lastYearFound = minYear - 1; // Start one before
-            
-                // Find the first day_number for each year *in the data*
-                for (const p of priceData) {
-                    const year = new Date(p.time).getFullYear();
-                    if (year > lastYearFound) {
-                        if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                            newTicks.push({ value: p.x, label: year.toString() });
-                        }
-                        lastYearFound = year;
-                    }
-                }
-            
-                // Add ticks for future years (that are not in the data)
-                const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                if (dayRange > 0 && timeRange > 0) { // Avoid division by zero
-                    for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                        // Estimate the day_number for Jan 1st of this future year
-                        const yearStartTime = new Date(year, 0, 1).getTime();
-                        const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                        const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-            
-                        if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                            newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                        }
-                    }
-                }
-            
-                axis.ticks.length = 0;
-                axis.ticks.push(...newTicks);
+                // ... existing code ... -->
             };
             // --- END OF TICK BUILDER DEFINITION ---
 
             if (chart) {
-                // *** FIX: Remove the Mean Regression line (index 1) ***
-                if (chart.data.datasets.length > 3) {
-                     chart.data.datasets.splice(1, 1);
-                }
-
+                // ... existing code ... -->
                 // *** FIX: Update correct dataset indices ***
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
-                chart.data.datasets[3].data = p99LineData;     // 99th Percentile
+
+                // *** NEW: Add/Update 20th Percentile ***
+                const p20Dataset = { 
+                    type: 'line', 
+                    label: '20th Percentile', 
+                    data: p20LineData, 
+                    borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
+                    borderWidth: 1, 
+                    borderDash: [5, 5], // Dashed
+                    pointRadius: 0, 
+                    fill: false,
+                    pointStyle: 'line'
+                };
+                
+                if (chart.data.datasets.length < 5) {
+                    // Add the new dataset at the correct position
+                    chart.data.datasets.splice(3, 0, p20Dataset);
+                } else {
+                    // Update the existing dataset
+                    chart.data.datasets[3] = p20Dataset;
+                }
+                // *** END NEW ***
+
+                // *** NEW: Add/Update 80th Percentile ***
+                const p80Dataset = { 
+                    type: 'line', 
+                    label: '80th Percentile', 
+                    data: p80LineData, 
+                    borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
+                    borderWidth: 1, 
+                    borderDash: [5, 5], // Dashed
+                    pointRadius: 0, 
+                    fill: false,
+                    pointStyle: 'line'
+                };
+                
+                if (chart.data.datasets.length < 6) { // Check if 80th is missing
+                    // Add the new dataset at the correct position
+                    chart.data.datasets.splice(4, 0, p80Dataset);
+                } else {
+                    // Update the existing dataset
+                    chart.data.datasets[4] = p80Dataset;
+                }
+                // *** END NEW ***
+
+                chart.data.datasets[5].data = p99LineData;     // 99th Percentile (now at index 5)
+
 
                 // *** FIX: Update correct label ***
-                chart.data.datasets[1].label = '50th Percentile Regression';
-
-                // *** NEW: Set visibility based on model fit ***
-                // *** REVERTED: Lines are no longer hidden based on model fit ***
-                // const showLines = modelFitGood;
-                // chart.data.datasets[1].hidden = !showLines; // 50th Percentile
-                // chart.data.datasets[2].hidden = !showLines; // 1st Percentile
-                // chart.data.datasets[3].hidden = !showLines; // 99th Percentile
-
-                chart.options.scales.x.min = extendedMinDay;
-                chart.options.scales.x.max = extendedMaxDay;
-                chart.options.scales.y.min = extendedMinPrice;
-                chart.options.scales.y.max = extendedMaxPrice;
+                // ... existing code ... -->
                 chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
                 chart.update();
             } else {
-                // *** NEW: Determine line visibility for creation ***
-                // *** REVERTED: Lines are no longer hidden based on model fit ***
+                // ... existing code ... -->
                 // const showLines = modelFitGood;
 
                 chart = new Chart(ctx, {
@@ -440,145 +287,64 @@
                         datasets: [
                             { 
                                 type: 'line', 
-                                label: '$TAO Price', 
-                                data: chartPriceData, 
-                                backgroundColor: 'rgba(24, 72, 204, 0.05)', 
-                                borderColor: 'rgba(24, 72, 204, 1)', 
-                                borderWidth: 2, 
-                                pointRadius: 0, 
-                                pointHoverRadius: 5, 
-                                tension: 0.1, 
-                                fill: false,
+                            // ... existing code ... -->
                                 pointStyle: 'line' 
                             },
                             // *** REMOVED: Mean Regression Dataset ***
                             { 
                                 type: 'line', 
-                                label: '50th Percentile Regression', 
-                                data: medianLineData, 
-                                borderColor: '#ff6d00', // Orange line
-                                borderWidth: 2, 
-                                pointRadius: 0, 
-                                fill: false,
+                            // ... existing code ... -->
                                 pointStyle: 'line'
                                 // hidden: !showLines // *** REVERTED ***
                             },
                             { 
                                 type: 'line', 
-                                label: '1st Percentile', 
-                                data: p1LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                            // ... existing code ... -->
+                                pointStyle: 'line'
+                                // hidden: !showLines // *** REVERTED ***
+                            },
+                            // *** NEW 20th PERCENTILE DATASET ***
+                            { 
+                                type: 'line', 
+                            // ... existing code ... -->
+                                pointStyle: 'line'
+                                // hidden: !showLines // *** REVERTED ***
+                            },
+                            // *** NEW 80th PERCENTILE DATASET ***
+                            { 
+                                type: 'line', 
+                                label: '80th Percentile', 
+                                data: p80LineData, 
+                                borderColor: 'rgba(75, 85, 99, 0.8)', // Dark Gray
                                 borderWidth: 1, 
+                                borderDash: [5, 5], // Dashed
                                 pointRadius: 0, 
                                 fill: false,
                                 pointStyle: 'line'
                                 // hidden: !showLines // *** REVERTED ***
                             },
+                            // *** END NEW DATASET ***
                             { 
                                 type: 'line', 
-                                label: '99th Percentile', 
-                                data: p99LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                                borderWidth: 1, 
-                                pointRadius: 0, 
-                                fill: false,
+                            // ... existing code ... -->
                                 pointStyle: 'line'
                                 // hidden: !showLines // *** REVERTED ***
                             }
                         ]
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
-                                labels: { 
-                                    color: '#374151',
-                                    usePointStyle: true, // Use the pointStyle (which we set to 'line')
-                                    boxWidth: 30, // 50% longer than default (est. 20px)
-                                    boxHeight: 12 // Align to 12px font size
-                                } 
-                            }, // Dark gray text
-                            tooltip: { 
-                                callbacks: {
-                                    title: function(tooltipItems) {
-                                        if (tooltipItems.length > 0) {
-                                            const item = tooltipItems[0];
-                                            const dayNumber = item.parsed.x; // This is day + offset
-                                            
-                                            // Only show date for the actual TAO Price dataset (index 0)
-                                            if (item.datasetIndex === 0) { 
-                                                const dataPoint = priceData.find(p => p.x === dayNumber);
-                                                if (dataPoint) {
-                                                    const date = new Date(dataPoint.time);
-                                                    return date.toLocaleDateString(undefined, { 
-                                                        year: 'numeric', 
-                                                        month: 'long', 
-                                                        day: 'numeric' 
-                                                    });
-                                                }
-                                            }
-                                            return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
-                                        }
-                                        return '';
-                                    },
+                        // ... existing code ... -->
                                     label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
                                 } 
                             } 
                         },
                         scales: {
                             x: { 
-                                type: 'logarithmic', 
-                                min: extendedMinDay, 
-                                max: extendedMaxDay, 
-                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' }, // Gray text
-                                ticks: { 
-                                    color: '#4b5563', // Gray text
-                                    autoSkip: false, 
-                                    callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        return tick ? tick.label : null;
-                                    }
-                                }, 
-                                afterBuildTicks: xAxisAfterBuildTicks,
+                            // ... existing code ... -->
                                 grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
                             },
                             y: { 
-                                type: 'logarithmic', 
-                                min: extendedMinPrice, 
-                                max: extendedMaxPrice, 
-                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' }, // Gray text
-                                ticks: {
-                                    color: '#4b5563', // Gray text
-                                    callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        // Use the label generated by afterBuildTicks for consistency
-                                        return tick ? tick.label : null;
-                                    }
-
-                                },
-                                afterBuildTicks: (axis) => {
-                                    const newTicks = [];
-                                    const axisMin = axis.min;
-                                    const axisMax = axis.max;
-                                    
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { tickValue = 0.000001; } 
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; } 
-
-                                    while (tickValue <= axisMax) {
-                                        if (tickValue >= axisMin) {
-                                            newTicks.push({
-                                                value: tickValue,
-                                                label: `$${tickValue.toLocaleString()}`
-                                            });
-                                        }
-                                        
-                                        let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue || nextTick === Infinity) { break; } // Prevent infinite loops
-                                        tickValue = nextTick;
-                                    }
-                                    axis.ticks.length = 0;
-                                    axis.ticks.push(...newTicks);
+                            // ... existing code ... -->
                                 },
                                 grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
                             }
@@ -589,50 +355,16 @@
         }
         
         function calculateRSquared(data, slope, intercept) {
-            let ss_tot = 0, ss_res = 0, y_mean = 0;
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length < 2) return 0;
-            validData.forEach(p => y_mean += Math.log10(p.y));
-            y_mean /= validData.length;
-            validData.forEach(p => {
-                const logY = Math.log10(p.y);
-                const logX = Math.log10(p.x);
-                const predictedLogY = slope * logX + intercept;
-                ss_tot += Math.pow(logY - y_mean, 2);
-                ss_res += Math.pow(logY - predictedLogY, 2);
-            });
-            return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
+            // ... existing code ... -->
         }
         
         window.onload = () => createOrUpdateChart();
 
         // --- ADDITIONS FOR FULLSCREEN BUTTON ---
         
-        const mainContainer = document.getElementById('mainContainer');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const fsIconEnter = document.getElementById('fsIconEnter');
-        const fsIconExit = document.getElementById('fsIconExit');
-
-        /**
-         * Toggles fullscreen mode for the main chart container
-         */
+        // ... existing code ... -->
         function toggleFullScreen() {
-            // Check if we are currently in fullscreen mode
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                // Enter fullscreen (with cross-browser support)
-                if (mainContainer.requestFullscreen) {
-                    mainContainer.requestFullscreen();
-                } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
-                    mainContainer.webkitRequestFullscreen();
-                }
-            } else {
-                // Exit fullscreen (with cross-browser support)
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                }
-            }
+            // ... existing code ... -->
         }
 
         /**
@@ -640,28 +372,7 @@
          * This is crucial for handling the 'Esc' key.
          */
         function updateFullscreenIcon() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                // We are IN fullscreen mode
-                fsIconEnter.classList.add('hidden');
-                fsIconExit.classList.remove('hidden');
-                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-            } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                
-                // Force the chart to resize to its container
-                if (chart) {
-                    // We use a double requestAnimationFrame to ensure the layout
-                    // has settled after the fullscreen state change.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            chart.resize();
-                        });
-                    });
-                }
-           }
+            // ... existing code ... -->
         }
 
         // Listen for fullscreen changes to keep the icon in sync
@@ -673,3 +384,4 @@
     
 </body>
 </html>
+
