@@ -28,6 +28,41 @@
             display: inline-block;
             margin-right: 8px;
         }
+    /* When body has a child in fullscreen, stop centering it */
+        body:has(#mainContainer:fullscreen) {
+            display: block; /* Override body's flex and items-center */
+        }
+
+        /* When the main container goes fullscreen... */
+        #mainContainer:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none !important; /* Override max-w-6xl */
+            border-radius: 0 !important; /* Override rounded-2xl */
+            
+            /* Use flex to manage the inner layout */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Make the chart's parent card grow to fill the space */
+        #mainContainer:fullscreen #chartCard {
+            flex-grow: 1; /* This card will expand */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Make the chart's wrapper (with the fixed height) grow */
+        #mainContainer:fullscreen #chartWrapper {
+            /* Override the h-[40rem] class and make it grow */
+            height: 100% !important; 
+            flex-grow: 1;
+        }
+        
+        /* Hide the footer when fullscreen */
+        body:has(#mainContainer:fullscreen) footer {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
@@ -48,11 +83,11 @@
         <!-- Controls div removed from here -->
         
         <!-- Chart Container -->
-        <div class="bg-white p-4 rounded-lg relative mt-4">
+        <div id="chartCard" class="bg-white p-4 rounded-lg relative mt-4">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
-            <div class="relative h-[24rem] sm:h-[30rem] md:h-[40rem]">
+            <div id="chartWrapper" class="relative h-[24rem] sm:h-[30rem] md:h-[40rem]">
                 <canvas id="powerLawChart"></canvas>
             </div>
 
