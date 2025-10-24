@@ -99,6 +99,11 @@
                  <!-- Placeholder for last update time --></div>
               <div id="lastPriceDiv" class="hidden sm:block">
                  <!-- Placeholder for last price --></div>
+             <!-- *** NEW Price Zone Div *** -->
+             <div id="priceZoneDiv" class="flex items-center hidden sm:block">
+                <!-- Content injected by JS -->
+             </div>
+             <!-- *** END NEW Div *** -->
              <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** --></div>
 
         <!-- 
@@ -142,6 +147,7 @@
         const lastPriceDiv = document.getElementById('lastPriceDiv');
         // *** ADDED: Get reference to Power Law status div ***
         const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
+        const priceZoneDiv = document.getElementById('priceZoneDiv'); // <-- NEW
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         
         // --- MODEL MODIFICATION ---
@@ -288,6 +294,42 @@
             // *** REMOVED: p20Residual and p80Residual ***
             const p99Residual = getPercentile(sortedResiduals, 99);
             
+            // *** NEW: Calculate percentiles for Price Zone ***
+            const p20Residual = getPercentile(sortedResiduals, 20);
+            const p40Residual = getPercentile(sortedResiduals, 40);
+            const p60Residual = getPercentile(sortedResiduals, 60);
+            const p80Residual = getPercentile(sortedResiduals, 80);
+    
+            // *** NEW: Calculate last data point's residual ***
+            const lastLogX = Math.log10(lastDataPoint.x);
+            const lastLogY = Math.log10(lastDataPoint.y);
+            const predictedLastLogY = slope * lastLogX + meanIntercept;
+            const lastResidual = lastLogY - predictedLastLogY;
+    
+            // *** NEW: Determine Price Zone ***
+            let priceZone = "";
+            let priceZoneColor = "";
+            if (lastResidual > p80Residual) {
+                priceZone = "Bubble";
+                priceZoneColor = "bg-red-500";
+            } else if (lastResidual > p60Residual) {
+                priceZone = "Expensive";
+                priceZoneColor = "bg-orange-500";
+            } else if (lastResidual > p40Residual) {
+                priceZone = "Fair Value";
+                priceZoneColor = "bg-green-500";
+            } else if (lastResidual > p20Residual) {
+                priceZone = "Cheap";
+                priceZoneColor = "bg-blue-500";
+            } else {
+                priceZone = "Deep Value";
+                priceZoneColor = "bg-purple-500";
+            }
+    
+            // *** NEW: Update Price Zone Div ***
+            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Price Zone:</strong> ${priceZone}`;
+            priceZoneDiv.classList.remove('hidden');
+
             // 4. Calculate intercepts for each percentile line by shifting the mean intercept
             //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
             const medianIntercept = meanIntercept + medianResidual;
@@ -669,4 +711,5 @@
     
 </body>
 </html>
+
 
