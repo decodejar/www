@@ -73,11 +73,11 @@
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
 
     <!-- 
-        This container has all scaling rules:
-        - flex-grow: Grow to fill the body
-        - max-w-[1600px]: Max width
-        - max-h-[900px]: Max height
-        - min-h-[30rem]: Min height
+      This container has all scaling rules:
+      - flex-grow: Grow to fill the body
+      - max-w-[1600px]: Max width
+      - max-h-[900px]: Max height
+      - min-h-[30rem]: Min height
     -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
@@ -101,23 +101,23 @@
                  <!-- Placeholder for last update time -->
              </div>
               <div id="lastPriceDiv" class="hidden sm:block">
-                 <!-- Placeholder for last price -->
+                  <!-- Placeholder for last price -->
              </div>
         </div>
 
         <!-- 
-            Chart Container
-            - flex-grow: Fills the main container
-            - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+          Chart Container
+          - flex-grow: Fills the main container
+          - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
         -->
         <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
             <!-- 
-                Chart Wrapper
-                - flex-grow: Fills the chart card
-                - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+              Chart Wrapper
+              - flex-grow: Fills the chart card
+              - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
             -->
             <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
@@ -158,7 +158,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                      throw new Error("Invalid data format in JSON file");
+                     throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -289,31 +289,11 @@
             const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
             
-            // --- NEW: Find Best Fit Percentile ---
-            let bestRSquared = -Infinity;
-            let bestPercentile = -1;
-            let bestFitIntercept = meanIntercept; // Default to mean
-
-            for (let p = 1; p <= 99; p++) {
-                const pResidual = getPercentile(sortedResiduals, p);
-                const pIntercept = meanIntercept + pResidual;
-                // Use the existing R² function to test this percentile's line
-                const rSquared = calculateRSquared(priceData, slope, pIntercept);
-                
-                if (rSquared > bestRSquared) {
-                    bestRSquared = rSquared;
-                    bestPercentile = p;
-                    bestFitIntercept = pIntercept;
-                }
-            }
-            // --- END NEW CODE ---
-            
             // R-squared is still calculated based on the original mean regression line's fit
-            // This is the R^2 for the *mean* line, which is what we display.
-            const meanRSquared = calculateRSquared(priceData, slope, meanIntercept);
+            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
             
             modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
-                <strong>Model Fit (R²):</strong> ${meanRSquared.toFixed(4)}`;
+                <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
             const startIndex = extendedMinDay; // Use the new min day
@@ -327,9 +307,6 @@
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
-            // --- NEW: Calculate Best Fit Line Data ---
-            const bestFitLineData = calculateLinePoints(bestFitIntercept);
-            // --- END NEW DATA ---
             // --- END REGRESSION LINE DATA ---
 
             // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
@@ -394,15 +371,9 @@
             if (chart) {
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = medianLineData;
-                
-                // --- NEW: Update Best Fit Line ---
-                chart.data.datasets[2].data = bestFitLineData;
-                chart.data.datasets[2].label = `Best Fit (${bestPercentile}th Percentile)`;
-                // --- END NEW ---
-                
-                // Update 1st and 99th percentile lines (at new indices 3 and 4)
-                chart.data.datasets[3].data = p1LineData;
-                chart.data.datasets[4].data = p99LineData;
+                // Update 1st and 99th percentile lines
+                chart.data.datasets[2].data = p1LineData;
+                chart.data.datasets[3].data = p99LineData;
 
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
@@ -426,30 +397,19 @@
                                 tension: 0.1, 
                                 fill: false // *** MODIFICATION: Removed fill by setting to false ***
                             },
-                            // --- NEW: Best Fit Line Dataset ---
-                            {
-                                type: 'line',
-                                label: `Best Fit (${bestPercentile}th Percentile)`,
-                                data: bestFitLineData,
-                                borderColor: '#ff6d00', // Orange line
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false
-                            },
-                            // --- END NEW ---
                             { 
                                 type: 'line', 
-                                label: '50th Percentile', 
+                                label: '50th Percentile Log-Log Regression', 
                                 data: medianLineData, 
-                                borderColor: '#6b7280', // "mid gray" (Tailwind gray-500)
-                                borderWidth: 1, 
+                                borderColor: '#ff6d00', // Orange line
+                                borderWidth: 2, 
                                 pointRadius: 0, 
                                 fill: false 
                             },
                             // *** MODIFICATION: Added 1st Percentile line ***
                             { 
                                 type: 'line', 
-                                label: '1st Percentile', 
+                                label: '1st Percentile Regression', 
                                 data: p1LineData, 
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1, 
@@ -460,7 +420,7 @@
                             // *** MODIFICATION: Added 99th Percentile line ***
                             { 
                                 type: 'line', 
-                                label: '99th Percentile', 
+                                label: '99th Percentile Regression', 
                                 data: p99LineData, 
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1, 
@@ -644,7 +604,7 @@
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
         
-        // --- END OF ADDITIONS ---   
+        // --- END OF ADDITIONS ---    
     </script>
     
 </body>
