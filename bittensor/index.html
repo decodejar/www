@@ -1,703 +1,696 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAO Tensor Law Model</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #ff6d00; /* Orange */
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-    /* When body has a child in fullscreen, stop centering it */
-        body:has(#mainContainer:fullscreen) {
-            display: block; /* Override body's flex and items-center */
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAO Tensor Law Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #ff6d00; /* Orange */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+    /* When body has a child in fullscreen, stop centering it */
+        body:has(#mainContainer:fullscreen) {
+            display: block; /* Override body's flex and items-center */
+        }
 
-        /* When the main container goes fullscreen... */
-        #mainContainer:fullscreen {
-            width: 100vw;
-            height: 100vh;
-            max-width: none !important; /* Override max-w-6xl */
-            border-radius: 0 !important; /* Override rounded-2xl */
-            
-            /* Use flex to manage the inner layout */
-            display: flex;
-            flex-direction: column;
-        }
+        /* When the main container goes fullscreen... */
+        #mainContainer:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none !important; /* Override max-w-6xl */
+            border-radius: 0 !important; /* Override rounded-2xl */
+            
+            /* Use flex to manage the inner layout */
+            display: flex;
+            flex-direction: column;
+        }
 
-        /* Make the chart's parent card grow to fill the space */
-        #mainContainer:fullscreen #chartCard {
-            flex-grow: 1; /* This card will expand */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Make the chart's wrapper (with the fixed height) grow */
-        #mainContainer:fullscreen #chartWrapper {
-            /* Override the h-[40rem] class and make it grow */
-            height: 100% !important; 
-            flex-grow: 1;
-        }
-        
-        /* Hide the footer when fullscreen */
-        body:has(#mainContainer:fullscreen) footer {
-            display: none;
-        }
-    </style>
+        /* Make the chart's parent card grow to fill the space */
+        #mainContainer:fullscreen #chartCard {
+            flex-grow: 1; /* This card will expand */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Make the chart's wrapper (with the fixed height) grow */
+        #mainContainer:fullscreen #chartWrapper {
+            /* Override the h-[40rem] class and make it grow */
+            height: 100% !important; 
+            flex-grow: 1;
+        }
+        
+        /* Hide the footer when fullscreen */
+        body:has(#mainContainer:fullscreen) footer {
+            display: none;
+        }
+    </style>
 </head>
-<!-- 
-    FIX: Changed min-h-screen to h-screen.
-    This makes the body's height match the viewport exactly, 
-    allowing it to shrink and fixing the vertical scaling bug.
+<!-- 
+    FIX: Changed min-h-screen to h-screen.
+    This makes the body's height match the viewport exactly, 
+    allowing it to shrink and fixing the vertical scaling bug.
 -->
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
 
-    <!-- 
-        This container has all scaling rules:
-        - flex-grow: Grow to fill the body
-        - max-w-[1600px]: Max width
-        - max-h-[900px]: Max height
-        - min-h-[30rem]: Min height
-    -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
-        <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
-            <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-            </svg>
-            <svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
-            </svg>
-        </button>
-        <header class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">TAO Tensor Law Model</h1>
-            <p class="text-gray-600 mt-1">Modelling Bittensor in Log-Log Regression</p>
-        </header>
+    <!-- 
+        This container has all scaling rules:
+        - flex-grow: Grow to fill the body
+        - max-w-[1600px]: Max width
+        - max-h-[900px]: Max height
+        - min-h-[30rem]: Min height
+    -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
+        <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
+            <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+            <svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
+            </svg>
+        </button>
+        <header class="text-center mb-6">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">TAO Tensor Law Model</h1>
+            <p class="text-gray-600 mt-1">Modelling Bittensor in Log-Log Regression</p>
+        </header>
 
-        <!-- *** MOVED STATUS BAR HERE *** -->
-        <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
-        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
-             <div id="statusDiv" class="flex items-center">
-                 <span class="status-dot bg-yellow-500"></span>Loading latest data...
-             </div>
-             <div id="lastUpdateDiv" class="hidden sm:block"> 
-                 <!-- Placeholder for last update time -->
-             </div>
-              <div id="lastPriceDiv" class="hidden sm:block">
-                 <!-- Placeholder for last price -->
-             </div>
-             <!-- *** NEW Price Zone Div *** -->
-             <div id="priceZoneDiv" class="flex items-center hidden sm:block">
-                <!-- Content injected by JS -->
-             </div>
-             <!-- *** END NEW Div *** -->
-             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
-        </div>
+        <!-- *** MOVED STATUS BAR HERE *** -->
+        <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
+             <div id="statusDiv" class="flex items-center">
+                 <span class="status-dot bg-yellow-500"></span>Loading latest data...
+             </div>
+             <div id="lastUpdateDiv" class="hidden sm:block"> 
+                 <!-- Placeholder for last update time -->
+             </div>
+              <div id="lastPriceDiv" class="hidden sm:block">
+                 <!-- Placeholder for last price -->
+             </div>
+             <!-- *** NEW Price Zone Div *** -->
+             <div id="priceZoneDiv" class="flex items-center hidden sm:block">
+                <!-- Content injected by JS -->
+             </div>
+             <!-- *** END NEW Div *** -->
+             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
+        </div>
 
-        <!-- 
-            Chart Container
-            - flex-grow: Fills the main container
-            - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        -->
-        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
-            <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                <div class="loader"></div>
-            </div>
-            <!-- 
-                Chart Wrapper
-                - flex-grow: Fills the chart card
-                - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            -->
-            <div id="chartWrapper" class="relative flex-grow min-h-0">
-                <canvas id="powerLawChart"></canvas>
-            </div>
+        <!-- 
+            Chart Container
+            - flex-grow: Fills the main container
+            - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+        -->
+        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
+            <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                <div class="loader"></div>
+            </div>
+            <!-- 
+                Chart Wrapper
+                - flex-grow: Fills the chart card
+                - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+            -->
+            <div id="chartWrapper" class="relative flex-grow min-h-0">
+                <canvas id="powerLawChart"></canvas>
+            </div>
 
-            <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
-            <!-- This bar now holds the model info and status, styled like the top bar -->
-            <!-- *** MODIFIED: Removed explicit width class*** -->
-            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
-                <!-- NEW: Split modelInfo into separate divs for single-row layout -->
-                <div id="growthExponentDiv"></div>
-                <div id="modelFitDiv"></div>
+            <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
+            <!-- This bar now holds the model info and status, styled like the top bar -->
+            <!-- *** MODIFIED: Removed explicit width class*** -->
+            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+                <!-- NEW: Split modelInfo into separate divs for single-row layout -->
+                <div id="growthExponentDiv"></div>
+                <div id="modelFitDiv"></div>
 
-                <!-- powerLawStatusDiv: content injected by JS -->
-                <!-- Added flex items-center to align the status dot -->
-                <div id="powerLawStatusDiv" class="flex items-center"></div>
-            </div>
-            <!-- *** END CONSOLIDATED BAR *** -->
-        </div>
+                <!-- powerLawStatusDiv: content injected by JS -->
+                <!-- Added flex items-center to align the status dot -->
+                <div id="powerLawStatusDiv" class="flex items-center"></div>
+            </div>
+            <!-- *** END CONSOLIDATED BAR *** -->
+        </div>
 
-    </div>
-    
-    <footer class="text-center p-4 mt-4">
-        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
-    </footer>
+    </div>
+    
+    <footer class="text-center p-4 mt-4">
+        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
+    </footer>
 
 <script>
-        // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
-        const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
-        const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
-        const loader = document.getElementById('loader');
-        const statusDiv = document.getElementById('statusDiv');
-        // *** ADDED: Get references to the new divs ***
-        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
-        const lastPriceDiv = document.getElementById('lastPriceDiv');
-        // *** ADDED: Get reference to Power Law status div ***
-        const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
-        const priceZoneDiv = document.getElementById('priceZoneDiv'); // <-- NEW
-        const ctx = document.getElementById('powerLawChart').getContext('2d');
-        
-        // --- MODEL MODIFICATION ---
-        // This makes the log scale spacing on x-axis more gradual.
-        const DAY_OFFSET = 365;
-        // --- END MODIFICATION ---
+        // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
+        const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
+        const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
+        const loader = document.getElementById('loader');
+        const statusDiv = document.getElementById('statusDiv');
+        // *** ADDED: Get references to the new divs ***
+        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
+        const lastPriceDiv = document.getElementById('lastPriceDiv');
+        // *** ADDED: Get reference to Power Law status div ***
+        const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
+        const priceZoneDiv = document.getElementById('priceZoneDiv'); // <-- NEW
+        const ctx = document.getElementById('powerLawChart').getContext('2d');
+        
+        // --- MODEL MODIFICATION ---
+        // This makes the log scale spacing on x-axis more gradual.
+        const DAY_OFFSET = 365;
+        // --- END MODIFICATION ---
 
-        let chart;
-        
-        async function loadPriceData() {
-            try {
-                // The data file is expected to be in the same location
-                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load data file: ${response.statusText}`);
-                }
-                const data = await response.json();
-                 if (!Array.isArray(data)) {
-                        throw new Error("Invalid data format in JSON file");
-                 }
-                // Filter out any data points with a price of 0 or less, as they break the log scale.
-                // Map data to the format: { time: timestamp, x: day_number_with_offset, y: price }
-                // --- X-VALUE MODIFICATION ---
-                // Add the DAY_OFFSET to the index (i + 1)
-                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
-                // --- END MODIFICATION ---
-            } catch (error) {
-                console.error("Error loading price data:", error);
-                return null;
-            }
-        }
-        
-        // Performs linear regression on log(x) vs log(y) data (Log-Log Regression)
-        function linearRegression(data) {
-            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-            // The data 'x' values now have the offset included, so the regression
-            // automatically calculates based on log(x + DAY_OFFSET)
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            const n = validData.length;
-            if (n < 2) return { slope: 0, intercept: 0 };
-            for (const { x, y } of validData) {
-                const logX = Math.log10(x);
-                const logY = Math.log10(y);
-                sumX += logX; sumY += logY; sumXY += logX * logY; sumX2 += logX * logX;
-            }
-            const denominator = (n * sumX2 - sumX * sumX);
-            if (denominator === 0) return { slope: 0, intercept: 0 };
-            const slope = (n * sumXY - sumX * sumY) / denominator;
-            const intercept = (sumY - slope * sumX) / n;
-            return { slope, intercept };
-        }
+        let chart;
+        
+        async function loadPriceData() {
+            try {
+                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load data file: ${response.statusText}`);
+                }
+                const data = await response.json();
+                 if (!Array.isArray(data)) {
+                        throw new Error("Invalid data format in JSON file");
+                 }
+                // Filter out any data points with a price of 0 or less, as they break the log scale.
+                // --- X-VALUE MODIFICATION ---
+                // Add the DAY_OFFSET to the index (i + 1)
+                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
+                // --- END MODIFICATION ---
+            } catch (error) {
+                console.error("Error loading price data:", error);
+                return null;
+            }
+        }
+        
+        function linearRegression(data) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            // The data 'x' values now have the offset included, so the regression
+            // automatically calculates based on log(x + DAY_OFFSET)
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            const n = validData.length;
+            if (n < 2) return { slope: 0, intercept: 0 };
+            for (const { x, y } of validData) {
+                const logX = Math.log10(x);
+                const logY = Math.log10(y);
+                sumX += logX; sumY += logY; sumXY += logX * logY; sumX2 += logX * logX;
+            }
+            const denominator = (n * sumX2 - sumX * sumX);
+            if (denominator === 0) return { slope: 0, intercept: 0 };
+            const slope = (n * sumXY - sumX * sumY) / denominator;
+            const intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept };
+        }
 
-        // Calculates the residuals (logY - predictedLogY)
-        function calculateResiduals(data, slope, intercept) {
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length === 0) return [];
+        // Calculates the residuals (logY - predictedLogY)
+        function calculateResiduals(data, slope, intercept) {
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            if (validData.length === 0) return [];
 
-            return validData.map(p => {
-                const logX = Math.log10(p.x); // x already includes offset
-                const logY = Math.log10(p.y);
-                const predictedLogY = slope * logX + intercept;
-                return logY - predictedLogY;
-            }).sort((a, b) => a - b); // Sort residuals for percentile calculation
-        }
+            return validData.map(p => {
+                const logX = Math.log10(p.x); // x already includes offset
+                const logY = Math.log10(p.y);
+                const predictedLogY = slope * logX + intercept;
+                return logY - predictedLogY;
+            }).sort((a, b) => a - b); // Sort residuals for percentile calculation
+        }
 
-        // Calculates a specific percentile from a sorted list of residuals
-        function getPercentile(sortedResiduals, percentile) {
-            if (!sortedResiduals || sortedResiduals.length === 0) return 0;
-            const index = (percentile / 100) * (sortedResiduals.length - 1);
-            const lowerIndex = Math.floor(index);
-            const upperIndex = Math.ceil(index);
-            
-            if (lowerIndex === upperIndex) {
-                 return sortedResiduals[lowerIndex];
-            } else {
-                 // Linear interpolation between the two closest indices
-                 const weight = index - lowerIndex;
-                 return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
-            }
-        }
+        // Calculates a specific percentile from a sorted list of residuals
+        function getPercentile(sortedResiduals, percentile) {
+            if (!sortedResiduals || sortedResiduals.length === 0) return 0;
+            const index = (percentile / 100) * (sortedResiduals.length - 1);
+            const lowerIndex = Math.floor(index);
+            const upperIndex = Math.ceil(index);
+            
+            if (lowerIndex === upperIndex) {
+                 return sortedResiduals[lowerIndex];
+            } else {
+                 // Linear interpolation between the two closest indices
+                 const weight = index - lowerIndex;
+                 return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
+            }
+        }
 
-        async function createOrUpdateChart() {
-            loader.style.display = 'flex';
-            
-            const priceData = await loadPriceData();
+        async function createOrUpdateChart() {
+            loader.style.display = 'flex';
+            
+            const priceData = await loadPriceData();
 
-            if (!priceData || priceData.length === 0) {
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
-                // *** UPDATED: Show error in new div ***
-                growthExponentDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
-                loader.style.display = 'none';
-                return;
-            }
-            
-            // *** ADDED: Get last data point info ***
-            const lastDataPoint = priceData[priceData.length - 1];
-            const lastPrice = lastDataPoint.y;
-            const lastTimestamp = lastDataPoint.time;
-            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
+            if (!priceData || priceData.length === 0) {
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
+                // *** UPDATED: Show error in new div ***
+                growthExponentDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
+                loader.style.display = 'none';
+                return;
+            }
+            
+            // *** ADDED: Get last data point info ***
+            const lastDataPoint = priceData[priceData.length - 1];
+            const lastPrice = lastDataPoint.y;
+            const lastTimestamp = lastDataPoint.time;
+            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
 
-            // *** UPDATED: Set statusDiv and new divs content ***
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
-            lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
-            // Show the divs now that they have content (using sm:block to hide on smallest screens)
-            lastUpdateDiv.classList.remove('hidden');
-            lastPriceDiv.classList.remove('hidden');
+            // *** UPDATED: Set statusDiv and new divs content ***
+            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
+            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
+            lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
+            // Show the divs now that they have content (using sm:block to hide on smallest screens)
+            lastUpdateDiv.classList.remove('hidden');
+            lastPriceDiv.classList.remove('hidden');
 
 
-            const times = priceData.map(p => p.time);
-            const prices = priceData.map(p => p.y);
-            const minTime = Math.min(...times);
-            const maxTime = Math.max(...times);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
+            const times = priceData.map(p => p.time);
+            const prices = priceData.map(p => p.y);
+            const minTime = Math.min(...times);
+            const maxTime = Math.max(...times);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
 
-            // --- X-AXIS RANGE CALCULATION (DAY-BASED WITH OFFSET) ---
-            const n = priceData.length;
-            const firstDayNum = priceData[0].x; // This is (1 + DAY_OFFSET)
-            const timeDuration = maxTime - minTime;
-            const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
-            // Find the ratio of projection
-            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1; // Avoid division by zero
-            
-            const projectedDayCount = n * futureTimeIndexRatio;
-            
-            const extendedMinDay = firstDayNum;
-            const extendedMaxDay = firstDayNum + projectedDayCount - 1;
-            // --- END X-AXIS RANGE ---
+            // --- X-AXIS RANGE CALCULATION (DAY-BASED WITH OFFSET) ---
+            const n = priceData.length;
+            const firstDayNum = priceData[0].x; // This is (1 + DAY_OFFSET)
+            const timeDuration = maxTime - minTime;
+            const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
+            // Find the ratio of projection
+            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1; // Avoid division by zero
+            
+            const projectedDayCount = n * futureTimeIndexRatio;
+            
+            const extendedMinDay = firstDayNum;
+            const extendedMaxDay = firstDayNum + projectedDayCount - 1;
+            // --- END X-AXIS RANGE ---
 
-            const logMinPrice = Math.log10(minPrice);
-            const logMaxPrice = Math.log10(maxPrice);
-            const logPriceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; 
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; 
+            const logMinPrice = Math.log10(minPrice);
+            const logMaxPrice = Math.log10(maxPrice);
+            const logPriceRange = logMaxPrice - logMinPrice;
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9; 
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4; 
 
-            // 1. Calculate the mean regression first to get the slope
-            //    This 'meanIntercept' is for the standard (mean) regression.
-            const { slope, intercept: meanIntercept } = linearRegression(priceData);
-            
-            // 2. Calculate all residuals from the mean regression line
-            const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
+            // 1. Calculate the mean regression first to get the slope
+            //    This 'meanIntercept' is for the standard (mean) regression.
+            const { slope, intercept: meanIntercept } = linearRegression(priceData);
+            
+            // 2. Calculate all residuals from the mean regression line
+            const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
 
-            // 3. Calculate 1st, 50th (median), and 99th percentile residuals
-            const medianResidual = getPercentile(sortedResiduals, 50); // This is p50
-            const p1Residual = getPercentile(sortedResiduals, 1);
-            const p99Residual = getPercentile(sortedResiduals, 99);
-            
-            // *** UPDATED: Calculate percentiles for all Price Zone boundaries ***
-            const p20Residual = getPercentile(sortedResiduals, 20);
-            const p45Residual = getPercentile(sortedResiduals, 45); // NEW: 45th Percentile
-            const p55Residual = getPercentile(sortedResiduals, 55); // NEW: 55th Percentile
-            const p80Residual = getPercentile(sortedResiduals, 80);
-    
-            // *** NEW: Calculate last data point's residual ***
-            const lastLogX = Math.log10(lastDataPoint.x);
-            const lastLogY = Math.log10(lastDataPoint.y);
-            const predictedLastLogY = slope * lastLogX + meanIntercept;
-            const lastResidual = lastLogY - predictedLastLogY;
-    
-            // *** UPDATED: Determine Price Zone based on new 5-zone logic (Fair Value Name Change) ***
-            let priceZone = "";
-            let priceZoneColor = "";
-            if (lastResidual > p80Residual) {
-                priceZone = "Very Expensive";
-                priceZoneColor = "bg-red-500";
-            } else if (lastResidual > p55Residual) { // Expensive: p55 to p80
-                priceZone = "Expensive";
-                priceZoneColor = "bg-orange-500";
-            } else if (lastResidual > p45Residual) { // Fair Value: p45 to p55 (was "Neutral")
-                priceZone = "Fair Value"; // *** UPDATED: Changed from "Neutral" to "Fair Value" ***
-                priceZoneColor = "bg-yellow-400"; // Using yellow-400 for visibility
-            } else if (lastResidual > p20Residual) { // Good Value: p20 to p45
-                priceZone = "Good Value";
-                priceZoneColor = "bg-green-500";
-            } else { // Deep Value: <= p20
-                priceZone = "Deep Value";
-                priceZoneColor = "bg-blue-300";
-            }
-    
-            // *** NEW: Update Price Zone Div ***
-            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Price Zone:</strong> ${priceZone}`;
-            priceZoneDiv.classList.remove('hidden');
+            // 3. Calculate 1st, 50th (median), and 99th percentile residuals
+            const medianResidual = getPercentile(sortedResiduals, 50); // This is p50
+            const p1Residual = getPercentile(sortedResiduals, 1);
+            const p99Residual = getPercentile(sortedResiduals, 99);
+            
+            // *** NEW: Calculate percentiles for Price Zone ***
+            const p20Residual = getPercentile(sortedResiduals, 20);
+            // *** REMOVED: p40Residual ***
+            // *** REMOVED: p60Residual ***
+            const p80Residual = getPercentile(sortedResiduals, 80);
+    
+            // *** NEW: Calculate last data point's residual ***
+            const lastLogX = Math.log10(lastDataPoint.x);
+            const lastLogY = Math.log10(lastDataPoint.y);
+            const predictedLastLogY = slope * lastLogX + meanIntercept;
+            const lastResidual = lastLogY - predictedLastLogY;
+    
+            // *** UPDATED: Determine Price Zone based on new rules ***
+            let priceZone = "";
+            let priceZoneColor = "";
+            if (lastResidual > p80Residual) {
+                priceZone = "Very Expensive";
+                priceZoneColor = "bg-red-500";
+            } else if (lastResidual > medianResidual) { // Use p50 (medianResidual)
+                priceZone = "Expensive";
+                priceZoneColor = "bg-orange-500";
+            } else if (lastResidual > p20Residual) {
+                priceZone = "Good Value";
+                priceZoneColor = "bg-green-500";
+            } else { // < p20
+                priceZone = "Deep Value";
+                priceZoneColor = "bg-blue-300";
+            }
+    
+            // *** NEW: Update Price Zone Div ***
+            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Price Zone:</strong> ${priceZone}`;
+            priceZoneDiv.classList.remove('hidden');
 
-            // 4. Calculate intercepts for each percentile line by shifting the mean intercept
-            //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
-            const medianResidual = getPercentile(sortedResiduals, 50); // Recalculate 50th for the line display (not for the zone boundaries)
-            const medianIntercept = meanIntercept + medianResidual;
-            const p1Intercept = meanIntercept + p1Residual;
-            const p99Intercept = meanIntercept + p99Residual;
-            
-            // R-squared is still calculated based on the original mean regression line's fit
-            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
-            
-            // *** NEW: Determine model fit ***
-            const modelFitGood = rSquared >= 0.9;
+            // 4. Calculate intercepts for each percentile line by shifting the mean intercept
+            //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
+            const medianIntercept = meanIntercept + medianResidual;
+            const p1Intercept = meanIntercept + p1Residual;
+            const p99Intercept = meanIntercept + p99Residual;
+            
+            // R-squared is still calculated based on the original mean regression line's fit
+            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
+            
+            // *** NEW: Determine model fit ***
+            const modelFitGood = rSquared >= 0.9;
 
-            // *** NEW: Update Power Law Status Div ***
-            powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law`;
-            // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
+            // *** NEW: Update Power Law Status Div ***
+            powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law`;
+            // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
 
-            // *** UPDATED: Populate the two new divs separately (no <br>) ***
-            growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
-            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            // *** UPDATED: Populate the two new divs separately (no <br>) ***
+            growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
+            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
 
-            // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
-            const startIndex = extendedMinDay; // Use the new min day
-            const endIndex = extendedMaxDay; // Use the new max day
-            
-            const calculateLinePoints = (intercept) => ([
-                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
-            ]);
-            
-            // *** UPDATED: Calculate median and percentile lines ***
-            const medianLineData = calculateLinePoints(medianIntercept);
-            const p1LineData = calculateLinePoints(p1Intercept);
-            const p99LineData = calculateLinePoints(p99Intercept);
-            // --- END REGRESSION LINE DATA ---
+            // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
+            const startIndex = extendedMinDay; // Use the new min day
+            const endIndex = extendedMaxDay; // Use the new max day
+            
+            const calculateLinePoints = (intercept) => ([
+                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
+                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
+            ]);
+            
+            // *** UPDATED: Calculate median and percentile lines ***
+            const medianLineData = calculateLinePoints(medianIntercept);
+            const p1LineData = calculateLinePoints(p1Intercept);
+            const p99LineData = calculateLinePoints(p99Intercept);
+            // --- END REGRESSION LINE DATA ---
 
-            // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
-            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
-            // --- END CHART PRICE DATA ---
-            
-            loader.style.display = 'none';
+            // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
+            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
+            // --- END CHART PRICE DATA ---
+            
+            loader.style.display = 'none';
 
-            // --- DEFINE THE X-AXIS TICK BUILDER ---
-            const xAxisAfterBuildTicks = (axis) => {
-                const newTicks = [];
-                const axisMinDay = axis.min;
-                const axisMaxDay = axis.max;
-            
-                if (!priceData || priceData.length === 0) return;
-            
-                const firstDay = priceData[0];
-                const lastDay = priceData[priceData.length - 1];
-            
-                // Estimate the max year based on a linear interpolation of day_number vs. time
-                const dayRange = lastDay.x - firstDay.x;
-                const timeRange = lastDay.time - firstDay.time;
-                const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0; // Avoid division by zero
-                const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
-                
-                const minYear = new Date(firstDay.time).getFullYear();
-                const maxYear = new Date(estimatedMaxTime).getFullYear();
+            // --- DEFINE THE X-AXIS TICK BUILDER ---
+            const xAxisAfterBuildTicks = (axis) => {
+                const newTicks = [];
+                const axisMinDay = axis.min;
+                const axisMaxDay = axis.max;
+            
+                if (!priceData || priceData.length === 0) return;
+            
+                const firstDay = priceData[0];
+                const lastDay = priceData[priceData.length - 1];
+            
+                // Estimate the max year based on a linear interpolation of day_number vs. time
+                const dayRange = lastDay.x - firstDay.x;
+                const timeRange = lastDay.time - firstDay.time;
+                const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0; // Avoid division by zero
+                const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
+                
+                const minYear = new Date(firstDay.time).getFullYear();
+                const maxYear = new Date(estimatedMaxTime).getFullYear();
 
-                let lastYearFound = minYear - 1; // Start one before
-            
-                // Find the first day_number for each year *in the data*
-                for (const p of priceData) {
-                    const year = new Date(p.time).getFullYear();
-                    if (year > lastYearFound) {
-                        if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                            newTicks.push({ value: p.x, label: year.toString() });
-                        }
-                        lastYearFound = year;
-                    }
-                }
-            
-                // Add ticks for future years (that are not in the data)
-                const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                if (dayRange > 0 && timeRange > 0) { // Avoid division by zero
-                    for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                        // Estimate the day_number for Jan 1st of this future year
-                        const yearStartTime = new Date(year, 0, 1).getTime();
-                        const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                        const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-            
-                        if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                            newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                        }
-                    }
-                }
-            
-                axis.ticks.length = 0;
-                axis.ticks.push(...newTicks);
-            };
-            // --- END OF TICK BUILDER DEFINITION ---
+                let lastYearFound = minYear - 1; // Start one before
+            
+                // Find the first day_number for each year *in the data*
+                for (const p of priceData) {
+                    const year = new Date(p.time).getFullYear();
+                    if (year > lastYearFound) {
+                        if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                            newTicks.push({ value: p.x, label: year.toString() });
+                        }
+                        lastYearFound = year;
+                    }
+                }
+            
+                // Add ticks for future years (that are not in the data)
+                const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
+                if (dayRange > 0 && timeRange > 0) { // Avoid division by zero
+                    for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                        // Estimate the day_number for Jan 1st of this future year
+                        const yearStartTime = new Date(year, 0, 1).getTime();
+                        const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                        const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+            
+                        if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                            newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                        }
+                    }
+                }
+            
+                axis.ticks.length = 0;
+                axis.ticks.push(...newTicks);
+            };
+            // --- END OF TICK BUILDER DEFINITION ---
 
-            if (chart) {
-                // *** FIX: Update correct dataset indices ***
-                chart.data.datasets[0].data = chartPriceData;
-                chart.data.datasets[1].data = medianLineData; // 50th Percentile
-                chart.data.datasets[2].data = p1LineData;     // 1st Percentile
+            if (chart) {
+                // *** FIX: Update correct dataset indices ***
+                chart.data.datasets[0].data = chartPriceData;
+                chart.data.datasets[1].data = medianLineData; // 50th Percentile
+                chart.data.datasets[2].data = p1LineData;     // 1st Percentile
 
-                if (chart.data.datasets.length > 3) { // If 99th is at index 3, and there were more before
-                    chart.data.datasets.splice(3, chart.data.datasets.length - 4); // Remove any datasets after index 2
-                }
-                
-                chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
+                if (chart.data.datasets.length > 3) { // If 99th is at index 3, and there were more before
+                    chart.data.datasets.splice(3, chart.data.datasets.length - 4); // Remove any datasets after index 2
+                }
+                
+                chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
 
 
-                // *** FIX: Update correct label ***
-                chart.data.datasets[1].label = '50th Percentile Regression';
+                // *** FIX: Update correct label ***
+                chart.data.datasets[1].label = '50th Percentile Regression';
 
-                chart.options.scales.x.min = extendedMinDay;
-                chart.options.scales.x.max = extendedMaxDay;
-                chart.options.scales.y.min = extendedMinPrice;
-                chart.options.scales.y.max = extendedMaxPrice;
-                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
-                chart.update();
-            } else {
-                chart = new Chart(ctx, {
-                    data: {
-                        datasets: [
-                            { 
-                                type: 'line', 
-                                label: '$TAO Price', 
-                                data: chartPriceData, 
-                                backgroundColor: 'rgba(24, 72, 204, 0.05)', 
-                                borderColor: 'rgba(24, 72, 204, 1)', 
-                                borderWidth: 2, 
-                                pointRadius: 0, 
-                                pointHoverRadius: 5, 
-                                tension: 0.1, 
-                                fill: false,
-                                pointStyle: 'line' 
-                            },
-                            { 
-                                type: 'line', 
-                                label: '50th Percentile Regression', 
-                                data: medianLineData, 
-                                borderColor: '#ff6d00', // Orange line
-                                borderWidth: 2, 
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line'
-                            },
-                            { 
-                                type: 'line', 
-                                label: '1st Percentile', 
-                                data: p1LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                                borderWidth: 1, 
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line'
-                            },
-                            { 
-                                type: 'line', 
-                                label: '99th Percentile', 
-                                data: p99LineData, 
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                                borderWidth: 1, 
-                                pointRadius: 0, 
-                                fill: false,
-                                pointStyle: 'line'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
-                                labels: { 
-                                    color: '#374151',
-                                    usePointStyle: true, // Use the pointStyle (which we set to 'line')
-                                    boxWidth: 30, // 50% longer than default (est. 20px)
-                                    boxHeight: 12 // Align to 12px font size
-                                } 
-                            }, // Dark gray text
-                            tooltip: { 
-                                callbacks: {
-                                    title: function(tooltipItems) {
-                                        if (tooltipItems.length > 0) {
-                                            const item = tooltipItems[0];
-                                            const dayNumber = item.parsed.x; // This is day + offset
-                                            
-                                            // Only show date for the actual TAO Price dataset (index 0)
-                                            if (item.datasetIndex === 0) { 
-                                                const dataPoint = priceData.find(p => p.x === dayNumber);
-                                                if (dataPoint) {
-                                                    const date = new Date(dataPoint.time);
-                                                    return date.toLocaleDateString(undefined, { 
-                                                        year: 'numeric', 
-                                                        month: 'long', 
-                                                        day: 'numeric' 
-                                                    });
-                                                }
-                                            }
-                                            return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
-                                        }
-                                        return '';
-                                    },
-                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
-                                } 
-                            } 
-                        },
-                        scales: {
-                            x: { 
-                                type: 'logarithmic', 
-                                min: extendedMinDay, 
-                                max: extendedMaxDay, 
-                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' }, // Gray text
-                                ticks: { 
-                                    color: '#4b5563', // Gray text
-                                    autoSkip: false, 
-                                    callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        return tick ? tick.label : null;
-                                    }
-                                }, 
-                                afterBuildTicks: xAxisAfterBuildTicks,
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
-                            },
-                            y: { 
-                                type: 'logarithmic', 
-                                min: extendedMinPrice, 
-                                max: extendedMaxPrice, 
-                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' }, // Gray text
-                                ticks: {
-                                    color: '#4b5563', // Gray text
-                                    callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        // Use the label generated by afterBuildTicks for consistency
-                                        return tick ? tick.label : null;
-                                    }
+                chart.options.scales.x.min = extendedMinDay;
+                chart.options.scales.x.max = extendedMaxDay;
+                chart.options.scales.y.min = extendedMinPrice;
+                chart.options.scales.y.max = extendedMaxPrice;
+                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
+                chart.update();
+            } else {
+                chart = new Chart(ctx, {
+                    data: {
+                        datasets: [
+                            { 
+                                type: 'line', 
+                                label: '$TAO Price', 
+                                data: chartPriceData, 
+                                backgroundColor: 'rgba(24, 72, 204, 0.05)', 
+                                borderColor: 'rgba(24, 72, 204, 1)', 
+                                borderWidth: 2, 
+                                pointRadius: 0, 
+                                pointHoverRadius: 5, 
+                                tension: 0.1, 
+                                fill: false,
+                                pointStyle: 'line' 
+                            },
+                            { 
+                                type: 'line', 
+                                label: '50th Percentile Regression', 
+                                data: medianLineData, 
+                                borderColor: '#ff6d00', // Orange line
+                                borderWidth: 2, 
+                                pointRadius: 0, 
+                                fill: false,
+                                pointStyle: 'line'
+                            },
+                            { 
+                                type: 'line', 
+                                label: '1st Percentile', 
+                                data: p1LineData, 
+                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                                borderWidth: 1, 
+                                pointRadius: 0, 
+                                fill: false,
+                                pointStyle: 'line'
+                            },
+                            { 
+                                type: 'line', 
+                                label: '99th Percentile', 
+                                data: p99LineData, 
+                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                                borderWidth: 1, 
+                                pointRadius: 0, 
+                                fill: false,
+                                pointStyle: 'line'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                labels: { 
+                                    color: '#374151',
+                                    usePointStyle: true, // Use the pointStyle (which we set to 'line')
+                                    boxWidth: 30, // 50% longer than default (est. 20px)
+                                    boxHeight: 12 // Align to 12px font size
+                                } 
+                            }, // Dark gray text
+                            tooltip: { 
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        if (tooltipItems.length > 0) {
+                                            const item = tooltipItems[0];
+                                            const dayNumber = item.parsed.x; // This is day + offset
+                                            
+                                            // Only show date for the actual TAO Price dataset (index 0)
+                                            if (item.datasetIndex === 0) { 
+                                                const dataPoint = priceData.find(p => p.x === dayNumber);
+                                                if (dataPoint) {
+                                                    const date = new Date(dataPoint.time);
+                                                    return date.toLocaleDateString(undefined, { 
+                                                        year: 'numeric', 
+                                                        month: 'long', 
+                                                        day: 'numeric' 
+                                                    });
+                                                }
+                                            }
+                                            return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
+                                        }
+                                        return '';
+                                    },
+                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
+                                } 
+                            } 
+                        },
+                        scales: {
+                            x: { 
+                                type: 'logarithmic', 
+                                min: extendedMinDay, 
+                                max: extendedMaxDay, 
+                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' }, // Gray text
+                                ticks: { 
+                                    color: '#4b5563', // Gray text
+                                    autoSkip: false, 
+                                    callback: function(value, index, ticks) {
+                                        const tick = ticks[index];
+                                        return tick ? tick.label : null;
+                                    }
+                                }, 
+                                afterBuildTicks: xAxisAfterBuildTicks,
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
+                            },
+                            y: { 
+                                type: 'logarithmic', 
+                                min: extendedMinPrice, 
+                                max: extendedMaxPrice, 
+                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' }, // Gray text
+                                ticks: {
+                                    color: '#4b5563', // Gray text
+                                    callback: function(value, index, ticks) {
+                                        const tick = ticks[index];
+                                        // Use the label generated by afterBuildTicks for consistency
+                                        return tick ? tick.label : null;
+                                    }
 
-                                },
-                                afterBuildTicks: (axis) => {
-                                    const newTicks = [];
-                                    const axisMin = axis.min;
-                                    const axisMax = axis.max;
-                                    
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { tickValue = 0.000001; } 
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; } 
+                                },
+                                afterBuildTicks: (axis) => {
+                                    const newTicks = [];
+                                    const axisMin = axis.min;
+                                    const axisMax = axis.max;
+                                    
+                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
+                                    if (tickValue === 0) { tickValue = 0.000001; } 
+                                    if (tickValue < 0.000001) { tickValue = 0.000001; } 
 
-                                    while (tickValue <= axisMax) {
-                                        if (tickValue >= axisMin) {
-                                            newTicks.push({
-                                                value: tickValue,
-                                                label: `$${tickValue.toLocaleString()}`
-                                            });
-                                        }
-                                        
-                                        let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue || nextTick === Infinity) { break; } // Prevent infinite loops
-                                        tickValue = nextTick;
-                                    }
-                                    axis.ticks.length = 0;
-                                    axis.ticks.push(...newTicks);
-                                },
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        
-        function calculateRSquared(data, slope, intercept) {
-            let ss_tot = 0, ss_res = 0, y_mean = 0;
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length < 2) return 0;
-            validData.forEach(p => y_mean += Math.log10(p.y));
-            y_mean /= validData.length;
-            validData.forEach(p => {
-                const logY = Math.log10(p.y);
-                const logX = Math.log10(p.x);
-                const predictedLogY = slope * logX + intercept;
-                ss_tot += Math.pow(logY - y_mean, 2);
-                ss_res += Math.pow(logY - predictedLogY, 2);
-            });
-            return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
-        }
-        
-        window.onload = () => createOrUpdateChart();
+                                    while (tickValue <= axisMax) {
+                                        if (tickValue >= axisMin) {
+                                            newTicks.push({
+                                                value: tickValue,
+                                                label: `$${tickValue.toLocaleString()}`
+                                            });
+                                        }
+                                        
+                                        let nextTick = tickValue * 10;
+                                        if (nextTick <= tickValue || nextTick === Infinity) { break; } // Prevent infinite loops
+                                        tickValue = nextTick;
+                                    }
+                                    axis.ticks.length = 0;
+                                    axis.ticks.push(...newTicks);
+                                },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function calculateRSquared(data, slope, intercept) {
+            let ss_tot = 0, ss_res = 0, y_mean = 0;
+            const validData = data.filter(p => p.y > 0 && p.x > 0);
+            if (validData.length < 2) return 0;
+            validData.forEach(p => y_mean += Math.log10(p.y));
+            y_mean /= validData.length;
+            validData.forEach(p => {
+                const logY = Math.log10(p.y);
+                const logX = Math.log10(p.x);
+                const predictedLogY = slope * logX + intercept;
+                ss_tot += Math.pow(logY - y_mean, 2);
+                ss_res += Math.pow(logY - predictedLogY, 2);
+            });
+            return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
+        }
+        
+        window.onload = () => createOrUpdateChart();
 
-        // --- ADDITIONS FOR FULLSCREEN BUTTON ---
-        
-        const mainContainer = document.getElementById('mainContainer');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const fsIconEnter = document.getElementById('fsIconEnter');
-        const fsIconExit = document.getElementById('fsIconExit');
+        // --- ADDITIONS FOR FULLSCREEN BUTTON ---
+        
+        const mainContainer = document.getElementById('mainContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fsIconEnter = document.getElementById('fsIconEnter');
+        const fsIconExit = document.getElementById('fsIconExit');
 
-        /**
-         * Toggles fullscreen mode for the main chart container
-         */
-        function toggleFullScreen() {
-            // Check if we are currently in fullscreen mode
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                // Enter fullscreen (with cross-browser support)
-                if (mainContainer.requestFullscreen) {
-                    mainContainer.requestFullscreen();
-                } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
-                    mainContainer.webkitRequestFullscreen();
-                }
-            } else {
-                // Exit fullscreen (with cross-browser support)
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                }
-            }
-        }
+        /**
+         * Toggles fullscreen mode for the main chart container
+         */
+        function toggleFullScreen() {
+            // Check if we are currently in fullscreen mode
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Enter fullscreen (with cross-browser support)
+                if (mainContainer.requestFullscreen) {
+                    mainContainer.requestFullscreen();
+                } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
+                    mainContainer.webkitRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen (with cross-browser support)
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
 
-        /**
-         * Updates the icon based on the current fullscreen state.
-         * This is crucial for handling the 'Esc' key.
-         */
-        function updateFullscreenIcon() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                // We are IN fullscreen mode
-                fsIconEnter.classList.add('hidden');
-                fsIconExit.classList.remove('hidden');
-                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-            } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                
-                // Force the chart to resize to its container
-                if (chart) {
-                    // We use a double requestAnimationFrame to ensure the layout
-                    // has settled after the fullscreen state change.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            chart.resize();
-                        });
-                    });
-                }
-           }
-        }
+        /**
+         * Updates the icon based on the current fullscreen state.
+         * This is crucial for handling the 'Esc' key.
+         */
+        function updateFullscreenIcon() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                // We are IN fullscreen mode
+                fsIconEnter.classList.add('hidden');
+                fsIconExit.classList.remove('hidden');
+                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+            } else {
+                // We are NOT in fullscreen mode
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                
+                // Force the chart to resize to its container
+                if (chart) {
+                    // We use a double requestAnimationFrame to ensure the layout
+                    // has settled after the fullscreen state change.
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            chart.resize();
+                        });
+                    });
+                }
+           }
+        }
 
-        // Listen for fullscreen changes to keep the icon in sync
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
-        
-        // --- END OF ADDITIONS FOR FULLSCREEN ---     
-    </script>
-    
+        // Listen for fullscreen changes to keep the icon in sync
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
+        
+        // --- END OF ADDITIONS ---     
+    </script>
+    
 </body>
 </html>
