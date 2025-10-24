@@ -65,7 +65,20 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center min-h-screen p-4">
+<!-- 
+    FIX: Changed min-h-screen to h-screen.
+    This makes the body's height match the viewport exactly, 
+    allowing it to shrink and fixing the vertical scaling bug.
+-->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
+
+    <!-- 
+      This container has all scaling rules:
+      - flex-grow: Grow to fill the body
+      - max-w-[1600px]: Max width
+      - max-h-[900px]: Max height
+      - min-h-[30rem]: Min height
+    -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -81,11 +94,20 @@
 
         <!-- Controls div removed from here -->
         
-        <!-- Chart Container -->
+        <!-- 
+          Chart Container
+          - flex-grow: Fills the main container
+          - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+        -->
         <div id="chartCard" class="bg-white p-4 rounded-lg relative mt-4 flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
+            <!-- 
+              Chart Wrapper
+              - flex-grow: Fills the chart card
+              - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+            -->
             <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
             </div>
@@ -478,22 +500,22 @@
                 fsIconExit.classList.remove('hidden');
                 fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
             } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-               fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                
-                // Force the chart to resize to its container
-                if (chart) {
-                    // We use a double requestAnimationFrame to ensure the layout
-                    // has settled after the fullscreen state change.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            chart.resize();
-                        });
-                    });
-                }
-         }
+                // We are NOT in fullscreen mode
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+               fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                
+                // Force the chart to resize to its container
+                if (chart) {
+                    // We use a double requestAnimationFrame to ensure the layout
+                    // has settled after the fullscreen state change.
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            chart.resize();
+                        });
+                    });
+                }
+           }
         }
 
         // Listen for fullscreen changes to keep the icon in sync
