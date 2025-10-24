@@ -32,8 +32,15 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
-        
+    <div id="mainContainer" class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
+        <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
+            <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+            <svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
+            </svg>
+        </button>
         <header class="text-center mb-6">
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Bittensor Power Law Model</h1>
         </header>
@@ -396,6 +403,59 @@
         }
         
         window.onload = () => createOrUpdateChart();
+
+        // --- ADDITIONS FOR FULLSCREEN BUTTON ---
+        
+        const mainContainer = document.getElementById('mainContainer');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fsIconEnter = document.getElementById('fsIconEnter');
+        const fsIconExit = document.getElementById('fsIconExit');
+
+        /**
+         * Toggles fullscreen mode for the main chart container
+         */
+        function toggleFullScreen() {
+            // Check if we are currently in fullscreen mode
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Enter fullscreen (with cross-browser support)
+                if (mainContainer.requestFullscreen) {
+                    mainContainer.requestFullscreen();
+                } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
+                    mainContainer.webkitRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen (with cross-browser support)
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        /**
+         * Updates the icon based on the current fullscreen state.
+         * This is crucial for handling the 'Esc' key.
+         */
+        function updateFullscreenIcon() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                // We are IN fullscreen mode
+                fsIconEnter.classList.add('hidden');
+                fsIconExit.classList.remove('hidden');
+                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+            } else {
+                // We are NOT in fullscreen mode
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+            }
+        }
+
+        // Listen for fullscreen changes to keep the icon in sync
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
+        
+        // --- END OF ADDITIONS ---    
     </script>
     
 </body>
