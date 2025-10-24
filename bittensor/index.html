@@ -104,10 +104,7 @@
               <div id="lastPriceDiv" class="hidden sm:block">
                  <!-- Placeholder for last price -->
              </div>
-             <!-- *** ADDED: Power Law Status Div (MOVED TO END) *** -->
-             <div id="powerLawStatusDiv" class="flex items-center hidden sm:block">
-                <!-- Placeholder for Power Law status -->
-             </div>
+             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
         </div>
 
         <!-- 
@@ -131,6 +128,8 @@
             <!-- Controls (Moved to top) -->
             
             <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
+            <!-- *** ADDED: New div for Power Law Status *** -->
+            <div id="powerLawStatusDiv" class="text-center mt-2 text-sm text-gray-600"></div>
         </div>
 
     </div>
@@ -306,7 +305,7 @@
 
             // *** NEW: Update Power Law Status Div ***
             powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law`;
-            powerLawStatusDiv.classList.remove('hidden');
+            // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
 
             // *** UPDATED: Renamed "Calculated Power Law Exponent" to "Growth Exponent" ***
             modelInfoDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}<br>
@@ -661,4 +660,6 @@
     
 </body>
 </html>
+
+
 
