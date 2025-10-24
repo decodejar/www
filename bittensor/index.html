@@ -69,7 +69,8 @@
     FIX: Changed min-h-screen to h-screen.
     This makes the body's height match the viewport exactly, 
     allowing it to shrink and fixing the vertical scaling bug.
---><body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
+-->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
 
     <!-- 
       This container has all scaling rules:
@@ -77,7 +78,8 @@
       - max-w-[1600px]: Max width
       - max-h-[900px]: Max height
       - min-h-[30rem]: Min height
-    --><div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
+    -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1600px] max-h-[900px] min-h-[30rem] flex flex-col bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -90,11 +92,25 @@
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Bittensor Power Law Model</h1>
         </header>
 
-        <!-- Controls div removed from here --><!-- 
+        <!-- *** MOVED STATUS BAR HERE *** -->
+        <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600">
+             <div id="statusDiv" class="flex items-center">
+                 <span class="status-dot bg-yellow-500"></span>Loading latest data...
+             </div>
+             <div id="lastUpdateDiv" class="hidden sm:block"> 
+                 <!-- Placeholder for last update time -->
+             </div>
+              <div id="lastPriceDiv" class="hidden sm:block">
+                  <!-- Placeholder for last price -->
+             </div>
+        </div>
+
+        <!-- 
           Chart Container
           - flex-grow: Fills the main container
           - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-        --><div id="chartCard" class="bg-white p-4 rounded-lg relative mt-4 flex-grow flex flex-col min-h-0">
+        -->
+        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0"> {/* Removed mt-4 */}
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -102,15 +118,12 @@
               Chart Wrapper
               - flex-grow: Fills the chart card
               - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
-            --><div id="chartWrapper" class="relative flex-grow min-h-0">
+            -->
+            <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Controls (Moved from above) --><div class="bg-gray-100 p-4 rounded-lg flex flex-wrap items-center justify-center gap-4 mt-4">
-                <div id="statusDiv" class="text-sm text-gray-600 flex items-center">
-                    <span class="status-dot bg-yellow-500"></span>Loading latest data from repository...
-                </div>
-            </div>
+            <!-- Controls (Moved to top) -->
             
             <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
         </div>
@@ -125,6 +138,9 @@
         const modelInfoDiv = document.getElementById('modelInfo');
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
+        // *** ADDED: Get references to the new divs ***
+        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
+        const lastPriceDiv = document.getElementById('lastPriceDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         
         // --- MODEL MODIFICATION ---
@@ -215,7 +231,20 @@
                 return;
             }
             
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Displaying latest daily data.`;
+            // *** ADDED: Get last data point info ***
+            const lastDataPoint = priceData[priceData.length - 1];
+            const lastPrice = lastDataPoint.y;
+            const lastTimestamp = lastDataPoint.time;
+            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
+
+            // *** UPDATED: Set statusDiv and new divs content ***
+            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
+            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
+            lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
+            // Show the divs now that they have content (using sm:block to hide on smallest screens)
+            lastUpdateDiv.classList.remove('hidden');
+            lastPriceDiv.classList.remove('hidden');
+
 
             const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y);
@@ -230,7 +259,7 @@
             const timeDuration = maxTime - minTime;
             const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
             // Find the ratio of projection
-            const futureTimeIndexRatio = (extendedMaxTime - minTime) / timeDuration;
+            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1; // Avoid division by zero
             
             const projectedDayCount = n * futureTimeIndexRatio;
             
@@ -300,7 +329,7 @@
                 // Estimate the max year based on a linear interpolation of day_number vs. time
                 const dayRange = lastDay.x - firstDay.x;
                 const timeRange = lastDay.time - firstDay.time;
-                const dayRatio = (axisMaxDay - firstDay.x) / dayRange;
+                const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0; // Avoid division by zero
                 const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
                 
                 const minYear = new Date(firstDay.time).getFullYear();
@@ -458,7 +487,8 @@
                                     color: '#4b5563', // Gray text
                                     callback: function(value, index, ticks) {
                                         const tick = ticks[index];
-                                        return tick ? `$${tick.value.toLocaleString()}` : null;
+                                        // Use the label generated by afterBuildTicks for consistency
+                                        return tick ? tick.label : null;
                                     }
 
                                 },
@@ -480,7 +510,7 @@
                                         }
                                         
                                         let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue) { break; }
+                                        if (nextTick <= tickValue || nextTick === Infinity) { break; } // Prevent infinite loops
                                         tickValue = nextTick;
                                     }
                                     axis.ticks.length = 0;
