@@ -73,11 +73,11 @@
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
 
     <!-- 
-      This container has all scaling rules:
-      - flex-grow: Grow to fill the body
-      - max-w-[1600px]: Max width
-      - max-h-[900px]: Max height
-      - min-h-[30rem]: Min height
+        This container has all scaling rules:
+        - flex-grow: Grow to fill the body
+        - max-w-[1600px]: Max width
+        - max-h-[900px]: Max height
+        - min-h-[30rem]: Min height
     -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
@@ -97,27 +97,31 @@
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
+             <!-- *** ADDED: Power Law Status Div *** -->
+             <div id="powerLawStatusDiv" class="flex items-center hidden sm:block">
+                <!-- Placeholder for Power Law status -->
+             </div>
              <div id="lastUpdateDiv" class="hidden sm:block"> 
                  <!-- Placeholder for last update time -->
              </div>
               <div id="lastPriceDiv" class="hidden sm:block">
-                  <!-- Placeholder for last price -->
+                 <!-- Placeholder for last price -->
              </div>
         </div>
 
         <!-- 
-          Chart Container
-          - flex-grow: Fills the main container
-          - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+            Chart Container
+            - flex-grow: Fills the main container
+            - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
         -->
         <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
             <!-- 
-              Chart Wrapper
-              - flex-grow: Fills the chart card
-              - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
+                Chart Wrapper
+                - flex-grow: Fills the chart card
+                - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
             -->
             <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <canvas id="powerLawChart"></canvas>
@@ -141,6 +145,8 @@
         // *** ADDED: Get references to the new divs ***
         const lastUpdateDiv = document.getElementById('lastUpdateDiv');
         const lastPriceDiv = document.getElementById('lastPriceDiv');
+        // *** ADDED: Get reference to Power Law status div ***
+        const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         
         // --- MODEL MODIFICATION ---
@@ -158,7 +164,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                     throw new Error("Invalid data format in JSON file");
+                      throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -294,8 +300,20 @@
             // R-squared is still calculated based on the original mean regression line's fit
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
             
-            modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
-                <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            // *** NEW: Determine model fit ***
+            const modelFitGood = rSquared >= 0.9;
+
+            // *** NEW: Update Power Law Status Div ***
+            powerLawStatusDiv.innerHTML = `<strong>Power Law Fit:</strong> <span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>${rSquared.toFixed(4)}`;
+            powerLawStatusDiv.classList.remove('hidden');
+
+            // *** UPDATED: Conditionally show Exponent based on model fit ***
+            if (modelFitGood) {
+                modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}`;
+            } else {
+                modelInfoDiv.innerHTML = `<span class="text-gray-500">Model fit (R² < 0.9) too low to display power law.</span>`;
+            }
+
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
             const startIndex = extendedMinDay; // Use the new min day
@@ -306,8 +324,10 @@
                 { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
             ]);
 
-            // *** ADDED: Calculate data for both mean and median lines ***
-            const meanLineData = calculateLinePoints(meanIntercept);
+            // *** REMOVED: Mean line data calculation ***
+            // const meanLineData = calculateLinePoints(meanIntercept); 
+            
+            // *** UPDATED: Calculate median and percentile lines ***
             const medianLineData = calculateLinePoints(medianIntercept);
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
@@ -373,16 +393,26 @@
             // --- END OF TICK BUILDER DEFINITION ---
 
             if (chart) {
-                chart.data.datasets[0].data = chartPriceData;
-                chart.data.datasets[1].data = medianLineData;
-                // Update 1st and 99th percentile lines
-                chart.data.datasets[2].data = p1LineData;
-                chart.data.datasets[3].data = p99LineData;
-                // *** ADDED: Update mean line data ***
-                chart.data.datasets[4].data = meanLineData;
+                // *** FIX: Remove the Mean Regression line (index 1) ***
+                if (chart.data.datasets.length > 3) {
+                     chart.data.datasets.splice(1, 1);
+                }
 
-                // *** ADDED: Update label for 50th percentile line ***
+                // *** FIX: Update correct dataset indices ***
+                chart.data.datasets[0].data = chartPriceData;
+                chart.data.datasets[1].data = medianLineData; // 50th Percentile
+                chart.data.datasets[2].data = p1LineData;     // 1st Percentile
+                chart.data.datasets[3].data = p99LineData;    // 99th Percentile
+
+                // *** FIX: Update correct label ***
                 chart.data.datasets[1].label = '50th Percentile Regression';
+
+                // *** NEW: Set visibility based on model fit ***
+                // *** REVERTED: Lines are no longer hidden based on model fit ***
+                // const showLines = modelFitGood;
+                // chart.data.datasets[1].hidden = !showLines; // 50th Percentile
+                // chart.data.datasets[2].hidden = !showLines; // 1st Percentile
+                // chart.data.datasets[3].hidden = !showLines; // 99th Percentile
 
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
@@ -391,6 +421,10 @@
                 chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
                 chart.update();
             } else {
+                // *** NEW: Determine line visibility for creation ***
+                // *** REVERTED: Lines are no longer hidden based on model fit ***
+                // const showLines = modelFitGood;
+
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
@@ -407,16 +441,7 @@
                                 fill: false,
                                 pointStyle: 'line' 
                             },
-                            {
-                                type: 'line',
-                                label: 'Mean Regression',
-                                data: meanLineData,
-                                borderColor: 'rgba(107, 114, 128, 1)', // Medium Gray
-                                borderWidth: 1,
-                                pointRadius: 0,
-                                fill: false,
-                                pointStyle: 'line'
-                            },
+                            // *** REMOVED: Mean Regression Dataset ***
                             { 
                                 type: 'line', 
                                 label: '50th Percentile Regression', 
@@ -425,7 +450,8 @@
                                 borderWidth: 2, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' 
+                                pointStyle: 'line'
+                                // hidden: !showLines // *** REVERTED ***
                             },
                             { 
                                 type: 'line', 
@@ -435,7 +461,8 @@
                                 borderWidth: 1, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' 
+                                pointStyle: 'line'
+                                // hidden: !showLines // *** REVERTED ***
                             },
                             { 
                                 type: 'line', 
@@ -445,7 +472,8 @@
                                 borderWidth: 1, 
                                 pointRadius: 0, 
                                 fill: false,
-                                pointStyle: 'line' 
+                                pointStyle: 'line'
+                                // hidden: !showLines // *** REVERTED ***
                             }
                         ]
                     },
@@ -630,8 +658,9 @@
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
         
-        // --- END OF ADDITIONS ---    
+        // --- END OF ADDITIONS ---     
     </script>
     
 </body>
 </html>
+
