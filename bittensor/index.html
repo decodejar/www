@@ -128,9 +128,9 @@
             <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
             <!-- This bar now holds the model info and status, styled like the top bar -->
             <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
-                <!-- modelInfo: content injected by JS -->
-                <!-- Added text-center sm:text-left to handle the <br> tag gracefully -->
-                <div id="modelInfo" class="text-center sm:text-left"></div>
+                <!-- NEW: Split modelInfo into separate divs for single-row layout -->
+                <div id="growthExponentDiv"></div>
+                <div id="modelFitDiv"></div>
 
                 <!-- powerLawStatusDiv: content injected by JS -->
                 <!-- Added flex items-center to align the status dot -->
@@ -147,7 +147,9 @@
     </footer>
 
 <script>
-        const modelInfoDiv = document.getElementById('modelInfo');
+        // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
+        const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
+        const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
         // *** ADDED: Get references to the new divs ***
@@ -240,7 +242,8 @@
 
             if (!priceData || priceData.length === 0) {
                 statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
-                modelInfoDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
+                // *** UPDATED: Show error in new div ***
+                growthExponentDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
                 loader.style.display = 'none';
                 return;
             }
@@ -315,9 +318,9 @@
             powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law`;
             // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
 
-            // *** UPDATED: Renamed "Calculated Power Law Exponent" to "Growth Exponent" ***
-            modelInfoDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}<br>
-                    <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            // *** UPDATED: Populate the two new divs separately (no <br>) ***
+            growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
+            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
@@ -668,3 +671,4 @@
     
 </body>
 </html>
+
