@@ -97,15 +97,15 @@
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
-             <!-- *** ADDED: Power Law Status Div *** -->
-             <div id="powerLawStatusDiv" class="flex items-center hidden sm:block">
-                <!-- Placeholder for Power Law status -->
-             </div>
              <div id="lastUpdateDiv" class="hidden sm:block"> 
                  <!-- Placeholder for last update time -->
              </div>
               <div id="lastPriceDiv" class="hidden sm:block">
                  <!-- Placeholder for last price -->
+             </div>
+             <!-- *** ADDED: Power Law Status Div (MOVED TO END) *** -->
+             <div id="powerLawStatusDiv" class="flex items-center hidden sm:block">
+                <!-- Placeholder for Power Law status -->
              </div>
         </div>
 
@@ -307,9 +307,8 @@
             powerLawStatusDiv.innerHTML = `<strong>Power Law:</strong> <span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>`;
             powerLawStatusDiv.classList.remove('hidden');
 
-            // *** UPDATED: Conditionally show Exponent based on model fit ***
-            // *** REVERTED: Show both Model Fit and Exponent regardless of fit ***
-            modelInfoDiv.innerHTML = `<strong>Calculated Power Law Exponent (α):</strong> ${slope.toFixed(3)}<br>
+            // *** UPDATED: Renamed "Calculated Power Law Exponent" to "Growth Exponent" ***
+            modelInfoDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}<br>
                   <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
 
@@ -661,5 +660,4 @@
     
 </body>
 </html>
-
 
