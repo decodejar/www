@@ -125,11 +125,19 @@
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Controls (Moved to top) -->
+            <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
+            <!-- This bar now holds the model info and status, styled like the top bar -->
+            <div class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+                <!-- modelInfo: content injected by JS -->
+                <!-- Added text-center sm:text-left to handle the <br> tag gracefully -->
+                <div id="modelInfo" class="text-center sm:text-left"></div>
+
+                <!-- powerLawStatusDiv: content injected by JS -->
+                <!-- Added flex items-center to align the status dot -->
+                <div id="powerLawStatusDiv" class="flex items-center"></div>
+            </div>
+            <!-- *** END CONSOLIDATED BAR *** -->
             
-            <div id="modelInfo" class="text-center mt-4 text-sm text-gray-600"></div>
-            <!-- *** ADDED: New div for Power Law Status *** -->
-            <div id="powerLawStatusDiv" class="text-center mt-2 text-sm text-gray-600"></div>
         </div>
 
     </div>
@@ -164,7 +172,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                      throw new Error("Invalid data format in JSON file");
+                       throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -309,7 +317,7 @@
 
             // *** UPDATED: Renamed "Calculated Power Law Exponent" to "Growth Exponent" ***
             modelInfoDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}<br>
-                  <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+                    <strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
 
             // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
@@ -399,7 +407,7 @@
                 chart.data.datasets[0].data = chartPriceData;
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
-                chart.data.datasets[3].data = p99LineData;    // 99th Percentile
+                chart.data.datasets[3].data = p99LineData;     // 99th Percentile
 
                 // *** FIX: Update correct label ***
                 chart.data.datasets[1].label = '50th Percentile Regression';
@@ -660,6 +668,3 @@
     
 </body>
 </html>
-
-
-
