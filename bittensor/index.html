@@ -395,7 +395,8 @@
                                 pointRadius: 0, 
                                 pointHoverRadius: 5, 
                                 tension: 0.1, 
-                                fill: false // *** MODIFICATION: Removed fill by setting to false ***
+                                fill: false, // *** MODIFICATION: Removed fill by setting to false ***
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             { 
                                 type: 'line', 
@@ -404,7 +405,8 @@
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2, 
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             // *** MODIFICATION: Added 1st Percentile line ***
                             { 
@@ -415,7 +417,8 @@
                                 borderWidth: 1, 
                                 borderDash: [5, 5], // Dashed line
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             },
                             // *** MODIFICATION: Added 99th Percentile line ***
                             { 
@@ -426,14 +429,20 @@
                                 borderWidth: 1, 
                                 borderDash: [5, 5], // Dashed line
                                 pointRadius: 0, 
-                                fill: false 
+                                fill: false,
+                                pointStyle: 'line' // Use a line in the legend
                             }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: { 
-                            legend: { labels: { color: '#374151' } }, // Dark gray text
+                            legend: { 
+                                labels: { 
+                                    color: '#374151',
+                                    usePointStyle: true // Use the pointStyle (which we set to 'line')
+                                } 
+                            }, // Dark gray text
                             tooltip: { 
                                 callbacks: {
                                     title: function(tooltipItems) {
@@ -609,3 +618,4 @@
     
 </body>
 </html>
+
