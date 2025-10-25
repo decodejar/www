@@ -489,7 +489,7 @@
             modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
             // --- NEW: Display the optimal offset results ---
-            optimalOffsetDiv.innerHTML = `<strong>Offset (Config):</strong> ${DAY_OFFSET} | <strong>Offset (Optimal):</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
+            optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
 
             // --- Calculate All Line Data Points ---
             const startIndex = extendedMinDay;
