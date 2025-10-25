@@ -133,10 +133,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
             </svg>
         </button>
-        <!-- MODIFIED: Reduced bottom margin, title font size, subtitle top margin -->
+        <!-- MODIFIED: Reduced bottom margin, title font size -->
         <header class="text-center mb-3">
             <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">TAO Tensor Law Model</h1>
-            <p class="text-gray-600 mt-0.5">Modelling Bittensor in Log-Log Regression</p>
+            <!-- REMOVED: Subtitle paragraph -->
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
@@ -245,6 +245,17 @@
         const greenFillColor = 'rgba(34, 197, 94, 0.1)'; // approx green-500
         const yellowFillColor = 'rgba(250, 204, 21, 0.1)'; // approx yellow-400
         const redFillColor = 'rgba(239, 68, 68, 0.1)'; // approx red-500
+        // --- END ---
+
+        // --- NEW: Define Line Styles ---
+        const grayLineStyle = {
+            borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+            borderWidth: 1,
+        };
+        const orangeLineStyle = {
+            borderColor: '#ff6d00', // Orange
+            borderWidth: 2,
+        };
         // --- END ---
 
         async function loadPriceData() {
@@ -421,12 +432,11 @@
                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
                  ];
             };
-            const originalMedianLineData = calculateLinePoints(medianIntercept); // For orange line
+            const medianLineData = calculateLinePoints(medianIntercept); // For 50th pctl line (orange OR gray)
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
-            const p20LineData = calculateLinePoints(p20Intercept); // NEW
-            const p50GrayLineData = calculateLinePoints(medianIntercept); // For thin gray line (same intercept as orange)
-            const p80LineData = calculateLinePoints(p80Intercept); // NEW
+            const p20LineData = calculateLinePoints(p20Intercept);
+            const p80LineData = calculateLinePoints(p80Intercept);
 
             const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
 
@@ -482,11 +492,6 @@
                 pointStyle: 'line'
             };
 
-            const grayLineStyle = {
-                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                 borderWidth: 1,
-            };
-
             const fillDatasetDefaults = {
                 type: 'line',
                 pointRadius: 0,
@@ -498,20 +503,21 @@
             if (chart) {
                 // Update existing datasets
                 chart.data.datasets[0].data = chartPriceData; // Price
-                chart.data.datasets[1].data = originalMedianLineData; // Orange Median
+                chart.data.datasets[1].data = medianLineData; // 50th Pctl (style updated in applyBandVisibility)
                 chart.data.datasets[2].data = p1LineData;     // P1 Line
                 chart.data.datasets[3].data = p99LineData;    // P99 Line
 
                 // Update or add new datasets (indices 4+)
                 const datasetsToUpdate = [
                     { index: 4, label: '20th Pctl', data: p20LineData, style: grayLineStyle, hidden: true },
-                    { index: 5, label: '50th Pctl (Band)', data: p50GrayLineData, style: grayLineStyle, hidden: true }, // Gray median for bands
+                    // Index 5 is now redundant/always hidden
+                    { index: 5, label: '50th Pctl (Hidden)', data: medianLineData, style: grayLineStyle, hidden: true },
                     { index: 6, label: '80th Pctl', data: p80LineData, style: grayLineStyle, hidden: true },
                     // Fills - Target needs to be the index of the line below it
-                    { index: 7, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, hidden: true },
-                    { index: 8, label: 'Value Band (P20-P50)', data: p50GrayLineData, fill: 4, backgroundColor: greenFillColor, hidden: true },
-                    { index: 9, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 5, backgroundColor: yellowFillColor, hidden: true },
-                    { index: 10, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, hidden: true },
+                    { index: 7, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, hidden: true }, // Fill to P1 (idx 2)
+                    { index: 8, label: 'Value Band (P20-P50)', data: medianLineData, fill: 4, backgroundColor: greenFillColor, hidden: true }, // Fill to P20 (idx 4)
+                    { index: 9, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 1, backgroundColor: yellowFillColor, hidden: true }, // Fill to Median (idx 1)
+                    { index: 10, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, hidden: true }, // Fill to P80 (idx 6)
                 ];
 
                 datasetsToUpdate.forEach(dsInfo => {
@@ -519,7 +525,6 @@
                         // Update existing dataset
                         chart.data.datasets[dsInfo.index].data = dsInfo.data;
                         chart.data.datasets[dsInfo.index].label = dsInfo.label;
-                        chart.data.datasets[dsInfo.index].hidden = dsInfo.hidden; // Set initial hidden state
                          if (dsInfo.style) {
                              Object.assign(chart.data.datasets[dsInfo.index], dsInfo.style);
                          }
@@ -527,21 +532,26 @@
                               chart.data.datasets[dsInfo.index].fill = dsInfo.fill;
                               chart.data.datasets[dsInfo.index].backgroundColor = dsInfo.backgroundColor;
                          }
+                          // Ensure redundant line stays hidden
+                          if (dsInfo.index === 5) {
+                               chart.data.datasets[dsInfo.index].hidden = true;
+                          }
                     } else {
                         // Add new dataset
-                        chart.data.datasets.push({
-                            ...datasetDefaults,
-                            ...(dsInfo.style || {}),
-                            ...(dsInfo.fill !== undefined ? fillDatasetDefaults : {}),
-                             label: dsInfo.label,
-                             data: dsInfo.data,
-                             hidden: dsInfo.hidden, // Set initial hidden state
-                             ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
-                         });
+                         chart.data.datasets.push({
+                             ...datasetDefaults,
+                             ...(dsInfo.style || {}),
+                             ...(dsInfo.fill !== undefined ? fillDatasetDefaults : {}),
+                              label: dsInfo.label,
+                              data: dsInfo.data,
+                              // Ensure redundant line starts hidden
+                              hidden: dsInfo.index === 5 ? true : dsInfo.hidden,
+                              ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
+                          });
                     }
                 });
 
-                 // Apply initial checkbox state
+                 // Apply checkbox state correctly updates styles/visibility
                  applyBandVisibility(showBandsCheckbox.checked);
 
 
@@ -569,13 +579,12 @@
                                 pointHoverRadius: 5,
                                 tension: 0.1,
                             },
-                            { // 1: Orange Median
+                            { // 1: 50th Percentile (Style changes dynamically)
                                 ...datasetDefaults,
                                 label: '50th Percentile',
-                                data: originalMedianLineData,
-                                borderColor: '#ff6d00',
-                                borderWidth: 2,
-                                hidden: false, // Initially visible
+                                data: medianLineData,
+                                ...orangeLineStyle, // Start with orange style
+                                hidden: false,
                             },
                             { // 2: P1 Line
                                 ...datasetDefaults,
@@ -597,11 +606,11 @@
                                 data: p20LineData,
                                 hidden: true,
                             },
-                            { // 5: P50 Line (Gray)
+                            { // 5: Redundant P50 Line (Gray) - Always hidden
                                 ...datasetDefaults,
                                 ...grayLineStyle,
-                                label: '50th Pctl (Band)', // Different label for legend if needed
-                                data: p50GrayLineData,
+                                label: '50th Pctl (Hidden)', // Label for debugging
+                                data: medianLineData, // Use same data
                                 hidden: true,
                             },
                             { // 6: P80 Line (Gray)
@@ -622,7 +631,7 @@
                              { // 8: Fill P20-P50 (Green)
                                 ...fillDatasetDefaults,
                                 label: 'Value Band (P20-P50)',
-                                data: p50GrayLineData, // Use upper boundary data
+                                data: medianLineData, // Use upper boundary data (index 1)
                                 fill: 4, // Fill down to index 4 (P20 Line)
                                 backgroundColor: greenFillColor,
                             },
@@ -630,7 +639,7 @@
                                 ...fillDatasetDefaults,
                                 label: 'Expensive Band (P50-P80)',
                                 data: p80LineData, // Use upper boundary data
-                                fill: 5, // Fill down to index 5 (P50 Gray Line)
+                                fill: 1, // Fill down to index 1 (Main P50 Line)
                                 backgroundColor: yellowFillColor,
                             },
                             { // 10: Fill P80-P99 (Red)
@@ -648,9 +657,10 @@
                             legend: {
                                 labels: {
                                     color: '#374151', usePointStyle: true, boxWidth: 30, boxHeight: 12,
-                                    // Filter out fill datasets from legend
+                                    // Filter out fill datasets and hidden lines
                                     filter: function(item, chart) {
-                                         return !item.text.includes('Band');
+                                         // Hide fills and the redundant 50th line (index 5)
+                                         return !item.text.includes('Band') && item.datasetIndex !== 5;
                                      }
                                 }
                             },
@@ -673,7 +683,8 @@
                                          return '';
                                      },
                                      label: (context) => {
-                                         if (context.dataset.label.includes('Band')) return null; // Don't show tooltip label for fills
+                                         // Hide tooltip label for fills and redundant 50th line
+                                         if (context.dataset.label.includes('Band') || context.datasetIndex === 5) return null;
                                          return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
                                      }
                                 }
@@ -738,6 +749,9 @@
              // Remove previous listener to avoid duplicates if function runs again
              showBandsCheckbox.removeEventListener('change', handleBandToggle);
              showBandsCheckbox.addEventListener('change', handleBandToggle);
+              // Apply initial state based on checkbox
+              applyBandVisibility(showBandsCheckbox.checked);
+              if(chart) chart.update('none'); // Update once without animation after applying initial visibility
              // --- END ---
         }
 
@@ -749,23 +763,41 @@
              chart.update(); // Update chart after visibility changes
         }
 
+        // --- MODIFIED: applyBandVisibility to change style of dataset 1 ---
         function applyBandVisibility(showBands) {
              if (!chart) return;
-              // Indices based on the final dataset order
-              const orangeMedianIndex = 1;
-              const grayLineIndices = [4, 5, 6]; // 20, 50(gray), 80
+              // Indices
+              const mainMedianIndex = 1;   // The one that changes color
+              const p20Index = 4;
+              const redundantP50Index = 5; // Always hidden
+              const p80Index = 6;
               const fillIndices = [7, 8, 9, 10]; // P1-P20, P20-P50, P50-P80, P80-P99
 
-              // Toggle Orange Median vs Gray Lines + Fills
-              chart.setDatasetVisibility(orangeMedianIndex, !showBands);
-              grayLineIndices.forEach(index => chart.setDatasetVisibility(index, showBands));
+              // Always visible lines
+              chart.setDatasetVisibility(0, true); // Price
+              chart.setDatasetVisibility(mainMedianIndex, true); // Main 50th is always visible now
+              chart.setDatasetVisibility(2, true); // P1
+              chart.setDatasetVisibility(3, true); // P99
+              chart.setDatasetVisibility(redundantP50Index, false); // Keep redundant one hidden
+
+              // Toggle visibility of band lines and fills
+              chart.setDatasetVisibility(p20Index, showBands);
+              chart.setDatasetVisibility(p80Index, showBands);
               fillIndices.forEach(index => chart.setDatasetVisibility(index, showBands));
 
-              // P1 and P99 lines (indices 2, 3) are always visible
-               chart.setDatasetVisibility(2, true);
-               chart.setDatasetVisibility(3, true);
+              // Change style of main 50th percentile line
+              const medianDataset = chart.data.datasets[mainMedianIndex];
+              if (showBands) {
+                  // Apply gray style
+                  medianDataset.borderColor = grayLineStyle.borderColor;
+                  medianDataset.borderWidth = grayLineStyle.borderWidth;
+              } else {
+                  // Apply orange style
+                  medianDataset.borderColor = orangeLineStyle.borderColor;
+                  medianDataset.borderWidth = orangeLineStyle.borderWidth;
+              }
          }
-         // --- END ---
+         // --- END MODIFICATION ---
 
         function calculateRSquared(data, slope, intercept) {
             let ss_tot = 0, ss_res = 0, y_mean = 0;
