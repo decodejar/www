@@ -70,8 +70,8 @@
     This makes the body's height match the viewport exactly,
     allowing it to shrink and fixing the vertical scaling bug.
 -->
-<!-- MODIFIED: Reduced body padding -->
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
+<!-- MODIFIED: Further reduced body padding -->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-2">
 
     <!--
         This container has all scaling rules:
@@ -80,8 +80,8 @@
         - max-h-[900px]: Max height
         - min-h-[30rem]: Min height
     -->
-    <!-- MODIFIED: Reduced container padding -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-3 sm:p-4 md:p-6 relative">
+    <!-- MODIFIED: Further reduced container padding -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -91,15 +91,15 @@
             </svg>
         </button>
         <!-- MODIFIED: Reduced bottom margin, title font size, subtitle top margin -->
-        <header class="text-center mb-4">
+        <header class="text-center mb-3">
             <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">TAO Tensor Law Model</h1>
             <p class="text-gray-600 mt-0.5">Modelling Bittensor in Log-Log Regression</p>
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
         <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
-        <!-- MODIFIED: Reduced padding and bottom margin -->
-        <div class="bg-gray-100 p-2 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-3 text-sm text-gray-600 px-4">
+        <!-- MODIFIED: Further reduced padding and bottom margin -->
+        <div class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
@@ -122,8 +122,8 @@
             - flex-grow: Fills the main container
             - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
         -->
-        <!-- MODIFIED: Reduced padding -->
-        <div id="chartCard" class="bg-white p-3 rounded-lg relative flex-grow flex flex-col min-h-0">
+        <!-- MODIFIED: Further reduced padding -->
+        <div id="chartCard" class="bg-white p-2 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -139,8 +139,8 @@
             <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
             <!-- This bar now holds the model info and status, styled like the top bar -->
             <!-- *** MODIFIED: Removed explicit width class*** -->
-            <!-- MODIFIED: Reduced padding and top margin -->
-            <div class="bg-gray-100 p-2 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-3 text-sm text-gray-600">
+            <!-- MODIFIED: Further reduced padding and top margin -->
+            <div class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <!-- NEW: Split modelInfo into separate divs for single-row layout -->
                 <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
@@ -154,8 +154,8 @@
 
     </div>
 
-    <!-- MODIFIED: Reduced padding and top margin -->
-    <footer class="text-center p-2 mt-3">
+    <!-- MODIFIED: Further reduced padding and top margin -->
+    <footer class="text-center p-1 mt-2">
         <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
     </footer>
 
@@ -466,7 +466,7 @@
 
 
                 // *** FIX: Update correct label ***
-                chart.data.datasets[1].label = '50th Percentile Regression';
+                chart.data.datasets[1].label = '50th Percentile'; // Removed 'Regression'
 
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
@@ -493,7 +493,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '50th Percentile',
+                                label: '50th Percentile', // Removed 'Regression'
                                 data: medianLineData,
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2,
@@ -553,11 +553,19 @@
                                                     });
                                                 }
                                             }
-                                            return `Day ${(dayNumber - DAY_OFFSET).toFixed(0)}`;
+                                            // Show raw day number for percentile lines
+                                            return `Day (Log Axis): ${dayNumber.toFixed(0)}`;
                                         }
                                         return '';
                                     },
-                                    label: (context) => `Price: $${context.parsed.y.toFixed(2)}`
+                                     label: (context) => {
+                                        // Different label based on dataset
+                                        if (context.datasetIndex === 0) { // TAO Price
+                                            return `Price: $${context.parsed.y.toFixed(2)}`;
+                                        } else { // Percentile lines
+                                             return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -693,7 +701,7 @@
                     // has settled after the fullscreen state change.
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
-                            chart.resize();
+                           if (chart) chart.resize(); // Check if chart exists before resizing
                         });
                     });
                 }
