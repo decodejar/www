@@ -51,7 +51,7 @@ def fetch_and_save_data():
         print("No existing data found. Fetching the last 365 days from CoinGecko...")
 
     
-    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days={days_to_fetch}&interval=daily&x_cg_demo_api_key={api_key}"
+    api_url = f"https://pro-api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days={days_to_fetch}&interval=daily&x_cg_demo_api_key={api_key}"
     
     try:
         response = requests.get(api_url, timeout=30)
