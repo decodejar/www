@@ -63,6 +63,38 @@
         body:has(#mainContainer:fullscreen) footer {
             display: none;
         }
+
+        /* --- Mobile Fullscreen Optimizations --- */
+
+        /* CSS only handles the PORTRAIT overlay now */
+        @media (max-width: 639px) and (orientation: portrait) {
+            #mainContainer:fullscreen #rotateOverlay {
+                display: flex !important; /* Show the overlay */
+            }
+
+            #mainContainer:fullscreen header,
+            #mainContainer:fullscreen #topStatusBar,
+            #mainContainer:fullscreen #chartCard,
+            #mainContainer:fullscreen #bottomModelBar,
+            #mainContainer:fullscreen #fullscreenBtn {
+                display: none !important; /* Hide everything else */
+            }
+        }
+
+        /* Style applied by JS for mobile landscape */
+        #mainContainer.mobile-fullscreen-landscape header,
+        #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
+             display: none !important;
+        }
+         #mainContainer.mobile-fullscreen-landscape #chartCard {
+             padding: 0 !important;
+         }
+         #mainContainer.mobile-fullscreen-landscape #topStatusBar {
+              display: flex !important; /* Ensure it remains visible */
+         }
+
+
+        /* --- END: Mobile Fullscreen Optimizations --- */
     </style>
 </head>
 <!--
@@ -82,6 +114,17 @@
     -->
     <!-- MODIFIED: Further reduced container padding -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
+
+        <!-- *** NEW "Please Rotate" Overlay *** -->
+        <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-600 mb-4 animate-pulse">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Please Rotate Your Device</h2>
+            <p class="text-gray-600">This chart is best viewed in landscape mode.</p>
+        </div>
+        <!-- *** END Overlay *** -->
+
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -99,7 +142,7 @@
         <!-- *** MOVED STATUS BAR HERE *** -->
         <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
         <!-- MODIFIED: Further reduced padding and bottom margin -->
-        <div class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
+        <div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
@@ -140,7 +183,7 @@
             <!-- This bar now holds the model info and status, styled like the top bar -->
             <!-- *** MODIFIED: Removed explicit width class*** -->
             <!-- MODIFIED: Further reduced padding and top margin -->
-            <div class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
+            <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <!-- NEW: Split modelInfo into separate divs for single-row layout -->
                 <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
@@ -151,7 +194,8 @@
                 <div id="powerLawStatusDiv" class="flex items-center">
                      <span id="powerLawStatusDot" class="status-dot bg-yellow-500"></span> <!-- Dot needs ID for JS -->
                      <span id="powerLawStatusText">Power Law</span> <!-- Text needs ID for JS -->
-                     <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-400 cursor-help border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-200">?</span>
+                     <!-- MODIFIED: Changed text/border color to gray-600 and hover bg to gray-300 -->
+                     <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
                 <!-- *** END MODIFICATION *** -->
             </div>
@@ -162,10 +206,16 @@
 
     <!-- MODIFIED: Further reduced padding and top margin -->
     <footer class="text-center p-1 mt-2">
-        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
+        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar | https://x.com/decodejar</a></p>
     </footer>
 
 <script>
+        /*
+        * TAO Tensor Law Model & Regression Logic
+        * Copyright (c) 2025 DecodeJar | https://x.com/decodejar. All Rights Reserved.
+        * Unauthorized copying or distribution is prohibited.
+        */
+
         // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
         const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
         const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
@@ -192,6 +242,7 @@
 
         async function loadPriceData() {
             try {
+                // Add cache-busting query parameter
                 const response = await fetch(`./price_data.json?t=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load data file: ${response.statusText}`);
@@ -207,7 +258,9 @@
                 // --- END MODIFICATION ---
             } catch (error) {
                 console.error("Error loading price data:", error);
-                return null;
+                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
+                loader.style.display = 'none';
+                return null; // Return null on error
             }
         }
 
@@ -264,12 +317,16 @@
 
             const priceData = await loadPriceData();
 
+            // Check if priceData is null or empty after load attempt
             if (!priceData || priceData.length === 0) {
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error: Could not load or process price_data.json.`;
-                // *** UPDATED: Show error in new div ***
-                growthExponentDiv.innerHTML = `<span class="text-red-400">Ensure 'price_data.json' is in your repository and contains valid data.</span>`;
+                if (!statusDiv.innerHTML.includes('Error')) { // Avoid overwriting specific load errors
+                   statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                }
+                growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
+                modelFitDiv.innerHTML = ''; // Clear other model info
+                powerLawStatusDiv.style.display = 'none'; // Hide status
                 loader.style.display = 'none';
-                return;
+                return; // Stop execution
             }
 
             // *** ADDED: Get last data point info ***
@@ -380,6 +437,7 @@
             const modelFitGood = rSquared >= 0.9;
 
             // --- MODIFIED: Update Power Law Status Dot and Text ---
+             powerLawStatusDiv.style.display = 'flex'; // Ensure status div is visible
             // Update dot color based on model fit
             if (powerLawStatusDot) {
                  powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
@@ -400,10 +458,16 @@
             const startIndex = extendedMinDay; // Use the new min day
             const endIndex = extendedMaxDay; // Use the new max day
 
-            const calculateLinePoints = (intercept) => ([
-                { x: startIndex, y: Math.pow(10, slope * Math.log10(startIndex) + intercept) },
-                { x: endIndex, y: Math.pow(10, slope * Math.log10(endIndex) + intercept) }
-            ]);
+            const calculateLinePoints = (intercept) => {
+                 // Ensure startIndex and endIndex are positive for log10
+                 const safeStartIndex = Math.max(startIndex, 1); // Avoid log10(0) or negative
+                 const safeEndIndex = Math.max(endIndex, 1);
+                 return [
+                     { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
+                     { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
+                 ];
+            };
+
 
             // *** UPDATED: Calculate median and percentile lines ***
             const medianLineData = calculateLinePoints(medianIntercept);
@@ -419,23 +483,31 @@
 
             // --- DEFINE THE X-AXIS TICK BUILDER ---
             const xAxisAfterBuildTicks = (axis) => {
+                 if (!priceData || priceData.length === 0) return; // Guard clause
+
                 const newTicks = [];
                 const axisMinDay = axis.min;
                 const axisMaxDay = axis.max;
 
-                if (!priceData || priceData.length === 0) return;
-
                 const firstDay = priceData[0];
                 const lastDay = priceData[priceData.length - 1];
+
+                // Ensure valid data points before proceeding
+                if (!firstDay || !lastDay) return;
+
 
                 // Estimate the max year based on a linear interpolation of day_number vs. time
                 const dayRange = lastDay.x - firstDay.x;
                 const timeRange = lastDay.time - firstDay.time;
-                const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0; // Avoid division by zero
-                const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
+                 // Ensure dayRange and timeRange are valid before division
+                 const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0;
+                 const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
+
 
                 const minYear = new Date(firstDay.time).getFullYear();
-                const maxYear = new Date(estimatedMaxTime).getFullYear();
+                // Ensure estimatedMaxTime is a valid number before getting year
+                const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
+
 
                 let lastYearFound = minYear - 1; // Start one before
 
@@ -452,21 +524,25 @@
 
                 // Add ticks for future years (that are not in the data)
                 const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                if (dayRange > 0 && timeRange > 0) { // Avoid division by zero
-                    for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                        // Estimate the day_number for Jan 1st of this future year
-                        const yearStartTime = new Date(year, 0, 1).getTime();
-                        const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                        const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+                 // Ensure valid ranges before loop
+                 if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
+                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                         // Estimate the day_number for Jan 1st of this future year
+                         const yearStartTime = new Date(year, 0, 1).getTime();
+                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
 
-                        if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                            newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                        }
-                    }
-                }
+                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                         }
+                     }
+                 }
 
-                axis.ticks.length = 0;
-                axis.ticks.push(...newTicks);
+
+                axis.ticks.length = 0; // Clear existing ticks
+                // Filter out potential NaN or invalid values before pushing
+                const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
+                axis.ticks.push(...validTicks);
             };
             // --- END OF TICK BUILDER DEFINITION ---
 
@@ -476,11 +552,26 @@
                 chart.data.datasets[1].data = medianLineData; // 50th Percentile
                 chart.data.datasets[2].data = p1LineData;     // 1st Percentile
 
-                if (chart.data.datasets.length > 3) { // If 99th is at index 3, and there were more before
-                    chart.data.datasets.splice(3, chart.data.datasets.length - 4); // Remove any datasets after index 2
+                // Ensure dataset 3 exists before updating
+                if (!chart.data.datasets[3]) {
+                     chart.data.datasets.push({
+                         type: 'line',
+                         label: '99th Percentile',
+                         data: p99LineData,
+                         borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                         borderWidth: 1,
+                         pointRadius: 0,
+                         fill: false,
+                         pointStyle: 'line'
+                     });
+                } else {
+                     chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
                 }
 
-                chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
+                 // Remove any extra datasets beyond index 3 if they somehow exist
+                 if (chart.data.datasets.length > 4) {
+                     chart.data.datasets.splice(4, chart.data.datasets.length - 4);
+                 }
 
 
                 // *** FIX: Update correct label ***
@@ -498,7 +589,7 @@
                         datasets: [
                             {
                                 type: 'line',
-                                label: '$TAO Price',
+                                label: 'TAO Price',
                                 data: chartPriceData,
                                 backgroundColor: 'rgba(24, 72, 204, 0.05)',
                                 borderColor: 'rgba(24, 72, 204, 1)',
@@ -511,7 +602,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '50th Percentile', // Removed 'Regression'
+                                label: '50th Percentile',
                                 data: medianLineData,
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2,
@@ -521,7 +612,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '1st Percentile',
+                                label: '1st Pctl',
                                 data: p1LineData,
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1,
@@ -531,7 +622,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '99th Percentile',
+                                label: '99th Pctl',
                                 data: p99LineData,
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1,
@@ -572,7 +663,9 @@
                                                 }
                                             }
                                             // Show raw day number for percentile lines
-                                            return `Day (Log Axis): ${dayNumber.toFixed(0)}`;
+                                             // Ensure dayNumber is valid before calculating
+                                             const displayDay = !isNaN(dayNumber) ? (dayNumber - DAY_OFFSET).toFixed(0) : 'N/A';
+                                             return `Day ~${displayDay}`; // Indicate approximation due to log scale
                                         }
                                         return '';
                                     },
@@ -597,8 +690,9 @@
                                     color: '#4b5563', // Gray text
                                     autoSkip: false,
                                     callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        return tick ? tick.label : null;
+                                        // Find the tick object corresponding to the value
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null; // Use the label set by afterBuildTicks
                                     }
                                 },
                                 afterBuildTicks: xAxisAfterBuildTicks,
@@ -612,23 +706,30 @@
                                 ticks: {
                                     color: '#4b5563', // Gray text
                                     callback: function(value, index, ticks) {
-                                        const tick = ticks[index];
-                                        // Use the label generated by afterBuildTicks for consistency
-                                        return tick ? tick.label : null;
+                                         // Find the tick object corresponding to the value
+                                         const tick = this.getTicks().find(t => t.value === value);
+                                         return tick ? tick.label : null; // Use the label set by afterBuildTicks
                                     }
 
                                 },
                                 afterBuildTicks: (axis) => {
+                                     if (!axis.chart.data || !axis.chart.data.datasets || axis.chart.data.datasets.length === 0) return; // Guard
+
                                     const newTicks = [];
                                     const axisMin = axis.min;
                                     const axisMax = axis.max;
 
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)) - 1);
-                                    if (tickValue === 0) { tickValue = 0.000001; }
-                                    if (tickValue < 0.000001) { tickValue = 0.000001; }
+                                     // Guard against invalid min/max
+                                     if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
+                                         axis.ticks = [{value: 1, label: '$1'}]; // Default fallback
+                                         return;
+                                     }
 
-                                    while (tickValue <= axisMax) {
-                                        if (tickValue >= axisMin) {
+
+                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin))); // Start at the nearest power of 10 below min
+
+                                    while (tickValue <= axisMax * 1.1) { // Extend slightly beyond max
+                                        if (tickValue >= axisMin * 0.9) { // Start slightly below min
                                             newTicks.push({
                                                 value: tickValue,
                                                 label: `$${tickValue.toLocaleString()}`
@@ -636,11 +737,19 @@
                                         }
 
                                         let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue || nextTick === Infinity) { break; } // Prevent infinite loops
+                                        if (nextTick <= tickValue || !isFinite(nextTick)) { break; } // Prevent infinite loops or NaN
                                         tickValue = nextTick;
                                     }
                                     axis.ticks.length = 0;
-                                    axis.ticks.push(...newTicks);
+                                     // Filter out invalid ticks before pushing
+                                     const validTicks = newTicks.filter(tick => isFinite(tick.value) && tick.value > 0);
+                                     axis.ticks.push(...validTicks);
+
+                                      // If no ticks generated, add min/max as fallback
+                                      if (axis.ticks.length === 0) {
+                                          axis.ticks.push({ value: axisMin, label: `$${axisMin.toLocaleString()}` });
+                                          axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
+                                      }
                                 },
                                 grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
                             }
@@ -663,17 +772,22 @@
                 ss_tot += Math.pow(logY - y_mean, 2);
                 ss_res += Math.pow(logY - predictedLogY, 2);
             });
-            return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
+             // Avoid division by zero if ss_tot is 0
+             return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); // Ensure R^2 is not negative
         }
 
-        window.onload = () => createOrUpdateChart();
 
-        // --- ADDITIONS FOR FULLSCREEN BUTTON ---
+        // --- FULLSCREEN & MOBILE VIEW LOGIC ---
 
         const mainContainer = document.getElementById('mainContainer');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fsIconEnter = document.getElementById('fsIconEnter');
         const fsIconExit = document.getElementById('fsIconExit');
+        const headerElement = document.querySelector('header'); // Get header element
+        const bottomBarElement = document.getElementById('bottomModelBar'); // Get bottom bar element
+        const topBarElement = document.getElementById('topStatusBar'); // Get top bar element
+        const chartCardElement = document.getElementById('chartCard'); // Get chart card element
+
 
         /**
          * Toggles fullscreen mode for the main chart container
@@ -683,14 +797,14 @@
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 // Enter fullscreen (with cross-browser support)
                 if (mainContainer.requestFullscreen) {
-                    mainContainer.requestFullscreen();
+                    mainContainer.requestFullscreen().catch(err => console.error(`Error entering fullscreen: ${err.message}`));
                 } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
                     mainContainer.webkitRequestFullscreen();
                 }
             } else {
                 // Exit fullscreen (with cross-browser support)
                 if (document.exitFullscreen) {
-                    document.exitFullscreen();
+                    document.exitFullscreen().catch(err => console.error(`Error exiting fullscreen: ${err.message}`));
                 } else if (document.webkitExitFullscreen) { /* Safari */
                     document.webkitExitFullscreen();
                 }
@@ -698,39 +812,82 @@
         }
 
         /**
-         * Updates the icon based on the current fullscreen state.
-         * This is crucial for handling the 'Esc' key.
+         * Updates the icon and applies/removes mobile fullscreen styles based on state.
+         * Uses direct style manipulation for landscape mode.
          */
-        function updateFullscreenIcon() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                // We are IN fullscreen mode
-                fsIconEnter.classList.add('hidden');
-                fsIconExit.classList.remove('hidden');
-                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-            } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+        function handleFullscreenChange() {
+             // Use requestAnimationFrame to ensure checks happen after potential layout shifts
+             requestAnimationFrame(() => {
+                 const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                 // Recalculate these inside RAF for latest values
+                 const isMobile = window.innerWidth < 640;
+                 const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
-                // Force the chart to resize to its container
-                if (chart) {
-                    // We use a double requestAnimationFrame to ensure the layout
-                    // has settled after the fullscreen state change.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                           if (chart) chart.resize(); // Check if chart exists before resizing
-                        });
-                    });
-                }
-           }
+                 // --- Icon Update ---
+                 if (isInFullscreen) {
+                     fsIconEnter.classList.add('hidden');
+                     fsIconExit.classList.remove('hidden');
+                     fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                 } else {
+                     fsIconEnter.classList.remove('hidden');
+                     fsIconExit.classList.add('hidden');
+                     fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                 }
+
+                 // --- Direct Style Manipulation for Mobile Landscape Fullscreen ---
+                 // Reset styles first regardless of state to handle edge cases
+                 if (headerElement) headerElement.style.display = '';
+                 if (bottomBarElement) bottomBarElement.style.display = '';
+                 if (topBarElement) topBarElement.style.display = ''; // Reset ensures it's visible if not hidden later
+                 if (chartCardElement) chartCardElement.style.padding = '';
+
+                 // Apply specific styles if in mobile landscape fullscreen
+                 if (isInFullscreen && isMobile && isLandscape) {
+                     if (headerElement) headerElement.style.display = 'none';
+                     if (bottomBarElement) bottomBarElement.style.display = 'none';
+                     if (chartCardElement) chartCardElement.style.padding = '0';
+                     // Top bar is left at default (flex) by the reset above
+                 }
+                  // Note: Portrait mode hiding is still handled by the separate CSS media query
+
+
+                 // --- Force Chart Resize ---
+                 // Resize needed when exiting OR entering mobile landscape fullscreen
+                  if (chart) {
+                      // Use a small delay with RAF to ensure container has resized
+                      setTimeout(() => {
+                           requestAnimationFrame(() => {
+                                if (chart) chart.resize();
+                           });
+                      }, 50); // Small delay might help ensure resize happens *after* container style changes apply
+                  }
+
+             });
+         }
+
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Safari
+
+        // Listen for resize and orientation changes
+        window.addEventListener('resize', handleFullscreenChange);
+         // More reliable orientation change listener if available
+         if (screen.orientation) {
+             screen.orientation.addEventListener('change', handleFullscreenChange);
+         } else {
+             window.addEventListener('orientationchange', handleFullscreenChange); // Fallback
+         }
+
+
+        // Initial check on load
+        window.onload = () => {
+            createOrUpdateChart();
+            // Call handleFullscreenChange slightly delayed to allow layout to settle
+            setTimeout(handleFullscreenChange, 150); // Increased delay slightly
         }
 
-        // Listen for fullscreen changes to keep the icon in sync
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
-
-        // --- END OF ADDITIONS ---
+        // --- END OF FULLSCREEN & MOBILE LOGIC ---
     </script>
 
 </body>
