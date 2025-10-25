@@ -157,7 +157,12 @@
                 <!-- Content injected by JS -->
              </div>
              <!-- *** END NEW Div *** -->
-             <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
+             <!-- *** NEW Show Bands Checkbox *** -->
+             <div id="showBandsContainer" class="flex items-center hidden"> <!-- Initially hidden -->
+                 <input type="checkbox" id="showBandsCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                 <label for="showBandsCheckbox" class="cursor-pointer">Show Bands</label>
+             </div>
+             <!-- *** END Checkbox *** -->
         </div>
 
         <!--
@@ -216,29 +221,31 @@
         * Unauthorized copying or distribution is prohibited.
         */
 
-        // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
-        const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
-        const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
+        const growthExponentDiv = document.getElementById('growthExponentDiv');
+        const modelFitDiv = document.getElementById('modelFitDiv');
         const loader = document.getElementById('loader');
         const statusDiv = document.getElementById('statusDiv');
-        // *** ADDED: Get references to the new divs ***
         const lastUpdateDiv = document.getElementById('lastUpdateDiv');
         const lastPriceDiv = document.getElementById('lastPriceDiv');
-        // *** ADDED: Get reference to Power Law status div ***
         const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
-        // *** ADDED: Get references for Power Law Status components ***
         const powerLawStatusDot = document.getElementById('powerLawStatusDot');
         const powerLawStatusText = document.getElementById('powerLawStatusText');
-        // *** END ADDITION ***
-        const priceZoneDiv = document.getElementById('priceZoneDiv'); // <-- NEW
+        const priceZoneDiv = document.getElementById('priceZoneDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
+        // --- NEW: Checkbox References ---
+        const showBandsContainer = document.getElementById('showBandsContainer');
+        const showBandsCheckbox = document.getElementById('showBandsCheckbox');
+        // --- END ---
 
-        // --- MODEL MODIFICATION ---
-        // This makes the log scale spacing on x-axis more gradual.
-        const DAY_OFFSET = 365;
-        // --- END MODIFICATION ---
-
+        const DAY_OFFSET = 365; // Makes log scale spacing more gradual.
         let chart;
+
+        // --- NEW: Define Fill Colors ---
+        const blueFillColor = 'rgba(147, 197, 253, 0.1)'; // approx blue-300
+        const greenFillColor = 'rgba(34, 197, 94, 0.1)'; // approx green-500
+        const yellowFillColor = 'rgba(250, 204, 21, 0.1)'; // approx yellow-400
+        const redFillColor = 'rgba(239, 68, 68, 0.1)'; // approx red-500
+        // --- END ---
 
         async function loadPriceData() {
             try {
@@ -252,10 +259,8 @@
                         throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
-                // --- X-VALUE MODIFICATION ---
                 // Add the DAY_OFFSET to the index (i + 1)
                 return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
-                // --- END MODIFICATION ---
             } catch (error) {
                 console.error("Error loading price data:", error);
                 statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
@@ -266,8 +271,6 @@
 
         function linearRegression(data) {
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-            // The data 'x' values now have the offset included, so the regression
-            // automatically calculates based on log(x + DAY_OFFSET)
             const validData = data.filter(p => p.y > 0 && p.x > 0);
             const n = validData.length;
             if (n < 2) return { slope: 0, intercept: 0 };
@@ -287,7 +290,6 @@
         function calculateResiduals(data, slope, intercept) {
             const validData = data.filter(p => p.y > 0 && p.x > 0);
             if (validData.length === 0) return [];
-
             return validData.map(p => {
                 const logX = Math.log10(p.x); // x already includes offset
                 const logY = Math.log10(p.y);
@@ -302,11 +304,10 @@
             const index = (percentile / 100) * (sortedResiduals.length - 1);
             const lowerIndex = Math.floor(index);
             const upperIndex = Math.ceil(index);
-
             if (lowerIndex === upperIndex) {
                  return sortedResiduals[lowerIndex];
             } else {
-                 // Linear interpolation between the two closest indices
+                 // Linear interpolation
                  const weight = index - lowerIndex;
                  return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
             }
@@ -317,40 +318,30 @@
 
             const priceData = await loadPriceData();
 
-            // Check if priceData is null or empty after load attempt
             if (!priceData || priceData.length === 0) {
-                if (!statusDiv.innerHTML.includes('Error')) { // Avoid overwriting specific load errors
-                   statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
-                }
-                growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
-                modelFitDiv.innerHTML = ''; // Clear other model info
-                powerLawStatusDiv.style.display = 'none'; // Hide status
-                loader.style.display = 'none';
-                return; // Stop execution
+                 if (!statusDiv.innerHTML.includes('Error')) {
+                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                 }
+                 growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
+                 modelFitDiv.innerHTML = '';
+                 powerLawStatusDiv.style.display = 'none';
+                 showBandsContainer.classList.add('hidden'); // Hide checkbox if no data
+                 loader.style.display = 'none';
+                 return;
             }
 
-            // *** ADDED: Get last data point info ***
             const lastDataPoint = priceData[priceData.length - 1];
             const lastPrice = lastDataPoint.y;
             const lastTimestamp = lastDataPoint.time;
-            // --- MODIFIED: Format date only ---
             const lastUpdateDate = new Date(lastTimestamp).toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'short', // Use 'short' for abbreviated month name
-                day: 'numeric'
+                year: 'numeric', month: 'short', day: 'numeric'
             });
-            // --- END MODIFICATION ---
 
-            // *** UPDATED: Set statusDiv and new divs content ***
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            // --- MODIFIED: Use formatted date ---
             lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateDate}`;
-            // --- END MODIFICATION ---
             lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
-            // Show the divs now that they have content (using sm:block to hide on smallest screens)
             lastUpdateDiv.classList.remove('hidden');
             lastPriceDiv.classList.remove('hidden');
-
 
             const times = priceData.map(p => p.time);
             const prices = priceData.map(p => p.y);
@@ -359,405 +350,422 @@
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
 
-            // --- X-AXIS RANGE CALCULATION (DAY-BASED WITH OFFSET) ---
+            // X-Axis Range Calculation
             const n = priceData.length;
-            const firstDayNum = priceData[0].x; // This is (1 + DAY_OFFSET)
+            const firstDayNum = priceData[0].x;
             const timeDuration = maxTime - minTime;
             const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
-            // Find the ratio of projection
-            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1; // Avoid division by zero
-
+            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1;
             const projectedDayCount = n * futureTimeIndexRatio;
-
             const extendedMinDay = firstDayNum;
             const extendedMaxDay = firstDayNum + projectedDayCount - 1;
-            // --- END X-AXIS RANGE ---
 
+            // Y-Axis Range Calculation
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const logPriceRange = logMaxPrice - logMinPrice;
             const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9;
             const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4;
 
-            // 1. Calculate the mean regression first to get the slope
-            //    This 'meanIntercept' is for the standard (mean) regression.
+            // --- Calculations ---
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
-
-            // 2. Calculate all residuals from the mean regression line
             const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
 
-            // 3. Calculate 1st, 50th (median), and 99th percentile residuals
-            const medianResidual = getPercentile(sortedResiduals, 50); // This is p50
+            const medianResidual = getPercentile(sortedResiduals, 50);
             const p1Residual = getPercentile(sortedResiduals, 1);
             const p99Residual = getPercentile(sortedResiduals, 99);
-
-            // *** NEW: Calculate percentiles for Price Zone ***
             const p20Residual = getPercentile(sortedResiduals, 20);
-            // *** REMOVED: p40Residual ***
-            // *** REMOVED: p60Residual ***
             const p80Residual = getPercentile(sortedResiduals, 80);
 
-            // *** NEW: Calculate last data point's residual ***
             const lastLogX = Math.log10(lastDataPoint.x);
             const lastLogY = Math.log10(lastDataPoint.y);
             const predictedLastLogY = slope * lastLogX + meanIntercept;
             const lastResidual = lastLogY - predictedLastLogY;
 
-            // *** UPDATED: Determine Price Zone based on new rules ***
             let priceZone = "";
             let priceZoneColor = "";
-            if (lastResidual > p80Residual) {
-                priceZone = "Bubble";
-                priceZoneColor = "bg-red-500";
-            } else if (lastResidual > medianResidual) { // Use p50 (medianResidual)
-                priceZone = "Expensive";
-                priceZoneColor = "bg-yellow-400";
-            } else if (lastResidual > p20Residual) {
-                priceZone = "Value";
-                priceZoneColor = "bg-green-500";
-            } else { // < p20
-                priceZone = "Discount";
-                priceZoneColor = "bg-blue-300";
-            }
+            if (lastResidual > p80Residual) { priceZone = "Bubble"; priceZoneColor = "bg-red-500"; }
+            else if (lastResidual > medianResidual) { priceZone = "Expensive"; priceZoneColor = "bg-yellow-400"; }
+            else if (lastResidual > p20Residual) { priceZone = "Value"; priceZoneColor = "bg-green-500"; }
+            else { priceZone = "Discount"; priceZoneColor = "bg-blue-300"; }
 
-            // *** NEW: Update Price Zone Div ***
             priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Price Band:</strong>&nbsp;${priceZone}`;
             priceZoneDiv.classList.remove('hidden');
 
-            // 4. Calculate intercepts for each percentile line by shifting the mean intercept
-            //    This 'medianIntercept' is shifted from the mean to find the true 50th percentile.
-            const medianIntercept = meanIntercept + medianResidual;
+            // --- Calculate All Intercepts ---
+            const medianIntercept = meanIntercept + medianResidual; // Shifted 50th
             const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
+            const p20Intercept = meanIntercept + p20Residual; // NEW
+            const p80Intercept = meanIntercept + p80Residual; // NEW
 
-            // R-squared is still calculated based on the original mean regression line's fit
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
-
-            // *** NEW: Determine model fit ***
             const modelFitGood = rSquared >= 0.9;
 
-            // --- MODIFIED: Update Power Law Status Dot and Text ---
-             powerLawStatusDiv.style.display = 'flex'; // Ensure status div is visible
-            // Update dot color based on model fit
+            powerLawStatusDiv.style.display = 'flex';
             if (powerLawStatusDot) {
                  powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
             }
-             // Update text content (optional, could remain static)
-             // if (powerLawStatusText) {
-             //     powerLawStatusText.textContent = 'Power Law Status';
-             // }
-             // --- END MODIFICATION ---
 
-
-            // *** UPDATED: Populate the two new divs separately (no <br>) ***
             growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
             modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
 
-
-            // --- REGRESSION LINE DATA (DAY-BASED WITH OFFSET) ---
-            const startIndex = extendedMinDay; // Use the new min day
-            const endIndex = extendedMaxDay; // Use the new max day
-
+            // --- Calculate All Line Data Points ---
+            const startIndex = extendedMinDay;
+            const endIndex = extendedMaxDay;
             const calculateLinePoints = (intercept) => {
-                 // Ensure startIndex and endIndex are positive for log10
-                 const safeStartIndex = Math.max(startIndex, 1); // Avoid log10(0) or negative
+                 const safeStartIndex = Math.max(startIndex, 1);
                  const safeEndIndex = Math.max(endIndex, 1);
                  return [
                      { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
                  ];
             };
-
-
-            // *** UPDATED: Calculate median and percentile lines ***
-            const medianLineData = calculateLinePoints(medianIntercept);
+            const originalMedianLineData = calculateLinePoints(medianIntercept); // For orange line
             const p1LineData = calculateLinePoints(p1Intercept);
             const p99LineData = calculateLinePoints(p99Intercept);
-            // --- END REGRESSION LINE DATA ---
+            const p20LineData = calculateLinePoints(p20Intercept); // NEW
+            const p50GrayLineData = calculateLinePoints(medianIntercept); // For thin gray line (same intercept as orange)
+            const p80LineData = calculateLinePoints(p80Intercept); // NEW
 
-            // --- CHART PRICE DATA (DAY-BASED WITH OFFSET) ---
             const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
-            // --- END CHART PRICE DATA ---
 
             loader.style.display = 'none';
 
-            // --- DEFINE THE X-AXIS TICK BUILDER ---
-            const xAxisAfterBuildTicks = (axis) => {
-                 if (!priceData || priceData.length === 0) return; // Guard clause
-
-                const newTicks = [];
-                const axisMinDay = axis.min;
-                const axisMaxDay = axis.max;
-
-                const firstDay = priceData[0];
-                const lastDay = priceData[priceData.length - 1];
-
-                // Ensure valid data points before proceeding
-                if (!firstDay || !lastDay) return;
-
-
-                // Estimate the max year based on a linear interpolation of day_number vs. time
-                const dayRange = lastDay.x - firstDay.x;
-                const timeRange = lastDay.time - firstDay.time;
-                 // Ensure dayRange and timeRange are valid before division
+            // --- X-Axis Tick Builder --- (No changes needed here)
+             const xAxisAfterBuildTicks = (axis) => {
+                 if (!priceData || priceData.length === 0) return;
+                 const newTicks = [];
+                 const axisMinDay = axis.min;
+                 const axisMaxDay = axis.max;
+                 const firstDay = priceData[0];
+                 const lastDay = priceData[priceData.length - 1];
+                 if (!firstDay || !lastDay) return;
+                 const dayRange = lastDay.x - firstDay.x;
+                 const timeRange = lastDay.time - firstDay.time;
                  const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0;
                  const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
-
-
-                const minYear = new Date(firstDay.time).getFullYear();
-                // Ensure estimatedMaxTime is a valid number before getting year
-                const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
-
-
-                let lastYearFound = minYear - 1; // Start one before
-
-                // Find the first day_number for each year *in the data*
-                for (const p of priceData) {
-                    const year = new Date(p.time).getFullYear();
-                    if (year > lastYearFound) {
-                        if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                            newTicks.push({ value: p.x, label: year.toString() });
-                        }
-                        lastYearFound = year;
-                    }
-                }
-
-                // Add ticks for future years (that are not in the data)
-                const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                 // Ensure valid ranges before loop
+                 const minYear = new Date(firstDay.time).getFullYear();
+                 const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
+                 let lastYearFound = minYear - 1;
+                 for (const p of priceData) {
+                     const year = new Date(p.time).getFullYear();
+                     if (year > lastYearFound) {
+                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                             newTicks.push({ value: p.x, label: year.toString() });
+                         }
+                         lastYearFound = year;
+                     }
+                 }
+                 const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
                  if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
                      for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                         // Estimate the day_number for Jan 1st of this future year
                          const yearStartTime = new Date(year, 0, 1).getTime();
                          const timeRatio = (yearStartTime - firstDay.time) / timeRange;
                          const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-
                          if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
                              newTicks.push({ value: estimatedDayNumber, label: year.toString() });
                          }
                      }
                  }
+                 axis.ticks.length = 0;
+                 const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
+                 axis.ticks.push(...validTicks);
+             };
 
-
-                axis.ticks.length = 0; // Clear existing ticks
-                // Filter out potential NaN or invalid values before pushing
-                const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
-                axis.ticks.push(...validTicks);
+            // --- Chart Update or Creation ---
+            const datasetDefaults = {
+                type: 'line',
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+                pointStyle: 'line'
             };
-            // --- END OF TICK BUILDER DEFINITION ---
+
+            const grayLineStyle = {
+                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
+                 borderWidth: 1,
+            };
+
+            const fillDatasetDefaults = {
+                type: 'line',
+                pointRadius: 0,
+                borderWidth: 0, // No border for fill areas
+                pointStyle: 'line', // Keep legend consistent
+                hidden: true, // Initially hidden
+            }
 
             if (chart) {
-                // *** FIX: Update correct dataset indices ***
-                chart.data.datasets[0].data = chartPriceData;
-                chart.data.datasets[1].data = medianLineData; // 50th Percentile
-                chart.data.datasets[2].data = p1LineData;     // 1st Percentile
+                // Update existing datasets
+                chart.data.datasets[0].data = chartPriceData; // Price
+                chart.data.datasets[1].data = originalMedianLineData; // Orange Median
+                chart.data.datasets[2].data = p1LineData;     // P1 Line
+                chart.data.datasets[3].data = p99LineData;    // P99 Line
 
-                // Ensure dataset 3 exists before updating
-                if (!chart.data.datasets[3]) {
-                     chart.data.datasets.push({
-                         type: 'line',
-                         label: '99th Percentile',
-                         data: p99LineData,
-                         borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                         borderWidth: 1,
-                         pointRadius: 0,
-                         fill: false,
-                         pointStyle: 'line'
-                     });
-                } else {
-                     chart.data.datasets[3].data = p99LineData;     // 99th Percentile (now at index 3)
-                }
+                // Update or add new datasets (indices 4+)
+                const datasetsToUpdate = [
+                    { index: 4, label: '20th Pctl', data: p20LineData, style: grayLineStyle, hidden: true },
+                    { index: 5, label: '50th Pctl (Band)', data: p50GrayLineData, style: grayLineStyle, hidden: true }, // Gray median for bands
+                    { index: 6, label: '80th Pctl', data: p80LineData, style: grayLineStyle, hidden: true },
+                    // Fills - Target needs to be the index of the line below it
+                    { index: 7, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, hidden: true },
+                    { index: 8, label: 'Value Band (P20-P50)', data: p50GrayLineData, fill: 4, backgroundColor: greenFillColor, hidden: true },
+                    { index: 9, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 5, backgroundColor: yellowFillColor, hidden: true },
+                    { index: 10, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, hidden: true },
+                ];
 
-                 // Remove any extra datasets beyond index 3 if they somehow exist
-                 if (chart.data.datasets.length > 4) {
-                     chart.data.datasets.splice(4, chart.data.datasets.length - 4);
-                 }
+                datasetsToUpdate.forEach(dsInfo => {
+                    if (chart.data.datasets[dsInfo.index]) {
+                        // Update existing dataset
+                        chart.data.datasets[dsInfo.index].data = dsInfo.data;
+                        chart.data.datasets[dsInfo.index].label = dsInfo.label;
+                        chart.data.datasets[dsInfo.index].hidden = dsInfo.hidden; // Set initial hidden state
+                         if (dsInfo.style) {
+                             Object.assign(chart.data.datasets[dsInfo.index], dsInfo.style);
+                         }
+                         if (dsInfo.fill !== undefined) {
+                              chart.data.datasets[dsInfo.index].fill = dsInfo.fill;
+                              chart.data.datasets[dsInfo.index].backgroundColor = dsInfo.backgroundColor;
+                         }
+                    } else {
+                        // Add new dataset
+                        chart.data.datasets.push({
+                            ...datasetDefaults,
+                            ...(dsInfo.style || {}),
+                            ...(dsInfo.fill !== undefined ? fillDatasetDefaults : {}),
+                             label: dsInfo.label,
+                             data: dsInfo.data,
+                             hidden: dsInfo.hidden, // Set initial hidden state
+                             ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
+                         });
+                    }
+                });
+
+                 // Apply initial checkbox state
+                 applyBandVisibility(showBandsCheckbox.checked);
 
 
-                // *** FIX: Update correct label ***
-                chart.data.datasets[1].label = '50th Percentile'; // Removed 'Regression'
-
+                // Update scales and redraw
                 chart.options.scales.x.min = extendedMinDay;
                 chart.options.scales.x.max = extendedMaxDay;
                 chart.options.scales.y.min = extendedMinPrice;
                 chart.options.scales.y.max = extendedMaxPrice;
-                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
+                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks; // Re-apply tick builder
                 chart.update();
+
             } else {
+                // Create new chart
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
-                            {
-                                type: 'line',
+                            { // 0: Price
+                                ...datasetDefaults,
+                                type: 'line', // Explicitly line
                                 label: 'TAO Price',
                                 data: chartPriceData,
                                 backgroundColor: 'rgba(24, 72, 204, 0.05)',
                                 borderColor: 'rgba(24, 72, 204, 1)',
                                 borderWidth: 2,
-                                pointRadius: 0,
                                 pointHoverRadius: 5,
                                 tension: 0.1,
-                                fill: false,
-                                pointStyle: 'line'
                             },
-                            {
-                                type: 'line',
+                            { // 1: Orange Median
+                                ...datasetDefaults,
                                 label: '50th Percentile',
-                                data: medianLineData,
-                                borderColor: '#ff6d00', // Orange line
+                                data: originalMedianLineData,
+                                borderColor: '#ff6d00',
                                 borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false,
-                                pointStyle: 'line'
+                                hidden: false, // Initially visible
                             },
-                            {
-                                type: 'line',
+                            { // 2: P1 Line
+                                ...datasetDefaults,
+                                ...grayLineStyle,
                                 label: '1st Pctl',
                                 data: p1LineData,
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                                borderWidth: 1,
-                                pointRadius: 0,
-                                fill: false,
-                                pointStyle: 'line'
                             },
-                            {
-                                type: 'line',
+                            { // 3: P99 Line
+                                ...datasetDefaults,
+                                ...grayLineStyle,
                                 label: '99th Pctl',
                                 data: p99LineData,
-                                borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
-                                borderWidth: 1,
-                                pointRadius: 0,
-                                fill: false,
-                                pointStyle: 'line'
-                            }
+                            },
+                            // --- NEW Datasets (Initially Hidden) ---
+                            { // 4: P20 Line (Gray)
+                                ...datasetDefaults,
+                                ...grayLineStyle,
+                                label: '20th Pctl',
+                                data: p20LineData,
+                                hidden: true,
+                            },
+                            { // 5: P50 Line (Gray)
+                                ...datasetDefaults,
+                                ...grayLineStyle,
+                                label: '50th Pctl (Band)', // Different label for legend if needed
+                                data: p50GrayLineData,
+                                hidden: true,
+                            },
+                            { // 6: P80 Line (Gray)
+                                ...datasetDefaults,
+                                ...grayLineStyle,
+                                label: '80th Pctl',
+                                data: p80LineData,
+                                hidden: true,
+                            },
+                             // --- NEW Fill Datasets (Initially Hidden) ---
+                             { // 7: Fill P1-P20 (Blue)
+                                ...fillDatasetDefaults,
+                                label: 'Discount Band (P1-P20)',
+                                data: p20LineData, // Use upper boundary data
+                                fill: 2, // Fill down to index 2 (P1 Line)
+                                backgroundColor: blueFillColor,
+                            },
+                             { // 8: Fill P20-P50 (Green)
+                                ...fillDatasetDefaults,
+                                label: 'Value Band (P20-P50)',
+                                data: p50GrayLineData, // Use upper boundary data
+                                fill: 4, // Fill down to index 4 (P20 Line)
+                                backgroundColor: greenFillColor,
+                            },
+                            { // 9: Fill P50-P80 (Yellow)
+                                ...fillDatasetDefaults,
+                                label: 'Expensive Band (P50-P80)',
+                                data: p80LineData, // Use upper boundary data
+                                fill: 5, // Fill down to index 5 (P50 Gray Line)
+                                backgroundColor: yellowFillColor,
+                            },
+                            { // 10: Fill P80-P99 (Red)
+                                ...fillDatasetDefaults,
+                                label: 'Bubble Band (P80-P99)',
+                                data: p99LineData, // Use upper boundary data
+                                fill: 6, // Fill down to index 6 (P80 Line)
+                                backgroundColor: redFillColor,
+                            },
                         ]
                     },
-                    options: {
+                    options: { // Standard chart options remain largely the same
                         responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 labels: {
-                                    color: '#374151',
-                                    usePointStyle: true, // Use the pointStyle (which we set to 'line')
-                                    boxWidth: 30, // 50% longer than default (est. 20px)
-                                    boxHeight: 12 // Align to 12px font size
+                                    color: '#374151', usePointStyle: true, boxWidth: 30, boxHeight: 12,
+                                    // Filter out fill datasets from legend
+                                    filter: function(item, chart) {
+                                         return !item.text.includes('Band');
+                                     }
                                 }
-                            }, // Dark gray text
+                            },
                             tooltip: {
                                 callbacks: {
-                                    title: function(tooltipItems) {
-                                        if (tooltipItems.length > 0) {
-                                            const item = tooltipItems[0];
-                                            const dayNumber = item.parsed.x; // This is day + offset
-
-                                            // Only show date for the actual TAO Price dataset (index 0)
-                                            if (item.datasetIndex === 0) {
-                                                const dataPoint = priceData.find(p => p.x === dayNumber);
-                                                if (dataPoint) {
-                                                    const date = new Date(dataPoint.time);
-                                                    return date.toLocaleDateString(undefined, {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    });
-                                                }
-                                            }
-                                            // Show raw day number for percentile lines
-                                             // Ensure dayNumber is valid before calculating
+                                     title: function(tooltipItems) {
+                                         if (tooltipItems.length > 0) {
+                                             const item = tooltipItems[0];
+                                             const dayNumber = item.parsed.x;
+                                             if (item.datasetIndex === 0) {
+                                                 const dataPoint = priceData.find(p => p.x === dayNumber);
+                                                 if (dataPoint) {
+                                                     const date = new Date(dataPoint.time);
+                                                     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                                                 }
+                                             }
                                              const displayDay = !isNaN(dayNumber) ? (dayNumber - DAY_OFFSET).toFixed(0) : 'N/A';
-                                             return `Day ~${displayDay}`; // Indicate approximation due to log scale
-                                        }
-                                        return '';
-                                    },
+                                             return `Day ~${displayDay}`;
+                                         }
+                                         return '';
+                                     },
                                      label: (context) => {
-                                        // Different label based on dataset
-                                        if (context.datasetIndex === 0) { // TAO Price
-                                            return `Price: $${context.parsed.y.toFixed(2)}`;
-                                        } else { // Percentile lines
-                                             return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-                                        }
-                                    }
+                                         if (context.dataset.label.includes('Band')) return null; // Don't show tooltip label for fills
+                                         return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                     }
                                 }
                             }
                         },
                         scales: {
                             x: {
-                                type: 'logarithmic',
-                                min: extendedMinDay,
-                                max: extendedMaxDay,
-                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' }, // Gray text
-                                ticks: {
-                                    color: '#4b5563', // Gray text
-                                    autoSkip: false,
-                                    callback: function(value, index, ticks) {
-                                        // Find the tick object corresponding to the value
-                                        const tick = this.getTicks().find(t => t.value === value);
-                                        return tick ? tick.label : null; // Use the label set by afterBuildTicks
-                                    }
+                                type: 'logarithmic', min: extendedMinDay, max: extendedMaxDay,
+                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' },
+                                ticks: { color: '#4b5563', autoSkip: false,
+                                     callback: function(value, index, ticks) {
+                                         const tick = this.getTicks().find(t => t.value === value);
+                                         return tick ? tick.label : null;
+                                     }
                                 },
                                 afterBuildTicks: xAxisAfterBuildTicks,
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             },
                             y: {
-                                type: 'logarithmic',
-                                min: extendedMinPrice,
-                                max: extendedMaxPrice,
-                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' }, // Gray text
-                                ticks: {
-                                    color: '#4b5563', // Gray text
-                                    callback: function(value, index, ticks) {
-                                         // Find the tick object corresponding to the value
+                                type: 'logarithmic', min: extendedMinPrice, max: extendedMaxPrice,
+                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' },
+                                ticks: { color: '#4b5563',
+                                     callback: function(value, index, ticks) {
                                          const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null; // Use the label set by afterBuildTicks
-                                    }
-
-                                },
-                                afterBuildTicks: (axis) => {
-                                     if (!axis.chart.data || !axis.chart.data.datasets || axis.chart.data.datasets.length === 0) return; // Guard
-
-                                    const newTicks = [];
-                                    const axisMin = axis.min;
-                                    const axisMax = axis.max;
-
-                                     // Guard against invalid min/max
-                                     if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
-                                         axis.ticks = [{value: 1, label: '$1'}]; // Default fallback
-                                         return;
+                                         return tick ? tick.label : null;
                                      }
-
-
-                                    let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin))); // Start at the nearest power of 10 below min
-
-                                    while (tickValue <= axisMax * 1.1) { // Extend slightly beyond max
-                                        if (tickValue >= axisMin * 0.9) { // Start slightly below min
-                                            newTicks.push({
-                                                value: tickValue,
-                                                label: `$${tickValue.toLocaleString()}`
-                                            });
-                                        }
-
-                                        let nextTick = tickValue * 10;
-                                        if (nextTick <= tickValue || !isFinite(nextTick)) { break; } // Prevent infinite loops or NaN
-                                        tickValue = nextTick;
-                                    }
-                                    axis.ticks.length = 0;
-                                     // Filter out invalid ticks before pushing
+                                },
+                                afterBuildTicks: (axis) => { // Y-axis tick builder
+                                     if (!axis.chart.data || !axis.chart.data.datasets || axis.chart.data.datasets.length === 0) return;
+                                     const newTicks = [];
+                                     const axisMin = axis.min;
+                                     const axisMax = axis.max;
+                                     if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
+                                          axis.ticks = [{value: 1, label: '$1'}]; return;
+                                     }
+                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
+                                     while (tickValue <= axisMax * 1.1) {
+                                         if (tickValue >= axisMin * 0.9) {
+                                             newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
+                                         }
+                                         let nextTick = tickValue * 10;
+                                         if (nextTick <= tickValue || !isFinite(nextTick)) { break; }
+                                         tickValue = nextTick;
+                                     }
+                                     axis.ticks.length = 0;
                                      const validTicks = newTicks.filter(tick => isFinite(tick.value) && tick.value > 0);
                                      axis.ticks.push(...validTicks);
-
-                                      // If no ticks generated, add min/max as fallback
-                                      if (axis.ticks.length === 0) {
+                                     if (axis.ticks.length === 0) {
                                           axis.ticks.push({ value: axisMin, label: `$${axisMin.toLocaleString()}` });
                                           axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
                                       }
-                                },
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' } // Light gray grid
+                                 },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
                             }
                         }
                     }
                 });
             }
+
+             // --- NEW: Show checkbox and add listener after chart setup ---
+             showBandsContainer.classList.remove('hidden');
+             // Remove previous listener to avoid duplicates if function runs again
+             showBandsCheckbox.removeEventListener('change', handleBandToggle);
+             showBandsCheckbox.addEventListener('change', handleBandToggle);
+             // --- END ---
         }
+
+        // --- NEW: Function to handle checkbox toggling ---
+        function handleBandToggle() {
+             if (!chart) return;
+             const showBands = showBandsCheckbox.checked;
+             applyBandVisibility(showBands);
+             chart.update(); // Update chart after visibility changes
+        }
+
+        function applyBandVisibility(showBands) {
+             if (!chart) return;
+              // Indices based on the final dataset order
+              const orangeMedianIndex = 1;
+              const grayLineIndices = [4, 5, 6]; // 20, 50(gray), 80
+              const fillIndices = [7, 8, 9, 10]; // P1-P20, P20-P50, P50-P80, P80-P99
+
+              // Toggle Orange Median vs Gray Lines + Fills
+              chart.setDatasetVisibility(orangeMedianIndex, !showBands);
+              grayLineIndices.forEach(index => chart.setDatasetVisibility(index, showBands));
+              fillIndices.forEach(index => chart.setDatasetVisibility(index, showBands));
+
+              // P1 and P99 lines (indices 2, 3) are always visible
+               chart.setDatasetVisibility(2, true);
+               chart.setDatasetVisibility(3, true);
+         }
+         // --- END ---
 
         function calculateRSquared(data, slope, intercept) {
             let ss_tot = 0, ss_res = 0, y_mean = 0;
@@ -772,8 +780,7 @@
                 ss_tot += Math.pow(logY - y_mean, 2);
                 ss_res += Math.pow(logY - predictedLogY, 2);
             });
-             // Avoid division by zero if ss_tot is 0
-             return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); // Ensure R^2 is not negative
+             return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot));
         }
 
 
@@ -783,47 +790,34 @@
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fsIconEnter = document.getElementById('fsIconEnter');
         const fsIconExit = document.getElementById('fsIconExit');
-        const headerElement = document.querySelector('header'); // Get header element
-        const bottomBarElement = document.getElementById('bottomModelBar'); // Get bottom bar element
-        const topBarElement = document.getElementById('topStatusBar'); // Get top bar element
-        const chartCardElement = document.getElementById('chartCard'); // Get chart card element
+        const headerElement = document.querySelector('header');
+        const bottomBarElement = document.getElementById('bottomModelBar');
+        const topBarElement = document.getElementById('topStatusBar');
+        const chartCardElement = document.getElementById('chartCard');
 
 
-        /**
-         * Toggles fullscreen mode for the main chart container
-         */
         function toggleFullScreen() {
-            // Check if we are currently in fullscreen mode
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                // Enter fullscreen (with cross-browser support)
                 if (mainContainer.requestFullscreen) {
                     mainContainer.requestFullscreen().catch(err => console.error(`Error entering fullscreen: ${err.message}`));
-                } else if (mainContainer.webkitRequestFullscreen) { /* Safari */
+                } else if (mainContainer.webkitRequestFullscreen) {
                     mainContainer.webkitRequestFullscreen();
                 }
             } else {
-                // Exit fullscreen (with cross-browser support)
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(err => console.error(`Error exiting fullscreen: ${err.message}`));
-                } else if (document.webkitExitFullscreen) { /* Safari */
+                } else if (document.webkitExitFullscreen) {
                     document.webkitExitFullscreen();
                 }
             }
         }
 
-        /**
-         * Updates the icon and applies/removes mobile fullscreen styles based on state.
-         * Uses direct style manipulation for landscape mode.
-         */
         function handleFullscreenChange() {
-             // Use requestAnimationFrame to ensure checks happen after potential layout shifts
              requestAnimationFrame(() => {
                  const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                 // Recalculate these inside RAF for latest values
                  const isMobile = window.innerWidth < 640;
                  const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
-                 // --- Icon Update ---
                  if (isInFullscreen) {
                      fsIconEnter.classList.add('hidden');
                      fsIconExit.classList.remove('hidden');
@@ -834,57 +828,43 @@
                      fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                  }
 
-                 // --- Direct Style Manipulation for Mobile Landscape Fullscreen ---
-                 // Reset styles first regardless of state to handle edge cases
+                 // Reset styles first
                  if (headerElement) headerElement.style.display = '';
                  if (bottomBarElement) bottomBarElement.style.display = '';
-                 if (topBarElement) topBarElement.style.display = ''; // Reset ensures it's visible if not hidden later
+                 if (topBarElement) topBarElement.style.display = '';
                  if (chartCardElement) chartCardElement.style.padding = '';
 
-                 // Apply specific styles if in mobile landscape fullscreen
+                 // Apply mobile landscape styles
                  if (isInFullscreen && isMobile && isLandscape) {
                      if (headerElement) headerElement.style.display = 'none';
                      if (bottomBarElement) bottomBarElement.style.display = 'none';
                      if (chartCardElement) chartCardElement.style.padding = '0';
-                     // Top bar is left at default (flex) by the reset above
                  }
-                  // Note: Portrait mode hiding is still handled by the separate CSS media query
 
-
-                 // --- Force Chart Resize ---
-                 // Resize needed when exiting OR entering mobile landscape fullscreen
                   if (chart) {
-                      // Use a small delay with RAF to ensure container has resized
                       setTimeout(() => {
                            requestAnimationFrame(() => {
                                 if (chart) chart.resize();
                            });
-                      }, 50); // Small delay might help ensure resize happens *after* container style changes apply
+                      }, 50);
                   }
-
              });
          }
 
 
-        // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Safari
-
-        // Listen for resize and orientation changes
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         window.addEventListener('resize', handleFullscreenChange);
-         // More reliable orientation change listener if available
          if (screen.orientation) {
              screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-             window.addEventListener('orientationchange', handleFullscreenChange); // Fallback
+             window.addEventListener('orientationchange', handleFullscreenChange);
          }
 
 
-        // Initial check on load
         window.onload = () => {
             createOrUpdateChart();
-            // Call handleFullscreenChange slightly delayed to allow layout to settle
-            setTimeout(handleFullscreenChange, 150); // Increased delay slightly
+            setTimeout(handleFullscreenChange, 150);
         }
 
         // --- END OF FULLSCREEN & MOBILE LOGIC ---
