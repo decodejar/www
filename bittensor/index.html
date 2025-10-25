@@ -95,7 +95,7 @@
              padding: 0 !important;
          }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
-              display: flex !important;
+             display: flex !important;
          }
         /* --- END: Mobile Fullscreen Optimizations --- */
     </style>
@@ -105,7 +105,7 @@
     <!-- 
       Main application container.
       Scales with viewport height/width up to a max size.
-    -->
+     -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
 
         <!-- Overlay to show on mobile fullscreen portrait -->
@@ -182,9 +182,9 @@
 
 <script>
         /*
-        * TAO Tensor Law Model & Regression Logic
-        * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
-        */
+         * TAO Tensor Law Model & Regression Logic
+         * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
+         */
 
         // --- Global Element References ---
         const growthExponentDiv = document.getElementById('growthExponentDiv');
@@ -358,7 +358,7 @@
             if (!baseData || baseData.length === 0) {
                  // Handle data loading failure
                  if (!statusDiv.innerHTML.includes('Error')) {
-                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
                  modelFitDiv.innerHTML = '';
@@ -526,26 +526,26 @@
                  // Find first data point for each year within data
                  let lastYearFound = minYear - 1;
                  for (const p of priceData) {
-                      const year = new Date(p.time).getFullYear();
-                      if (year > lastYearFound) {
-                           if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                                newTicks.push({ value: p.x, label: year.toString() });
-                           }
-                           lastYearFound = year;
-                      }
+                     const year = new Date(p.time).getFullYear();
+                     if (year > lastYearFound) {
+                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                             newTicks.push({ value: p.x, label: year.toString() });
+                         }
+                         lastYearFound = year;
+                     }
                  }
                  
                  // Estimate ticks for future projected years
                  const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
                  if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                      for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                           const yearStartTime = new Date(year, 0, 1).getTime();
-                           const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                           const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                           if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                                newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                           }
-                      }
+                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                         const yearStartTime = new Date(year, 0, 1).getTime();
+                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                         }
+                     }
                  }
                  axis.ticks.length = 0; // Clear existing ticks
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
@@ -709,6 +709,22 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
+                        // --- ADDED: Staggered animation for price line on load ---
+                        animation: {
+                            duration: 1000, // Total duration in ms
+                            delay: (context) => {
+                                // Only apply sequential delay to the price line (dataset 0)
+                                if (context.type === 'data' && context.datasetIndex === 0) {
+                                    const totalPoints = context.chart.data.datasets[0].data.length;
+                                    if (totalPoints <= 0) return 0; // Avoid division by zero
+                                    const delayPerPoint = 1000 / totalPoints; // 1000ms total
+                                    return context.dataIndex * delayPerPoint;
+                                }
+                                // No delay for other datasets (lines, fills, etc.)
+                                return 0;
+                            }
+                        },
+                        // --- END: Animation block ---
                         plugins: {
                             legend: {
                                 labels: {
@@ -752,8 +768,8 @@
                                     color: '#4b5563', autoSkip: false,
                                     // Use the generated label (year) for the tick
                                     callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null;
                                     }
                                 },
                                 afterBuildTicks: xAxisAfterBuildTicks, // Custom tick builder
@@ -765,8 +781,8 @@
                                 ticks: { 
                                     color: '#4b5563',
                                     callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null;
                                     }
                                 },
                                 // Y-axis tick builder (powers of 10)
@@ -776,7 +792,7 @@
                                      const axisMin = axis.min;
                                      const axisMax = axis.max;
                                      if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
-                                          axis.ticks = [{value: 1, label: '$1'}]; return;
+                                         axis.ticks = [{value: 1, label: '$1'}]; return;
                                      }
                                      // Start from the nearest power of 10 below min
                                      let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
@@ -819,7 +835,7 @@
         function handleBandToggle() {
              if (!chart) return;
              applyBandVisibility(showBandsCheckbox.checked);
-             chart.update();
+             chart.update('none'); // MODIFIED: Update without re-animating
         }
 
         /**
@@ -828,8 +844,8 @@
          */
         function applyBandVisibility(showBands) {
              if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 11) {
-                console.error("Chart or datasets not fully initialized for applyBandVisibility.");
-                return;
+                 console.error("Chart or datasets not fully initialized for applyBandVisibility.");
+                 return;
              }
              // Dataset Indices
              const mainMedianIndex = 1;
@@ -849,16 +865,16 @@
              if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
              if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
              fillIndices.forEach(index => {
-                   if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
+                  if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
              });
 
              // Change style of main 50th percentile line
              const medianDataset = chart.data.datasets[mainMedianIndex];
              if (medianDataset) {
                   if (showBands) {
-                      Object.assign(medianDataset, grayLineStyle); // Gray when bands are on
+                       Object.assign(medianDataset, grayLineStyle); // Gray when bands are on
                   } else {
-                      Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
+                       Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
                   }
              }
         }
@@ -969,7 +985,7 @@
          if (screen.orientation) {
               screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-              window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+               window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
          }
 
         // Initial load
