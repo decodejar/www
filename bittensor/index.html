@@ -160,7 +160,9 @@
              <!-- *** NEW Show Bands Checkbox *** -->
              <div id="showBandsContainer" class="flex items-center hidden"> <!-- Initially hidden -->
                  <input type="checkbox" id="showBandsCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                 <label for="showBandsCheckbox" class="cursor-pointer">Show Bands</label>
+                 <label for="showBandsCheckbox" class="cursor-pointer mr-1">Show Bands</label> <!-- Added right margin -->
+                 <!-- MODIFICATION: Added tooltip span for bands -->
+                 <span title="Blue: Discount (P1-P20), Green: Value (P20-P50), Yellow: Expensive (P50-P80), Red: Bubble (P80-P99)" class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
              </div>
              <!-- *** END Checkbox *** -->
         </div>
@@ -765,7 +767,10 @@
 
         // --- MODIFIED: applyBandVisibility to change style of dataset 1 ---
         function applyBandVisibility(showBands) {
-             if (!chart) return;
+             if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 11) {
+                console.error("Chart or datasets not fully initialized for applyBandVisibility.");
+                return; // Exit if chart/datasets aren't ready
+             }
               // Indices
               const mainMedianIndex = 1;   // The one that changes color
               const p20Index = 4;
@@ -773,29 +778,37 @@
               const p80Index = 6;
               const fillIndices = [7, 8, 9, 10]; // P1-P20, P20-P50, P50-P80, P80-P99
 
-              // Always visible lines
-              chart.setDatasetVisibility(0, true); // Price
-              chart.setDatasetVisibility(mainMedianIndex, true); // Main 50th is always visible now
-              chart.setDatasetVisibility(2, true); // P1
-              chart.setDatasetVisibility(3, true); // P99
-              chart.setDatasetVisibility(redundantP50Index, false); // Keep redundant one hidden
+              // Always visible lines (ensure they exist first)
+               if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
+               if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true); // Main 50th is always visible now
+               if (chart.data.datasets[2]) chart.setDatasetVisibility(2, true); // P1
+               if (chart.data.datasets[3]) chart.setDatasetVisibility(3, true); // P99
+               if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Keep redundant one hidden
+
 
               // Toggle visibility of band lines and fills
-              chart.setDatasetVisibility(p20Index, showBands);
-              chart.setDatasetVisibility(p80Index, showBands);
-              fillIndices.forEach(index => chart.setDatasetVisibility(index, showBands));
+               if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
+               if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
+               fillIndices.forEach(index => {
+                    if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
+               });
+
 
               // Change style of main 50th percentile line
               const medianDataset = chart.data.datasets[mainMedianIndex];
-              if (showBands) {
-                  // Apply gray style
-                  medianDataset.borderColor = grayLineStyle.borderColor;
-                  medianDataset.borderWidth = grayLineStyle.borderWidth;
-              } else {
-                  // Apply orange style
-                  medianDataset.borderColor = orangeLineStyle.borderColor;
-                  medianDataset.borderWidth = orangeLineStyle.borderWidth;
-              }
+               if (medianDataset) { // Check if dataset exists
+                   if (showBands) {
+                       // Apply gray style
+                       medianDataset.borderColor = grayLineStyle.borderColor;
+                       medianDataset.borderWidth = grayLineStyle.borderWidth;
+                   } else {
+                       // Apply orange style
+                       medianDataset.borderColor = orangeLineStyle.borderColor;
+                       medianDataset.borderWidth = orangeLineStyle.borderWidth;
+                   }
+               } else {
+                   console.error("Median dataset (index 1) not found for style change.");
+               }
          }
          // --- END MODIFICATION ---
 
@@ -904,4 +917,3 @@
 
 </body>
 </html>
-
