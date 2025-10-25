@@ -67,21 +67,25 @@
         /* --- MODIFIED: Mobile Fullscreen Optimizations --- */
 
         /* On mobile (fullscreen), in LANDSCAPE mode:
-           - Hide header and info bars
+           - Hide header and BOTTOM info bar
            - Show the chart card with no padding
+           - Top bar remains VISIBLE
         */
         @media (max-width: 639px) and (orientation: landscape) {
             #mainContainer:fullscreen header,
-            #mainContainer:fullscreen #topStatusBar,
-            #mainContainer:fullscreen #bottomModelBar,
+            #mainContainer:fullscreen #bottomModelBar, /* Only hide the bottom bar */
             #mainContainer:fullscreen #rotateOverlay {
-                display: none !important; /* Added !important */
+                display: none !important;
             }
 
             #mainContainer:fullscreen #chartCard {
                 padding: 0;
-                display: flex !important; /* Added !important */
+                display: flex !important;
             }
+            /* Explicitly ensure top bar is visible if needed, though default is block/flex */
+             #mainContainer:fullscreen #topStatusBar {
+                display: flex !important; /* Make sure it's visible */
+             }
         }
 
         /* On mobile (fullscreen), in PORTRAIT mode:
@@ -90,7 +94,7 @@
         */
         @media (max-width: 639px) and (orientation: portrait) {
             #mainContainer:fullscreen #rotateOverlay {
-                display: flex !important; /* Added !important */
+                display: flex !important; /* Show the overlay */
             }
 
             #mainContainer:fullscreen header,
@@ -98,7 +102,7 @@
             #mainContainer:fullscreen #chartCard,
             #mainContainer:fullscreen #bottomModelBar,
             #mainContainer:fullscreen #fullscreenBtn {
-                display: none !important; /* Added !important */
+                display: none !important; /* Hide everything else */
             }
         }
         /* --- END: Mobile Fullscreen Optimizations --- */
@@ -311,11 +315,22 @@
             const lastDataPoint = priceData[priceData.length - 1];
             const lastPrice = lastDataPoint.y;
             const lastTimestamp = lastDataPoint.time;
-            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
+            // --- MODIFICATION START ---
+            // Use toLocaleDateString() for date only
+            const lastUpdateDate = new Date(lastTimestamp).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            // --- MODIFICATION END ---
+
 
             // *** UPDATED: Set statusDiv and new divs content ***
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
+             // --- MODIFICATION START ---
+            // Display the formatted date
+            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateDate}`;
+            // --- MODIFICATION END ---
             lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
             // Show the divs now that they have content (using sm:block to hide on smallest screens)
             lastUpdateDiv.classList.remove('hidden');
@@ -723,7 +738,7 @@
                 fsIconEnter.classList.remove('hidden');
                 fsIconExit.classList.add('hidden');
                 fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                
+
                 // Force the chart to resize to its container
                 if (chart) {
                     // We use a double requestAnimationFrame to ensure the layout
@@ -740,11 +755,10 @@
         // Listen for fullscreen changes to keep the icon in sync
         document.addEventListener('fullscreenchange', updateFullscreenIcon);
         document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
-        
-        // --- END OF ADDITIONS ---     
+
+        // --- END OF ADDITIONS ---
     </script>
-    
+
 </body>
 </html>
-" selected code.
 
