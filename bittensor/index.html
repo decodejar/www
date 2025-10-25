@@ -64,25 +64,9 @@
             display: none;
         }
 
-        /* --- JS-CONTROLLED Mobile Fullscreen Optimizations --- */
+        /* --- Mobile Fullscreen Optimizations --- */
 
-        /* Class added by JS for mobile landscape fullscreen */
-        .mobile-fullscreen-landscape header,
-        .mobile-fullscreen-landscape #bottomModelBar,
-        .mobile-fullscreen-landscape #rotateOverlay {
-            display: none !important;
-        }
-        .mobile-fullscreen-landscape #chartCard {
-            padding: 0 !important;
-        }
-        .mobile-fullscreen-landscape #topStatusBar {
-             display: flex !important;
-        }
-
-        /* On mobile (fullscreen), in PORTRAIT mode (still controlled by CSS for simplicity):
-           - Show the "Please Rotate" overlay
-           - Hide ALL other app content
-        */
+        /* CSS only handles the PORTRAIT overlay now */
         @media (max-width: 639px) and (orientation: portrait) {
             #mainContainer:fullscreen #rotateOverlay {
                 display: flex !important; /* Show the overlay */
@@ -96,6 +80,20 @@
                 display: none !important; /* Hide everything else */
             }
         }
+
+        /* Style applied by JS for mobile landscape */
+        #mainContainer.mobile-fullscreen-landscape header,
+        #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
+             display: none !important;
+        }
+         #mainContainer.mobile-fullscreen-landscape #chartCard {
+             padding: 0 !important;
+         }
+         #mainContainer.mobile-fullscreen-landscape #topStatusBar {
+              display: flex !important; /* Ensure it remains visible */
+         }
+
+
         /* --- END: Mobile Fullscreen Optimizations --- */
     </style>
 </head>
@@ -683,7 +681,10 @@
             return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
         }
 
-        window.onload = () => createOrUpdateChart();
+        window.onload = () => {
+            createOrUpdateChart();
+            handleFullscreenChange(); // Initial check on load
+        }
 
         // --- ADDITIONS FOR FULLSCREEN BUTTON ---
 
@@ -715,51 +716,53 @@
         }
 
         /**
-         * Updates the icon and applies mobile fullscreen styles based on state.
+         * Updates the icon and applies/removes mobile fullscreen styles based on state.
          */
         function handleFullscreenChange() {
-             const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-             const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
-             // Use screen.orientation for more reliable orientation detection if available
-             const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
+            // Use requestAnimationFrame to ensure checks happen after potential layout shifts
+            requestAnimationFrame(() => {
+                const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
+                // Use screen.orientation for more reliable orientation detection if available, fallback to width/height comparison
+                const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
-             if (isInFullscreen) {
-                 fsIconEnter.classList.add('hidden');
-                 fsIconExit.classList.remove('hidden');
-                 fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                // --- Icon Update ---
+                if (isInFullscreen) {
+                    fsIconEnter.classList.add('hidden');
+                    fsIconExit.classList.remove('hidden');
+                    fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                } else {
+                    fsIconEnter.classList.remove('hidden');
+                    fsIconExit.classList.add('hidden');
+                    fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                }
 
-                 // Apply mobile landscape class if conditions met
-                 if (isMobile && isLandscape) {
-                     mainContainer.classList.add('mobile-fullscreen-landscape');
-                 } else {
-                     mainContainer.classList.remove('mobile-fullscreen-landscape');
-                 }
+                // --- Apply/Remove Mobile Landscape Class ---
+                if (isInFullscreen && isMobile && isLandscape) {
+                    // Mobile Landscape Fullscreen: Add class
+                    mainContainer.classList.add('mobile-fullscreen-landscape');
+                } else {
+                    // Not mobile landscape fullscreen OR not fullscreen at all: Remove class
+                    mainContainer.classList.remove('mobile-fullscreen-landscape');
+                }
 
-             } else {
-                 fsIconEnter.classList.remove('hidden');
-                 fsIconExit.classList.add('hidden');
-                 fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                 mainContainer.classList.remove('mobile-fullscreen-landscape'); // Always remove on exit
-
-                 // Force chart resize after exiting fullscreen
-                 if (chart) {
-                     requestAnimationFrame(() => {
-                         requestAnimationFrame(() => {
-                             chart.resize();
-                         });
-                     });
-                 }
-            }
-         }
+                // --- Force Chart Resize on Exit ---
+                if (!isInFullscreen && chart) {
+                     // Double RAF to ensure resize happens after layout settles
+                    requestAnimationFrame(() => {
+                        chart.resize();
+                    });
+                }
+            });
+        }
 
 
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Safari
 
-        // Listen for orientation changes to update styles while in fullscreen
-        window.addEventListener('orientationchange', handleFullscreenChange);
-        // Also listen for resize, as orientationchange isn't always reliable
+        // Listen for orientation changes AND resize to update styles while in fullscreen
+        // Using resize is often more reliable than orientationchange alone
         window.addEventListener('resize', handleFullscreenChange);
 
         // --- END OF ADDITIONS ---
@@ -767,3 +770,4 @@
 
 </body>
 </html>
+
