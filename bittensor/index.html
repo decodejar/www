@@ -72,20 +72,20 @@
            - Top bar remains VISIBLE
         */
         @media (max-width: 639px) and (orientation: landscape) {
-            #mainContainer:fullscreen header,
-            #mainContainer:fullscreen #bottomModelBar, /* Only hide the bottom bar */
+            #mainContainer:fullscreen header,             /* Hide the header (title/subtitle) */
+            #mainContainer:fullscreen #bottomModelBar,    /* Hide the bottom model info bar */
             #mainContainer:fullscreen #rotateOverlay {
-                display: none !important;
+                display: none !important;                 /* Ensure these are hidden */
             }
 
             #mainContainer:fullscreen #chartCard {
-                padding: 0;
-                display: flex !important;
+                padding: 0;                               /* Remove padding around the chart */
+                display: flex !important;                 /* Ensure chart card is visible */
             }
-            /* Explicitly ensure top bar is visible if needed, though default is block/flex */
-             #mainContainer:fullscreen #topStatusBar {
-                display: flex !important; /* Make sure it's visible */
-             }
+
+            #mainContainer:fullscreen #topStatusBar {
+                display: flex !important;                 /* Ensure the top status bar is visible */
+            }
         }
 
         /* On mobile (fullscreen), in PORTRAIT mode:
