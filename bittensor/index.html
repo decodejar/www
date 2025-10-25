@@ -204,7 +204,7 @@
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
 
         // --- Chart Configuration ---
-        const DAY_OFFSET = 100; // Configured day offset for chart display.
+        const DAY_OFFSET = 81; // Configured day offset for chart display.
         let chart; // Global chart instance
 
         // Band Fill Colors
@@ -459,13 +459,28 @@
             }
 
             growthExponentDiv.innerHTML = `<strong>Exponent (α):</strong> ${slope.toFixed(3)}`;
-            modelFitDiv.innerHTML = `<strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            
+            // --- Determine Fit (R²) color ---
+            let fitColorClass = "";
+            if (rSquared >= 0.9) {
+                fitColorClass = "bg-blue-300";
+            } else if (rSquared >= 0.7) {
+                fitColorClass = "bg-green-500";
+            } else if (rSquared >= 0.5) {
+                fitColorClass = "bg-yellow-400";
+            } else {
+                fitColorClass = "bg-red-500";
+            }
+            // --- END ---
+            
+            // --- MODIFIED: Add dot to modelFitDiv innerHTML ---
+            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span><strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
             // Conditionally show optimal offset info
             if (DAY_OFFSET === optimalOffset) {
                 optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET}`;
             } else if (optimalOffset !== -1) { 
-                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
+                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
             } else {
                 optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET}`;
             }
@@ -967,4 +982,5 @@
 
 </body>
 </html>
+
 
