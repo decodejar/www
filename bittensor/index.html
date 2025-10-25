@@ -147,7 +147,13 @@
 
                 <!-- powerLawStatusDiv: content injected by JS -->
                 <!-- Added flex items-center to align the status dot -->
-                <div id="powerLawStatusDiv" class="flex items-center"></div>
+                <!-- MODIFIED: Added structure for tooltip -->
+                <div id="powerLawStatusDiv" class="flex items-center">
+                     <span id="powerLawStatusDot" class="status-dot bg-yellow-500"></span> <!-- Dot needs ID for JS -->
+                     <span id="powerLawStatusText">Power Law</span> <!-- Text needs ID for JS -->
+                     <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-400 cursor-help border border-gray-400 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-200">?</span>
+                </div>
+                <!-- *** END MODIFICATION *** -->
             </div>
             <!-- *** END CONSOLIDATED BAR *** -->
         </div>
@@ -156,16 +162,10 @@
 
     <!-- MODIFIED: Further reduced padding and top margin -->
     <footer class="text-center p-1 mt-2">
-        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar - x.com/decodejar</a></p>
+        <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
     </footer>
 
 <script>
-        /*
-        * TAO Tensor Law Model & Regression Logic
-        * Copyright (c) 2025 X.COM/DECODEJAR. All Rights Reserved.
-        * Unauthorized copying or distribution is prohibited.
-        */
-        
         // const modelInfoDiv = document.getElementById('modelInfo'); // OLD
         const growthExponentDiv = document.getElementById('growthExponentDiv'); // NEW
         const modelFitDiv = document.getElementById('modelFitDiv'); // NEW
@@ -176,6 +176,10 @@
         const lastPriceDiv = document.getElementById('lastPriceDiv');
         // *** ADDED: Get reference to Power Law status div ***
         const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
+        // *** ADDED: Get references for Power Law Status components ***
+        const powerLawStatusDot = document.getElementById('powerLawStatusDot');
+        const powerLawStatusText = document.getElementById('powerLawStatusText');
+        // *** END ADDITION ***
         const priceZoneDiv = document.getElementById('priceZoneDiv'); // <-- NEW
         const ctx = document.getElementById('powerLawChart').getContext('2d');
 
@@ -375,9 +379,17 @@
             // *** NEW: Determine model fit ***
             const modelFitGood = rSquared >= 0.9;
 
-            // *** NEW: Update Power Law Status Div ***
-            powerLawStatusDiv.innerHTML = `<span class="status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}"></span>Power Law Status`;
-            // *** REMOVED: classList.remove('hidden') as the new div is not hidden ***
+            // --- MODIFIED: Update Power Law Status Dot and Text ---
+            // Update dot color based on model fit
+            if (powerLawStatusDot) {
+                 powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
+            }
+             // Update text content (optional, could remain static)
+             // if (powerLawStatusText) {
+             //     powerLawStatusText.textContent = 'Power Law Status';
+             // }
+             // --- END MODIFICATION ---
+
 
             // *** UPDATED: Populate the two new divs separately (no <br>) ***
             growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
@@ -509,7 +521,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '1st Pctl',
+                                label: '1st Percentile',
                                 data: p1LineData,
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1,
@@ -519,7 +531,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '99th Pctl',
+                                label: '99th Percentile',
                                 data: p99LineData,
                                 borderColor: 'rgba(156, 163, 175, 0.7)', // Light gray
                                 borderWidth: 1,
