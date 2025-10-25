@@ -325,7 +325,7 @@
             let priceZone = "";
             let priceZoneColor = "";
             if (lastResidual > p80Residual) {
-                priceZone = "Very Expensive";
+                priceZone = "Bubble";
                 priceZoneColor = "bg-red-500";
             } else if (lastResidual > medianResidual) { // Use p50 (medianResidual)
                 priceZone = "Expensive";
@@ -334,7 +334,7 @@
                 priceZone = "Value";
                 priceZoneColor = "bg-green-500";
             } else { // < p20
-                priceZone = "Deep Value";
+                priceZone = "Discount";
                 priceZoneColor = "bg-blue-300";
             }
     
