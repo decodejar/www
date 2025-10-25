@@ -266,11 +266,19 @@
             const lastDataPoint = priceData[priceData.length - 1];
             const lastPrice = lastDataPoint.y;
             const lastTimestamp = lastDataPoint.time;
-            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
+            // --- MODIFIED: Format date only ---
+            const lastUpdateDate = new Date(lastTimestamp).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short', // Use 'short' for abbreviated month name
+                day: 'numeric'
+            });
+            // --- END MODIFICATION ---
 
             // *** UPDATED: Set statusDiv and new divs content ***
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
+            // --- MODIFIED: Use formatted date ---
+            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateDate}`;
+            // --- END MODIFICATION ---
             lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
             // Show the divs now that they have content (using sm:block to hide on smallest screens)
             lastUpdateDiv.classList.remove('hidden');
@@ -485,7 +493,7 @@
                             },
                             {
                                 type: 'line',
-                                label: '50th Percentile Regression',
+                                label: '50th Percentile',
                                 data: medianLineData,
                                 borderColor: '#ff6d00', // Orange line
                                 borderWidth: 2,
