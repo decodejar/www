@@ -47,7 +47,7 @@ def fetch_and_save_data():
         print(f"Fetching the last {days_to_fetch} day(s) of new data from CoinGecko...")
     else:
         # If there's no existing data, fetch the maximum allowed (365 days).
-        days_to_fetch = 365
+        days_to_fetch = 1000
         print("No existing data found. Fetching the last 365 days from CoinGecko...")
 
     
