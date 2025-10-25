@@ -63,38 +63,6 @@
         body:has(#mainContainer:fullscreen) footer {
             display: none;
         }
-
-        /* --- Mobile Fullscreen Optimizations --- */
-
-        /* CSS only handles the PORTRAIT overlay now */
-        @media (max-width: 639px) and (orientation: portrait) {
-            #mainContainer:fullscreen #rotateOverlay {
-                display: flex !important; /* Show the overlay */
-            }
-
-            #mainContainer:fullscreen header,
-            #mainContainer:fullscreen #topStatusBar,
-            #mainContainer:fullscreen #chartCard,
-            #mainContainer:fullscreen #bottomModelBar,
-            #mainContainer:fullscreen #fullscreenBtn {
-                display: none !important; /* Hide everything else */
-            }
-        }
-
-        /* Style applied by JS for mobile landscape */
-        #mainContainer.mobile-fullscreen-landscape header,
-        #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
-             display: none !important;
-        }
-         #mainContainer.mobile-fullscreen-landscape #chartCard {
-             padding: 0 !important;
-         }
-         #mainContainer.mobile-fullscreen-landscape #topStatusBar {
-              display: flex !important; /* Ensure it remains visible */
-         }
-
-
-        /* --- END: Mobile Fullscreen Optimizations --- */
     </style>
 </head>
 <!--
@@ -102,7 +70,8 @@
     This makes the body's height match the viewport exactly,
     allowing it to shrink and fixing the vertical scaling bug.
 -->
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-6">
+<!-- MODIFIED: Reduced body padding -->
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-4">
 
     <!--
         This container has all scaling rules:
@@ -111,18 +80,8 @@
         - max-h-[900px]: Max height
         - min-h-[30rem]: Min height
     -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8 relative">
-
-        <!-- *** NEW "Please Rotate" Overlay *** -->
-        <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-600 mb-4 animate-pulse">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Please Rotate Your Device</h2>
-            <p class="text-gray-600">This chart is best viewed in landscape mode.</p>
-        </div>
-        <!-- *** END Overlay *** -->
-
+    <!-- MODIFIED: Reduced container padding -->
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-3 sm:p-4 md:p-6 relative">
         <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
             <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -131,27 +90,28 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
             </svg>
         </button>
-        <header class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl text-gray-900">TAO Tensor Law Model</h1>
-            <p class="text-gray-600 mt-1">Modelling Bittensor in Log-Log Regression</p>
+        <!-- MODIFIED: Reduced bottom margin, title font size, subtitle top margin -->
+        <header class="text-center mb-4">
+            <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">TAO Tensor Law Model</h1>
+            <p class="text-gray-600 mt-0.5">Modelling Bittensor in Log-Log Regression</p>
         </header>
 
         <!-- *** MOVED STATUS BAR HERE *** -->
         <!-- *** MODIFIED: Added px-4 to match the inner padding of mainContainer and removed explicit width class*** -->
-        <!-- *** NEW: Added id="topStatusBar" *** -->
-        <div id="topStatusBar" class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-sm text-gray-600 px-4">
+        <!-- MODIFIED: Reduced padding and bottom margin -->
+        <div class="bg-gray-100 p-2 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-3 text-sm text-gray-600 px-4">
              <div id="statusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-500"></span>Loading latest data...
              </div>
              <div id="lastUpdateDiv" class="hidden sm:block">
                  <!-- Placeholder for last update time -->
              </div>
-               <div id="lastPriceDiv" class="hidden sm:block">
+              <div id="lastPriceDiv" class="hidden sm:block">
                  <!-- Placeholder for last price -->
              </div>
              <!-- *** NEW Price Zone Div *** -->
              <div id="priceZoneDiv" class="flex items-center hidden sm:block">
-                 <!-- Content injected by JS -->
+                <!-- Content injected by JS -->
              </div>
              <!-- *** END NEW Div *** -->
              <!-- *** REMOVED: Power Law Status Div (MOVED TO END) *** -->
@@ -162,7 +122,8 @@
             - flex-grow: Fills the main container
             - min-h-0: Fixes the vertical scaling bug by allowing this to shrink
         -->
-        <div id="chartCard" class="bg-white p-4 rounded-lg relative flex-grow flex flex-col min-h-0">
+        <!-- MODIFIED: Reduced padding -->
+        <div id="chartCard" class="bg-white p-3 rounded-lg relative flex-grow flex flex-col min-h-0">
             <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
@@ -178,8 +139,8 @@
             <!-- *** CONSOLIDATED MODEL INFO BAR *** -->
             <!-- This bar now holds the model info and status, styled like the top bar -->
             <!-- *** MODIFIED: Removed explicit width class*** -->
-            <!-- *** NEW: Added id="bottomModelBar" *** -->
-            <div id="bottomModelBar" class="bg-gray-100 p-3 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-sm text-gray-600">
+            <!-- MODIFIED: Reduced padding and top margin -->
+            <div class="bg-gray-100 p-2 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-3 text-sm text-gray-600">
                 <!-- NEW: Split modelInfo into separate divs for single-row layout -->
                 <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
@@ -193,7 +154,8 @@
 
     </div>
 
-    <footer class="text-center p-4 mt-4">
+    <!-- MODIFIED: Reduced padding and top margin -->
+    <footer class="text-center p-2 mt-3">
         <p class="text-gray-500 text-sm">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a></p>
     </footer>
 
@@ -226,7 +188,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                         throw new Error("Invalid data format in JSON file");
+                        throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
                 // --- X-VALUE MODIFICATION ---
@@ -304,22 +266,11 @@
             const lastDataPoint = priceData[priceData.length - 1];
             const lastPrice = lastDataPoint.y;
             const lastTimestamp = lastDataPoint.time;
-            // --- MODIFICATION START ---
-            // Use toLocaleDateString() for date only
-            const lastUpdateDate = new Date(lastTimestamp).toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-            // --- MODIFICATION END ---
-
+            const lastUpdateUTC = new Date(lastTimestamp).toUTCString();
 
             // *** UPDATED: Set statusDiv and new divs content ***
             statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-             // --- MODIFICATION START ---
-            // Display the formatted date
-            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateDate}`;
-            // --- MODIFICATION END ---
+            lastUpdateDiv.innerHTML = `<strong>Last Update:</strong> ${lastUpdateUTC}`;
             lastPriceDiv.innerHTML = `<strong>Last Price:</strong> $${lastPrice.toFixed(2)}`;
             // Show the divs now that they have content (using sm:block to hide on smallest screens)
             lastUpdateDiv.classList.remove('hidden');
@@ -681,10 +632,7 @@
             return ss_tot === 0 ? 1 : 1 - (ss_res / ss_tot);
         }
 
-        window.onload = () => {
-            createOrUpdateChart();
-            handleFullscreenChange(); // Initial check on load
-        }
+        window.onload = () => createOrUpdateChart();
 
         // --- ADDITIONS FOR FULLSCREEN BUTTON ---
 
@@ -716,54 +664,37 @@
         }
 
         /**
-         * Updates the icon and applies/removes mobile fullscreen styles based on state.
+         * Updates the icon based on the current fullscreen state.
+         * This is crucial for handling the 'Esc' key.
          */
-        function handleFullscreenChange() {
-            // Use requestAnimationFrame to ensure checks happen after potential layout shifts
-            requestAnimationFrame(() => {
-                const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
-                // Use screen.orientation for more reliable orientation detection if available, fallback to width/height comparison
-                const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
+        function updateFullscreenIcon() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                // We are IN fullscreen mode
+                fsIconEnter.classList.add('hidden');
+                fsIconExit.classList.remove('hidden');
+                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+            } else {
+                // We are NOT in fullscreen mode
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
 
-                // --- Icon Update ---
-                if (isInFullscreen) {
-                    fsIconEnter.classList.add('hidden');
-                    fsIconExit.classList.remove('hidden');
-                    fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-                } else {
-                    fsIconEnter.classList.remove('hidden');
-                    fsIconExit.classList.add('hidden');
-                    fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                }
-
-                // --- Apply/Remove Mobile Landscape Class ---
-                if (isInFullscreen && isMobile && isLandscape) {
-                    // Mobile Landscape Fullscreen: Add class
-                    mainContainer.classList.add('mobile-fullscreen-landscape');
-                } else {
-                    // Not mobile landscape fullscreen OR not fullscreen at all: Remove class
-                    mainContainer.classList.remove('mobile-fullscreen-landscape');
-                }
-
-                // --- Force Chart Resize on Exit ---
-                if (!isInFullscreen && chart) {
-                     // Double RAF to ensure resize happens after layout settles
+                // Force the chart to resize to its container
+                if (chart) {
+                    // We use a double requestAnimationFrame to ensure the layout
+                    // has settled after the fullscreen state change.
                     requestAnimationFrame(() => {
-                        chart.resize();
+                        requestAnimationFrame(() => {
+                            chart.resize();
+                        });
                     });
                 }
-            });
+           }
         }
 
-
-        // Listen for fullscreen changes
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Safari
-
-        // Listen for orientation changes AND resize to update styles while in fullscreen
-        // Using resize is often more reliable than orientationchange alone
-        window.addEventListener('resize', handleFullscreenChange);
+        // Listen for fullscreen changes to keep the icon in sync
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
 
         // --- END OF ADDITIONS ---
     </script>
