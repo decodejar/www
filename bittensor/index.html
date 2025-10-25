@@ -486,13 +486,12 @@
             }
 
             growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
-            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
             // --- NEW: Display the optimal offset results ---
             // --- MODIFIED: Conditionally show optimal offset info ---
             if (DAY_OFFSET === optimalOffset) {
                 // Configured offset IS the optimal one
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET} (Optimal)`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET}`;
             } else if (optimalOffset !== -1) { 
                 // Configured is different from a valid optimal offset
                 optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
@@ -502,6 +501,8 @@
             }
             // --- END MODIFICATION ---
 
+            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            
             // --- Calculate All Line Data Points ---
             const startIndex = extendedMinDay;
             const endIndex = extendedMaxDay;
