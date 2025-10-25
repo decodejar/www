@@ -194,6 +194,9 @@
                 <!-- NEW: Split modelInfo into separate divs for single-row layout -->
                 <div id="growthExponentDiv"></div>
                 <div id="modelFitDiv"></div>
+                <!-- *** NEW: Optimal Offset Div *** -->
+                <div id="optimalOffsetDiv"></div>
+                <!-- *** END: Optimal Offset Div *** -->
 
                 <!-- powerLawStatusDiv: content injected by JS -->
                 <!-- Added flex items-center to align the status dot -->
@@ -237,6 +240,8 @@
         const powerLawStatusText = document.getElementById('powerLawStatusText');
         const priceZoneDiv = document.getElementById('priceZoneDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
+        // --- NEW: Optimal Offset Ref ---
+        const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
         // --- NEW: Checkbox References ---
         const showBandsContainer = document.getElementById('showBandsContainer');
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
@@ -272,11 +277,11 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                        throw new Error("Invalid data format in JSON file");
+                         throw new Error("Invalid data format in JSON file");
                  }
                 // Filter out any data points with a price of 0 or less, as they break the log scale.
-                // Add the DAY_OFFSET to the index (i + 1)
-                return data.map((p, i) => ({ time: p[0] * 1000, x: i + 1 + DAY_OFFSET, y: p[1] })).filter(p => p.y > 0);
+                // MODIFICATION: Return 'dayIndex' (i+1) without the offset. Offset is applied later.
+                return data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
             } catch (error) {
                 console.error("Error loading price data:", error);
                 statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
@@ -329,22 +334,79 @@
             }
         }
 
+        // --- NEW: Function to find the optimal DAY_OFFSET for R² ---
+        // --- MODIFIED: Removed default maxOffset, it's now passed from createOrUpdateChart ---
+        function findOptimalOffset(baseData, minOffset = 1, maxOffset) {
+            let bestOffset = -1;
+            let bestRSquared = -Infinity;
+
+            // Need at least 2 data points to calculate regression
+            if (baseData.length < 2) {
+                return { optimalOffset: -1, bestFit: 0 };
+            }
+
+            // --- NEW: Check if maxOffset was provided ---
+            if (typeof maxOffset === 'undefined' || maxOffset < minOffset) {
+                console.error("findOptimalOffset called without a valid maxOffset.");
+                // Fallback, though it should be passed from createOrUpdateChart
+                maxOffset = baseData.length; 
+            }
+
+            for (let offset = minOffset; offset <= maxOffset; offset++) {
+                // 1. Apply the current test offset
+                // We only need x and y for the regression functions
+                const offsetData = baseData.map(p => ({
+                    x: p.dayIndex + offset,
+                    y: p.y
+                }));
+
+                // 2. Run regression for this offset
+                const { slope, intercept } = linearRegression(offsetData);
+                
+                // linearRegression returns {0, 0} on failure (e.g., < 2 points)
+                if (slope === 0 && intercept === 0 && offsetData.length > 1) {
+                    continue; // Skip if regression failed
+                }
+
+                // 3. Calculate R²
+                const rSquared = calculateRSquared(offsetData, slope, intercept);
+
+                // 4. Track the best fit
+                if (rSquared > bestRSquared) {
+                    bestRSquared = rSquared;
+                    bestOffset = offset;
+                }
+            }
+            return { optimalOffset: bestOffset, bestFit: bestRSquared };
+        }
+        // --- END NEW FUNCTION ---
+
         async function createOrUpdateChart() {
             loader.style.display = 'flex';
 
-            const priceData = await loadPriceData();
+            // 1. Load BASE data (no offset applied yet)
+            const baseData = await loadPriceData();
 
-            if (!priceData || priceData.length === 0) {
+            if (!baseData || baseData.length === 0) {
                  if (!statusDiv.innerHTML.includes('Error')) {
-                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
-                 growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
-                 modelFitDiv.innerHTML = '';
-                 powerLawStatusDiv.style.display = 'none';
+// ... existing code ... -->
                  showBandsContainer.classList.add('hidden'); // Hide checkbox if no data
                  loader.style.display = 'none';
                  return;
             }
+
+            // 2. --- NEW: Run optimization function on BASE data ---
+            // This searches for the best offset
+            // --- MODIFIED: Pass baseData.length as the maxOffset ---
+            const maxDaysInData = baseData.length > 0 ? baseData.length : 730; // Use data length, fallback to 730 if empty (though already handled)
+            const { optimalOffset, bestFit } = findOptimalOffset(baseData, 1, maxDaysInData);
+            
+            // 3. --- NEW: Apply the HARD-CODED offset for the chart ---
+            // All subsequent calculations for drawing the chart will use this `priceData`
+            const priceData = baseData.map(p => ({ ...p, x: p.dayIndex + DAY_OFFSET }));
+
 
             const lastDataPoint = priceData[priceData.length - 1];
             const lastPrice = lastDataPoint.y;
@@ -425,6 +487,9 @@
 
             growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
             modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
+            
+            // --- NEW: Display the optimal offset results ---
+            optimalOffsetDiv.innerHTML = `<strong>Offset (Config):</strong> ${DAY_OFFSET} | <strong>Offset (Optimal):</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
 
             // --- Calculate All Line Data Points ---
             const startIndex = extendedMinDay;
@@ -433,8 +498,8 @@
                  const safeStartIndex = Math.max(startIndex, 1);
                  const safeEndIndex = Math.max(endIndex, 1);
                  return [
-                     { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
-                     { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
+                      { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
+                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
                  ];
             };
             const medianLineData = calculateLinePoints(medianIntercept); // For 50th pctl line (orange OR gray)
@@ -464,24 +529,24 @@
                  const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
                  let lastYearFound = minYear - 1;
                  for (const p of priceData) {
-                     const year = new Date(p.time).getFullYear();
-                     if (year > lastYearFound) {
-                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                             newTicks.push({ value: p.x, label: year.toString() });
-                         }
-                         lastYearFound = year;
-                     }
+                      const year = new Date(p.time).getFullYear();
+                      if (year > lastYearFound) {
+                           if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                                newTicks.push({ value: p.x, label: year.toString() });
+                           }
+                           lastYearFound = year;
+                      }
                  }
                  const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
                  if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                         const yearStartTime = new Date(year, 0, 1).getTime();
-                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                         }
-                     }
+                      for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                           const yearStartTime = new Date(year, 0, 1).getTime();
+                           const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                           const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+                           if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                                newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                           }
+                      }
                  }
                  axis.ticks.length = 0;
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
@@ -537,22 +602,22 @@
                               chart.data.datasets[dsInfo.index].fill = dsInfo.fill;
                               chart.data.datasets[dsInfo.index].backgroundColor = dsInfo.backgroundColor;
                          }
-                          // Ensure redundant line stays hidden
-                          if (dsInfo.index === 5) {
-                               chart.data.datasets[dsInfo.index].hidden = true;
-                          }
+                         // Ensure redundant line stays hidden
+                         if (dsInfo.index === 5) {
+                             chart.data.datasets[dsInfo.index].hidden = true;
+                         }
                     } else {
                         // Add new dataset
                          chart.data.datasets.push({
                              ...datasetDefaults,
                              ...(dsInfo.style || {}),
                              ...(dsInfo.fill !== undefined ? fillDatasetDefaults : {}),
-                              label: dsInfo.label,
-                              data: dsInfo.data,
-                              // Ensure redundant line starts hidden
-                              hidden: dsInfo.index === 5 ? true : dsInfo.hidden,
-                              ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
-                          });
+                             label: dsInfo.label,
+                             data: dsInfo.data,
+                             // Ensure redundant line starts hidden
+                             hidden: dsInfo.index === 5 ? true : dsInfo.hidden,
+                             ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
+                         });
                     }
                 });
 
@@ -627,33 +692,33 @@
                             },
                              // --- NEW Fill Datasets (Initially Hidden) ---
                              { // 7: Fill P1-P20 (Blue)
-                                ...fillDatasetDefaults,
-                                label: 'Discount Band (P1-P20)',
-                                data: p20LineData, // Use upper boundary data
-                                fill: 2, // Fill down to index 2 (P1 Line)
-                                backgroundColor: blueFillColor,
-                            },
+                                 ...fillDatasetDefaults,
+                                 label: 'Discount Band (P1-P20)',
+                                 data: p20LineData, // Use upper boundary data
+                                 fill: 2, // Fill down to index 2 (P1 Line)
+                                 backgroundColor: blueFillColor,
+                             },
                              { // 8: Fill P20-P50 (Green)
-                                ...fillDatasetDefaults,
-                                label: 'Value Band (P20-P50)',
-                                data: medianLineData, // Use upper boundary data (index 1)
-                                fill: 4, // Fill down to index 4 (P20 Line)
-                                backgroundColor: greenFillColor,
-                            },
+                                 ...fillDatasetDefaults,
+                                 label: 'Value Band (P20-P50)',
+                                 data: medianLineData, // Use upper boundary data (index 1)
+                                 fill: 4, // Fill down to index 4 (P20 Line)
+                                 backgroundColor: greenFillColor,
+                             },
                             { // 9: Fill P50-P80 (Yellow)
-                                ...fillDatasetDefaults,
-                                label: 'Expensive Band (P50-P80)',
-                                data: p80LineData, // Use upper boundary data
-                                fill: 1, // Fill down to index 1 (Main P50 Line)
-                                backgroundColor: yellowFillColor,
-                            },
+                                 ...fillDatasetDefaults,
+                                 label: 'Expensive Band (P50-P80)',
+                                 data: p80LineData, // Use upper boundary data
+                                 fill: 1, // Fill down to index 1 (Main P50 Line)
+                                 backgroundColor: yellowFillColor,
+                             },
                             { // 10: Fill P80-P99 (Red)
-                                ...fillDatasetDefaults,
-                                label: 'Bubble Band (P80-P99)',
-                                data: p99LineData, // Use upper boundary data
-                                fill: 6, // Fill down to index 6 (P80 Line)
-                                backgroundColor: redFillColor,
-                            },
+                                 ...fillDatasetDefaults,
+                                 label: 'Bubble Band (P80-P99)',
+                                 data: p99LineData, // Use upper boundary data
+                                 fill: 6, // Fill down to index 6 (P80 Line)
+                                 backgroundColor: redFillColor,
+                             },
                         ]
                     },
                     options: { // Standard chart options remain largely the same
@@ -737,7 +802,7 @@
                                      axis.ticks.length = 0;
                                      const validTicks = newTicks.filter(tick => isFinite(tick.value) && tick.value > 0);
                                      axis.ticks.push(...validTicks);
-                                     if (axis.ticks.length === 0) {
+                                      if (axis.ticks.length === 0) {
                                           axis.ticks.push({ value: axisMin, label: `$${axisMin.toLocaleString()}` });
                                           axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
                                       }
@@ -750,14 +815,14 @@
             }
 
              // --- NEW: Show checkbox and add listener after chart setup ---
-             showBandsContainer.classList.remove('hidden');
-             // Remove previous listener to avoid duplicates if function runs again
-             showBandsCheckbox.removeEventListener('change', handleBandToggle);
-             showBandsCheckbox.addEventListener('change', handleBandToggle);
-              // Apply initial state based on checkbox
-              applyBandVisibility(showBandsCheckbox.checked);
-              if(chart) chart.update('none'); // Update once without animation after applying initial visibility
-             // --- END ---
+              showBandsContainer.classList.remove('hidden');
+              // Remove previous listener to avoid duplicates if function runs again
+              showBandsCheckbox.removeEventListener('change', handleBandToggle);
+              showBandsCheckbox.addEventListener('change', handleBandToggle);
+               // Apply initial state based on checkbox
+               applyBandVisibility(showBandsCheckbox.checked);
+               if(chart) chart.update('none'); // Update once without animation after applying initial visibility
+              // --- END ---
         }
 
         // --- NEW: Function to handle checkbox toggling ---
@@ -774,45 +839,45 @@
                 console.error("Chart or datasets not fully initialized for applyBandVisibility.");
                 return; // Exit if chart/datasets aren't ready
              }
-              // Indices
-              const mainMedianIndex = 1;   // The one that changes color
-              const p20Index = 4;
-              const redundantP50Index = 5; // Always hidden
-              const p80Index = 6;
-              const fillIndices = [7, 8, 9, 10]; // P1-P20, P20-P50, P50-P80, P80-P99
+             // Indices
+             const mainMedianIndex = 1;    // The one that changes color
+             const p20Index = 4;
+             const redundantP50Index = 5; // Always hidden
+             const p80Index = 6;
+             const fillIndices = [7, 8, 9, 10]; // P1-P20, P20-P50, P50-P80, P80-P99
 
-              // Always visible lines (ensure they exist first)
-               if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
-               if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true); // Main 50th is always visible now
-               if (chart.data.datasets[2]) chart.setDatasetVisibility(2, true); // P1
-               if (chart.data.datasets[3]) chart.setDatasetVisibility(3, true); // P99
-               if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Keep redundant one hidden
-
-
-              // Toggle visibility of band lines and fills
-               if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
-               if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
-               fillIndices.forEach(index => {
-                    if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
-               });
+             // Always visible lines (ensure they exist first)
+              if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
+              if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true); // Main 50th is always visible now
+              if (chart.data.datasets[2]) chart.setDatasetVisibility(2, true); // P1
+              if (chart.data.datasets[3]) chart.setDatasetVisibility(3, true); // P99
+              if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Keep redundant one hidden
 
 
-              // Change style of main 50th percentile line
-              const medianDataset = chart.data.datasets[mainMedianIndex];
-               if (medianDataset) { // Check if dataset exists
-                   if (showBands) {
-                       // Apply gray style
-                       medianDataset.borderColor = grayLineStyle.borderColor;
-                       medianDataset.borderWidth = grayLineStyle.borderWidth;
-                   } else {
-                       // Apply orange style
-                       medianDataset.borderColor = orangeLineStyle.borderColor;
-                       medianDataset.borderWidth = orangeLineStyle.borderWidth;
-                   }
-               } else {
-                   console.error("Median dataset (index 1) not found for style change.");
-               }
-         }
+             // Toggle visibility of band lines and fills
+              if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
+              if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
+              fillIndices.forEach(index => {
+                   if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
+              });
+
+
+             // Change style of main 50th percentile line
+             const medianDataset = chart.data.datasets[mainMedianIndex];
+              if (medianDataset) { // Check if dataset exists
+                  if (showBands) {
+                      // Apply gray style
+                      medianDataset.borderColor = grayLineStyle.borderColor;
+                      medianDataset.borderWidth = grayLineStyle.borderWidth;
+                  } else {
+                      // Apply orange style
+                      medianDataset.borderColor = orangeLineStyle.borderColor;
+                      medianDataset.borderWidth = orangeLineStyle.borderWidth;
+                  }
+              } else {
+                  console.error("Median dataset (index 1) not found for style change.");
+              }
+        }
          // --- END MODIFICATION ---
 
         function calculateRSquared(data, slope, intercept) {
@@ -890,12 +955,12 @@
                  }
 
                   if (chart) {
-                      setTimeout(() => {
+                       setTimeout(() => {
                            requestAnimationFrame(() => {
                                 if (chart) chart.resize();
                            });
-                      }, 50);
-                  }
+                       }, 50);
+                   }
              });
          }
 
@@ -904,9 +969,9 @@
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
         window.addEventListener('resize', handleFullscreenChange);
          if (screen.orientation) {
-             screen.orientation.addEventListener('change', handleFullscreenChange);
+              screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-             window.addEventListener('orientationchange', handleFullscreenChange);
+              window.addEventListener('orientationchange', handleFullscreenChange);
          }
 
 
@@ -920,4 +985,5 @@
 
 </body>
 </html>
+
 
