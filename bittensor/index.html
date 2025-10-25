@@ -64,31 +64,22 @@
             display: none;
         }
 
-        /* --- MODIFIED: Mobile Fullscreen Optimizations --- */
+        /* --- JS-CONTROLLED Mobile Fullscreen Optimizations --- */
 
-        /* On mobile (fullscreen), in LANDSCAPE mode:
-           - Hide header and BOTTOM info bar
-           - Show the chart card with no padding
-           - Top bar remains VISIBLE
-        */
-        @media (max-width: 639px) and (orientation: landscape) {
-            #mainContainer:fullscreen header,             /* Hide the header (title/subtitle) */
-            #mainContainer:fullscreen #bottomModelBar,    /* Hide the bottom model info bar */
-            #mainContainer:fullscreen #rotateOverlay {
-                display: none !important;                 /* Ensure these are hidden */
-            }
-
-            #mainContainer:fullscreen #chartCard {
-                padding: 0;                               /* Remove padding around the chart */
-                display: flex !important;                 /* Ensure chart card is visible */
-            }
-
-            #mainContainer:fullscreen #topStatusBar {
-                display: flex !important;                 /* Ensure the top status bar is visible */
-            }
+        /* Class added by JS for mobile landscape fullscreen */
+        .mobile-fullscreen-landscape header,
+        .mobile-fullscreen-landscape #bottomModelBar,
+        .mobile-fullscreen-landscape #rotateOverlay {
+            display: none !important;
+        }
+        .mobile-fullscreen-landscape #chartCard {
+            padding: 0 !important;
+        }
+        .mobile-fullscreen-landscape #topStatusBar {
+             display: flex !important;
         }
 
-        /* On mobile (fullscreen), in PORTRAIT mode:
+        /* On mobile (fullscreen), in PORTRAIT mode (still controlled by CSS for simplicity):
            - Show the "Please Rotate" overlay
            - Hide ALL other app content
         */
@@ -724,37 +715,52 @@
         }
 
         /**
-         * Updates the icon based on the current fullscreen state.
-         * This is crucial for handling the 'Esc' key.
+         * Updates the icon and applies mobile fullscreen styles based on state.
          */
-        function updateFullscreenIcon() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-                // We are IN fullscreen mode
-                fsIconEnter.classList.add('hidden');
-                fsIconExit.classList.remove('hidden');
-                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-            } else {
-                // We are NOT in fullscreen mode
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-                fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+        function handleFullscreenChange() {
+             const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+             const isMobile = window.innerWidth < 640; // Tailwind's 'sm' breakpoint
+             // Use screen.orientation for more reliable orientation detection if available
+             const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
-                // Force the chart to resize to its container
-                if (chart) {
-                    // We use a double requestAnimationFrame to ensure the layout
-                    // has settled after the fullscreen state change.
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            chart.resize();
-                        });
-                    });
-                }
-           }
-        }
+             if (isInFullscreen) {
+                 fsIconEnter.classList.add('hidden');
+                 fsIconExit.classList.remove('hidden');
+                 fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
 
-        // Listen for fullscreen changes to keep the icon in sync
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon); // For Safari
+                 // Apply mobile landscape class if conditions met
+                 if (isMobile && isLandscape) {
+                     mainContainer.classList.add('mobile-fullscreen-landscape');
+                 } else {
+                     mainContainer.classList.remove('mobile-fullscreen-landscape');
+                 }
+
+             } else {
+                 fsIconEnter.classList.remove('hidden');
+                 fsIconExit.classList.add('hidden');
+                 fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                 mainContainer.classList.remove('mobile-fullscreen-landscape'); // Always remove on exit
+
+                 // Force chart resize after exiting fullscreen
+                 if (chart) {
+                     requestAnimationFrame(() => {
+                         requestAnimationFrame(() => {
+                             chart.resize();
+                         });
+                     });
+                 }
+            }
+         }
+
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // For Safari
+
+        // Listen for orientation changes to update styles while in fullscreen
+        window.addEventListener('orientationchange', handleFullscreenChange);
+        // Also listen for resize, as orientationchange isn't always reliable
+        window.addEventListener('resize', handleFullscreenChange);
 
         // --- END OF ADDITIONS ---
     </script>
