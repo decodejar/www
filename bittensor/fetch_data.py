@@ -8,9 +8,9 @@ def fetch_and_save_data():
     Loads existing historical data, then fetches any new data from CoinGecko
     since the last entry and appends it.
     """
-    api_key = os.getenv('COINGECKO_API_KEY')
+    api_key = os.getenv('COINGECKO_PRO_API_KEY')
     if not api_key:
-        print("Error: COINGECKO_API_KEY secret is not set in the GitHub repository.")
+        print("Error: COINGECKO_PRO_API_KEY secret is not set in the GitHub repository.")
         return
     else:
         print("Successfully loaded COINGECKO_API_KEY secret.")
@@ -51,7 +51,7 @@ def fetch_and_save_data():
         print("No existing data found. Fetching the last 365 days from CoinGecko...")
 
     
-    api_url = f"https://pro-api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days={days_to_fetch}&interval=daily&x_cg_demo_api_key={api_key}"
+    api_url = f"https://api.coingecko.com/api/v3/coins/bittensor/market_chart?vs_currency=usd&days={days_to_fetch}&interval=daily&x_cg_demo_api_key={api_key}"
     
     try:
         response = requests.get(api_url, timeout=30)
