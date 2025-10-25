@@ -190,13 +190,14 @@
             <!-- This bar now holds the model info and status, styled like the top bar -->
             <!-- *** MODIFIED: Removed explicit width class*** -->
             <!-- MODIFIED: Further reduced padding and top margin -->
+            <!-- MODIFIED: Re-ordered items -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
-                <!-- NEW: Split modelInfo into separate divs for single-row layout -->
+                <!-- 1. Exponent -->
                 <div id="growthExponentDiv"></div>
-                <div id="modelFitDiv"></div>
-                <!-- *** NEW: Optimal Offset Div *** -->
+                <!-- 2. Offset -->
                 <div id="optimalOffsetDiv"></div>
-                <!-- *** END: Optimal Offset Div *** -->
+                <!-- 3. Fit -->
+                <div id="modelFitDiv"></div>
 
                 <!-- powerLawStatusDiv: content injected by JS -->
                 <!-- Added flex items-center to align the status dot -->
@@ -485,24 +486,24 @@
                  powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
             }
 
-            growthExponentDiv.innerHTML = `<strong>Growth Exponent (α):</strong> ${slope.toFixed(3)}`;
+            // --- MODIFIED: Renamed labels ---
+            growthExponentDiv.innerHTML = `<strong>Exponent (α):</strong> ${slope.toFixed(3)}`;
+            modelFitDiv.innerHTML = `<strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
             // --- NEW: Display the optimal offset results ---
-            // --- MODIFIED: Conditionally show optimal offset info ---
+            // --- MODIFIED: Conditionally show optimal offset info & Renamed labels ---
             if (DAY_OFFSET === optimalOffset) {
                 // Configured offset IS the optimal one
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET}`;
+                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} (Optimal)`;
             } else if (optimalOffset !== -1) { 
                 // Configured is different from a valid optimal offset
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
+                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R²: ${bestFit.toFixed(4)})`;
             } else {
                 // Optimal calculation failed (optimalOffset === -1)
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET}`;
+                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET}`;
             }
             // --- END MODIFICATION ---
 
-            modelFitDiv.innerHTML = `<strong>Model Fit (R²):</strong> ${rSquared.toFixed(4)}`;
-            
             // --- Calculate All Line Data Points ---
             const startIndex = extendedMinDay;
             const endIndex = extendedMaxDay;
@@ -997,3 +998,4 @@
 
 </body>
 </html>
+
