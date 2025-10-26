@@ -902,15 +902,15 @@
 +                     Object.assign(chart.data.datasets[p99Index], styleToApply);
 +                 }
 +                 if (chart.data.datasets[p20Index]) {
-+                     chart.setDatasetVisibility(p20Index, true);
-+                     Object.assign(chart.data.datasets[p20Index], styleToApply);
-+                 }
-+                 if (chart.data.datasets[p80Index]) {
-+                     chart.setDatasetVisibility(p80Index, true);
-+                     Object.assign(chart.data.datasets[p80Index], styleToApply);
-+                 }
-+                 
-+                 // Toggle band FILL areas ON
+                     chart.setDatasetVisibility(p20Index, true);
+                     Object.assign(chart.data.datasets[p20Index], styleToApply);
+                 }
+                 if (chart.data.datasets[p80Index]) {
+                     chart.setDatasetVisibility(p80Index, true);
+                     Object.assign(chart.data.datasets[p80Index], styleToApply); // <-- This line is now fixed
+                 }
+                 
+                 // Toggle band FILL areas ON
 +                 fillIndices.forEach(index => {
 +                      if (chart.data.datasets[index]) chart.setDatasetVisibility(index, true);
 +                 });
@@ -1010,3 +1010,14 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
