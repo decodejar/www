@@ -894,7 +894,7 @@
                  }
 
              } else {
-                 // BANDS OFF: Show 1st/99th as dotted, show 20th/80th as dotted
+                 // BANDS OFF: Show 1st/99th as dotted, HIDE 20th/80th
                  const styleToApply = grayDashedLineStyle; // This is now [2, 2] and darker
                  
                  if (chart.data.datasets[p1Index]) {
@@ -906,14 +906,14 @@
                      Object.assign(chart.data.datasets[p99Index], styleToApply);
                  }
                  
-                 // Show 20th and 80th as dotted
+                 // Hide 20th and 80th
                  if (chart.data.datasets[p20Index]) {
-                     chart.setDatasetVisibility(p20Index, true);
-                     Object.assign(chart.data.datasets[p20Index], styleToApply);
+                     chart.setDatasetVisibility(p20Index, false);
+                     Object.assign(chart.data.datasets[p20Index], styleToApply); // Apply style so it's ready
                  }
                  if (chart.data.datasets[p80Index]) {
-                     chart.setDatasetVisibility(p80Index, true);
-                     Object.assign(chart.data.datasets[p80Index], styleToApply);
+                     chart.setDatasetVisibility(p80Index, false);
+                     Object.assign(chart.data.datasets[p80Index], styleToApply); // Apply style so it's ready
                  }
 
                  // Toggle band FILL areas OFF
