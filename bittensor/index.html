@@ -810,14 +810,18 @@
                                  },
                                 grid: { 
                                     color: function(context) {
-                                        // `context.tick.label` is the label we assigned in `afterBuildTicks`.
-                                        // If the label is null, it's a minor tick we manually added.
-                                        if (context.tick.label === null) {
-                                            return 'rgba(0, 0, 0, 0.05)'; // Fainter color for minor grid lines
-                                        }
+                                        const value = context.tick.value;
+                                        if (value <= 0) return 'rgba(0, 0, 0, 0.1)'; // Safety check for log axis
+
+                                        const logVal = Math.log10(value);
                                         
-                                        // Otherwise, it's a major tick (with a label).
-                                        return 'rgba(0, 0, 0, 0.1)'; // Default color for major grid lines
+                                        // Check if logVal is very close to an integer (a power of 10)
+                                        // Use a small epsilon for float comparison
+                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
+                                            return 'rgba(0, 0, 0, 0.1)'; // Major tick (1, 10, 100...)
+                                        } else {
+                                            return 'rgba(0, 0, 0, 0.05)'; // Minor tick (2, 3, 20, 30...)
+                                        }
                                     }
                                 }
                             }
@@ -1004,5 +1008,6 @@
 
 </body>
 </html>
+
 
 
