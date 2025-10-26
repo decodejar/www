@@ -785,9 +785,9 @@
                                          if (tickValue >= axisMin * 0.9) {
                                              newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
                                          }
-                                 },
-                                // Y-axis tick builder (powers of 10)
-                                afterBuildTicks: (axis) => {
+                                         
+                                         // --- START: Add minor ticks (2-9, 20-90, 200-900...) ---
+                                         for (let i = 2; i <= 9; i++) {
                                              const minorTickValue = tickValue * i;
                                              // Only add if within the visible axis range
                                              if (minorTickValue <= axisMax * 1.1 && minorTickValue >= axisMin * 0.9) {
