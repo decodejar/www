@@ -551,7 +551,7 @@
             
             // Conditionally show optimal offset info
             if (DAY_OFFSET === optimalOffset) {
-                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET}`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET}`;
             } else if (optimalOffset !== -1) { 
                 optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
             } else {
