@@ -885,7 +885,7 @@
              const medianDataset = chart.data.datasets[mainMedianIndex];
              if (medianDataset) {
                   if (showBands) {
-                      Object.assign(medianDataset, grayLineStyle); // Gray when bands are on
+                      Object.assign(medianDataset, grayFineLineStyle); // Gray and fine when bands are on
                   } else {
                       Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
                   }
@@ -1010,3 +1010,12 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
