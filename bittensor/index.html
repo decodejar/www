@@ -223,7 +223,7 @@
         };
         // --- NEW ---
         const grayDashedLineStyle = {
-            borderColor: 'rgba(156, 163, 175, 0.7)',
+            borderColor: 'rgba(156, 163, 175, 0.9)', // Made slightly darker (increased alpha)
             borderWidth: 1,
             borderDash: [2, 2] // 2px dash, 2px gap for 'dotted' look
         };
@@ -894,8 +894,8 @@
                  }
 
              } else {
-                 // BANDS OFF: Show 1st/99th as dotted, hide 20th/80th
-                 const styleToApply = grayDashedLineStyle; // This is now [2, 2]
+                 // BANDS OFF: Show 1st/99th as dotted, show 20th/80th as dotted
+                 const styleToApply = grayDashedLineStyle; // This is now [2, 2] and darker
                  
                  if (chart.data.datasets[p1Index]) {
                      chart.setDatasetVisibility(p1Index, true);
@@ -906,12 +906,14 @@
                      Object.assign(chart.data.datasets[p99Index], styleToApply);
                  }
                  
-                 // Hide 20th and 80th
+                 // Show 20th and 80th as dotted
                  if (chart.data.datasets[p20Index]) {
-                     chart.setDatasetVisibility(p20Index, false);
+                     chart.setDatasetVisibility(p20Index, true);
+                     Object.assign(chart.data.datasets[p20Index], styleToApply);
                  }
                  if (chart.data.datasets[p80Index]) {
-                     chart.setDatasetVisibility(p80Index, false);
+                     chart.setDatasetVisibility(p80Index, true);
+                     Object.assign(chart.data.datasets[p80Index], styleToApply);
                  }
 
                  // Toggle band FILL areas OFF
