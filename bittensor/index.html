@@ -98,6 +98,43 @@
              display: flex !important;
          }
         /* --- END: Mobile Fullscreen Optimizations --- */
+
+        /* --- NEW: Projection Table Styles --- */
+        #projectionTable {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 5; /* Below loader (10) but above chart */
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem 0.75rem; /* p-2 p-3 */
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1.15rem;
+            color: #374151; /* text-gray-700 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        #projectionTable h3 {
+            font-weight: 600; /* font-semibold */
+            color: #1f2937; /* text-gray-800 */
+            margin-bottom: 0.25rem; /* mb-1 */
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 0.25rem;
+        }
+        #projectionTable div {
+            display: flex;
+            justify-content: space-between;
+        }
+        #projectionTable div span:first-child {
+            margin-right: 1.25rem; /* mr-5 */
+            color: #4b5563; /* text-gray-600 */
+        }
+        #projectionTable div span:last-child {
+            font-weight: 500; /* font-medium */
+            color: #1f2937; /* text-gray-800 */
+        }
+        /* --- END: Projection Table Styles --- */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-2">
@@ -157,6 +194,9 @@
             </div>
             <!-- Canvas Wrapper: Scales to fill parent card -->
             <div id="chartWrapper" class="relative flex-grow min-h-0">
+                <!-- NEW: Floating projection table -->
+                <div id="projectionTable" class="hidden"></div>
+                <!-- END NEW -->
                 <canvas id="powerLawChart"></canvas>
             </div>
 
@@ -201,6 +241,7 @@
         const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
         const showBandsContainer = document.getElementById('showBandsContainer');
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
+        const projectionTable = document.getElementById('projectionTable'); // NEW
 
         // --- Chart Configuration ---
         const DAY_OFFSET = 81; // Configured day offset for chart display.
@@ -458,6 +499,11 @@
             const p99Intercept = meanIntercept + p99Residual;
             const p20Intercept = meanIntercept + p20Residual;
             const p80Intercept = meanIntercept + p80Residual;
+
+            // --- NEW: Call projection function ---
+            // Must pass baseData, not priceData, to get original day 1
+            calculateProjections(slope, medianIntercept, baseData, DAY_OFFSET, projectionTable);
+            // --- END NEW ---
 
             // --- Update Bottom Status Bar ---
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
@@ -951,6 +997,71 @@
                 ss_res += Math.pow(logY - predictedLogY, 2);
             });
              return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); // R² = 1 - (ss_res / ss_tot)
+        }
+
+        /**
+         * NEW: Calculates and displays future price projections in the floating table.
+         */
+        function calculateProjections(slope, medianIntercept, baseData, dayOffset, tableElement) {
+            if (!baseData || baseData.length === 0 || !tableElement) {
+                console.warn("calculateProjections: Missing data or table element.");
+                if(tableElement) tableElement.classList.add('hidden');
+                return;
+            }
+
+            // 1. Get the reference date and dayIndex from the first data point
+            // We use the 'time' and 'dayIndex' from the *raw* data before the offset was added.
+            const firstDataPointDate = new Date(baseData[0].time);
+            const firstDayIndex = baseData[0].dayIndex; // This is the index *before* offset (e.g., 1)
+            
+            // 2. Define target dates (using Oct 26, 2025 as "Today" per environment)
+            const targetDates = [
+                { label: "Today (Oct 26, 2025)", date: new Date(2025, 9, 26) }, // Month is 0-indexed (9 = Oct)
+                { label: "Jan 1, 2026", date: new Date(2026, 0, 1) },
+                { label: "Jan 1, 2027", date: new Date(2027, 0, 1) },
+                { label: "Jan 1, 2028", date: new Date(2028, 0, 1) }
+            ];
+
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+            // 3. Helper function to get the target dayIndex
+            const getDayIndex = (targetDate) => {
+                const diffTime = targetDate.getTime() - firstDataPointDate.getTime();
+                // Round to nearest day to account for DST changes
+                const diffDays = Math.round(diffTime / MS_PER_DAY);
+                // Add to the first day's index
+                return firstDayIndex + diffDays;
+            };
+
+            // 4. Helper function to calculate price using the power law formula
+            // Price = 10^(slope * log10(Day) + medianIntercept)
+            const calculatePrice = (dayIndexWithOffset) => {
+                if (dayIndexWithOffset <= 0) return NaN; // Can't log(0) or negative
+                const logX = Math.log10(dayIndexWithOffset);
+                return Math.pow(10, slope * logX + medianIntercept);
+            };
+
+            let tableHtml = '<h3>Fair Value Projections</h3>';
+
+            // 5. Calculate and build HTML for each price
+            targetDates.forEach(item => {
+                const targetDayIndex = getDayIndex(item.date);
+                const dayNumberWithOffset = targetDayIndex + dayOffset;
+                const projectedPrice = calculatePrice(dayNumberWithOffset);
+                
+                const priceString = isNaN(projectedPrice) ? "N/A" : `$${projectedPrice.toFixed(2)}`;
+                const label = item.label.includes("Today") ? "Today" : item.label;
+
+                tableHtml += `
+                    <div>
+                        <span>${label.split('(')[0].trim()}:</span>
+                        <span>${priceString}</span>
+                    </div>
+                `;
+            });
+
+            tableElement.innerHTML = tableHtml;
+            tableElement.classList.remove('hidden');
         }
 
         // --- FULLSCREEN & MOBILE VIEW LOGIC ---
