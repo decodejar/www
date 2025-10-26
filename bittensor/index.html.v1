@@ -95,9 +95,63 @@
              padding: 0 !important;
          }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
-              display: flex !important;
+             display: flex !important;
          }
         /* --- END: Mobile Fullscreen Optimizations --- */
+
+        /* --- NEW: Projection Table Styles --- */
+        #projectionTable {
+            position: absolute;
+            top: 12%;
+            left: 10%;
+            z-index: 5; /* Below loader (10) but above chart */
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem 0.75rem; /* p-2 p-3 */
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1.15rem;
+            color: #374151; /* text-gray-700 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        #projectionTable h3 {
+            font-weight: 600; /* font-semibold */
+            color: #1f2937; /* text-gray-800 */
+            margin-bottom: 0.25rem; /* mb-1 */
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 0.25rem;
+            /* NEW: Added flex for alignment of title and button */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #projectionTable div {
+            display: flex;
+            justify-content: space-between;
+        }
+        #projectionTable div span:first-child {
+            margin-right: 1.25rem; /* mr-5 */
+            color: #4b5563; /* text-gray-600 */
+        }
+        #projectionTable div span:last-child {
+            font-weight: 500; /* font-medium */
+            color: #1f2937; /* text-gray-800 */
+        }
+        /* NEW: Style for the close button */
+        #projectionTable h3 button {
+            margin-left: 0.5rem; /* ml-2 */
+            color: #9ca3af; /* text-gray-400 */
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+         #projectionTable h3 button:hover {
+             color: #374151; /* hover:text-gray-700 */
+         }
+        /* --- END: Projection Table Styles --- */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-2">
@@ -105,7 +159,7 @@
     <!-- 
       Main application container.
       Scales with viewport height/width up to a max size.
-    -->
+     -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
 
         <!-- Overlay to show on mobile fullscreen portrait -->
@@ -157,6 +211,9 @@
             </div>
             <!-- Canvas Wrapper: Scales to fill parent card -->
             <div id="chartWrapper" class="relative flex-grow min-h-0">
+                <!-- NEW: Floating projection table -->
+                <div id="projectionTable" class="hidden"></div>
+                <!-- END NEW -->
                 <canvas id="powerLawChart"></canvas>
             </div>
 
@@ -167,9 +224,9 @@
                 <div id="modelFitDiv"></div>
                 <!-- Power Law status (good/bad fit) -->
                 <div id="powerLawStatusDiv" class="flex items-center">
-                     <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
-                     <span id="powerLawStatusText">Power Law&nbsp;</span>
-                     <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
+                    <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
+                    <span id="powerLawStatusText">Power Law&nbsp;</span>
+                    <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
             </div>
         </div>
@@ -182,9 +239,9 @@
 
 <script>
         /*
-        * TAO Tensor Law Model & Regression Logic
-        * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
-        */
+         * TAO Tensor Law Model & Regression Logic
+         * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
+         */
 
         // --- Global Element References ---
         const growthExponentDiv = document.getElementById('growthExponentDiv');
@@ -201,6 +258,7 @@
         const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
         const showBandsContainer = document.getElementById('showBandsContainer');
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
+        const projectionTable = document.getElementById('projectionTable'); // NEW
 
         // --- Chart Configuration ---
         const DAY_OFFSET = 81; // Configured day offset for chart display.
@@ -221,6 +279,17 @@
             borderColor: '#ff6d00',
             borderWidth: 2,
         };
+        // --- NEW ---
+        const grayDashedLineStyle = {
+            borderColor: 'rgba(156, 163, 175, 0.9)', // Made slightly darker (increased alpha)
+            borderWidth: 1,
+            borderDash: [2, 2] // 2px dash, 2px gap for 'dotted' look
+        };
+        const grayFineLineStyle = {
+            borderColor: 'rgba(156, 163, 175, 0.7)',
+            borderWidth: 0.5, // "Very fine"
+            borderDash: [] // Solid
+        };
 
         /**
          * Fetches and parses price data from JSON file.
@@ -234,7 +303,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                         throw new Error("Invalid data format in JSON file");
+                        throw new Error("Invalid data format in JSON file");
                  }
                 // Map to { time, dayIndex (i+1), y (price) } and filter invalid prices
                 return data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
@@ -358,7 +427,7 @@
             if (!baseData || baseData.length === 0) {
                  // Handle data loading failure
                  if (!statusDiv.innerHTML.includes('Error')) {
-                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
                  modelFitDiv.innerHTML = '';
@@ -448,6 +517,11 @@
             const p20Intercept = meanIntercept + p20Residual;
             const p80Intercept = meanIntercept + p80Residual;
 
+            // --- NEW: Call projection function ---
+            // Must pass baseData, not priceData, to get original day 1
+            calculateProjections(slope, medianIntercept, baseData, DAY_OFFSET, projectionTable);
+            // --- END NEW ---
+
             // --- Update Bottom Status Bar ---
             const rSquared = calculateRSquared(priceData, slope, meanIntercept);
             const modelFitGood = rSquared >= 0.9;
@@ -526,26 +600,26 @@
                  // Find first data point for each year within data
                  let lastYearFound = minYear - 1;
                  for (const p of priceData) {
-                      const year = new Date(p.time).getFullYear();
-                      if (year > lastYearFound) {
-                           if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                                newTicks.push({ value: p.x, label: year.toString() });
-                           }
-                           lastYearFound = year;
-                      }
+                     const year = new Date(p.time).getFullYear();
+                     if (year > lastYearFound) {
+                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                             newTicks.push({ value: p.x, label: year.toString() });
+                         }
+                         lastYearFound = year;
+                     }
                  }
                  
                  // Estimate ticks for future projected years
                  const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
                  if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                      for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                           const yearStartTime = new Date(year, 0, 1).getTime();
-                           const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                           const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                           if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                                newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                           }
-                      }
+                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                         const yearStartTime = new Date(year, 0, 1).getTime();
+                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                         }
+                     }
                  }
                  axis.ticks.length = 0; // Clear existing ticks
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
@@ -691,14 +765,14 @@
                                  fill: 4, // Fill to index 4
                                  backgroundColor: greenFillColor,
                              },
-                            { // 9: Fill P50-P80 (Hidden)
+                             { // 9: Fill P50-P80 (Hidden)
                                  ...fillDatasetDefaults,
                                  label: 'Expensive Band (P50-P80)',
                                  data: p80LineData,
                                  fill: 1, // Fill to index 1
                                  backgroundColor: yellowFillColor,
                              },
-                            { // 10: Fill P80-P99 (Hidden)
+                             { // 10: Fill P80-P99 (Hidden)
                                  ...fillDatasetDefaults,
                                  label: 'Bubble Band (P80-P99)',
                                  data: p99LineData,
@@ -752,8 +826,8 @@
                                     color: '#4b5563', autoSkip: false,
                                     // Use the generated label (year) for the tick
                                     callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null;
                                     }
                                 },
                                 afterBuildTicks: xAxisAfterBuildTicks, // Custom tick builder
@@ -764,39 +838,44 @@
                                 title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' },
                                 ticks: { 
                                     color: '#4b5563',
-                                    callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                    callback: function(value, index, ticks) {
+                                        /* --- DEBUGGING STEP as requested ---
+                                        // Always return a label to see if the ticks and lines are generated.
+                                        return `$${value.toLocaleString()}`;
+                                        */
+
+                                        /* --- Original Logic --- */
+                                        const logVal = Math.log10(value);
+                                        // If logVal is an integer (or very close), it's a major tick (1, 10, 100...)
+                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
+                                            return `$${value.toLocaleString()}`; // Show label for major ticks
+                                        }
+                                        // --- NEW FIX ---
+                                        // Return an empty string '' instead of null.
+                                        // This should draw the grid line but no label.
+                                        return ''; 
+                                        
                                     }
                                 },
                                 // Y-axis tick builder (powers of 10)
-                                afterBuildTicks: (axis) => {
-                                     if (!axis.chart.data || !axis.chart.data.datasets || axis.chart.data.datasets.length === 0) return;
-                                     const newTicks = [];
-                                     const axisMin = axis.min;
-                                     const axisMax = axis.max;
-                                     if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
-                                          axis.ticks = [{value: 1, label: '$1'}]; return;
-                                     }
-                                     // Start from the nearest power of 10 below min
-                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
-                                     while (tickValue <= axisMax * 1.1) {
-                                         if (tickValue >= axisMin * 0.9) {
-                                             newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
-                                         }
-                                         let nextTick = tickValue * 10;
-                                         if (nextTick <= tickValue || !isFinite(nextTick)) { break; } // Safety break
-                                         tickValue = nextTick;
-                                     }
-                                     axis.ticks.length = 0;
-                                     const validTicks = newTicks.filter(tick => isFinite(tick.value) && tick.value > 0);
-                                     axis.ticks.push(...validTicks);
-                                      if (axis.ticks.length === 0) { // Fallback if no ticks generated
-                                          axis.ticks.push({ value: axisMin, label: `$${axisMin.toLocaleString()}` });
-                                          axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
-                                      }
-                                 },
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                                // --- REMOVED afterBuildTicks FUNCTION --- 
+                                // Let Chart.js handle tick generation natively
+                                grid: { 
+                                    color: function(context) {
+                                        const value = context.tick.value;
+                                        if (value <= 0) return 'rgba(0, 0, 0, 0.1)'; // Safety check for log axis
+
+                                        const logVal = Math.log10(value);
+                                        
+                                        // Check if logVal is very close to an integer (a power of 10)
+                                        // Use a small epsilon for float comparison
+                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
+                                            return 'rgba(0, 0, 0, 0.1)'; // Major tick (1, 10, 100...)
+                                        } else {
+                                            return 'rgba(0, 0, 0, 0.05)'; // Minor tick (2, 3, 20, 30...)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -833,34 +912,85 @@
              }
              // Dataset Indices
              const mainMedianIndex = 1;
+             const p1Index = 2;
+             const p99Index = 3;
              const p20Index = 4;
              const redundantP50Index = 5;
              const p80Index = 6;
              const fillIndices = [7, 8, 9, 10];
-
+ 
              // Ensure core lines are always visible (or hidden)
              if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
              if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true);
-             if (chart.data.datasets[2]) chart.setDatasetVisibility(2, true); // P1
-             if (chart.data.datasets[3]) chart.setDatasetVisibility(3, true); // P99
              if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Always hidden
+ 
+             // --- NEW LOGIC ---
+             if (showBands) {
+                 // BANDS ON: Show all 4 percentile lines as fine solid lines
+                 const styleToApply = grayFineLineStyle;
+                 if (chart.data.datasets[p1Index]) {
+                     chart.setDatasetVisibility(p1Index, true);
+                     Object.assign(chart.data.datasets[p1Index], styleToApply);
+                 }
+                 if (chart.data.datasets[p99Index]) {
+                     chart.setDatasetVisibility(p99Index, true);
+                     Object.assign(chart.data.datasets[p99Index], styleToApply);
+                 }
+                 if (chart.data.datasets[p20Index]) {
+                     chart.setDatasetVisibility(p20Index, true);
+                     Object.assign(chart.data.datasets[p20Index], styleToApply);
+                 }
+                 if (chart.data.datasets[p80Index]) {
+                     chart.setDatasetVisibility(p80Index, true);
+                     Object.assign(chart.data.datasets[p80Index], styleToApply);
+                 }
+                 
+                 // Toggle band FILL areas ON
+                 fillIndices.forEach(index => {
+                      if (chart.data.datasets[index]) chart.setDatasetVisibility(index, true);
+                 });
 
-             // Toggle band lines and fill areas
-             if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
-             if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
-             fillIndices.forEach(index => {
-                   if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
-             });
+                 // Style 50th percentile line
+                 const medianDataset = chart.data.datasets[mainMedianIndex];
+                 if (medianDataset) {
+                      Object.assign(medianDataset, grayFineLineStyle); // Gray and fine when bands are on
+                 }
 
-             // Change style of main 50th percentile line
-             const medianDataset = chart.data.datasets[mainMedianIndex];
-             if (medianDataset) {
-                  if (showBands) {
-                      Object.assign(medianDataset, grayLineStyle); // Gray when bands are on
-                  } else {
+             } else {
+                 // BANDS OFF: Show 1st/99th as dotted, HIDE 20th/80th
+                 const styleToApply = grayDashedLineStyle; // This is now [2, 2] and darker
+                 
+                 if (chart.data.datasets[p1Index]) {
+                     chart.setDatasetVisibility(p1Index, true);
+                     Object.assign(chart.data.datasets[p1Index], styleToApply);
+                 }
+                 if (chart.data.datasets[p99Index]) {
+                     chart.setDatasetVisibility(p99Index, true);
+                     Object.assign(chart.data.datasets[p99Index], styleToApply);
+                 }
+                 
+                 // Hide 20th and 80th
+                 if (chart.data.datasets[p20Index]) {
+                     chart.setDatasetVisibility(p20Index, false);
+                     Object.assign(chart.data.datasets[p20Index], styleToApply); // Apply style so it's ready
+                 }
+                 if (chart.data.datasets[p80Index]) {
+                     chart.setDatasetVisibility(p80Index, false);
+                     Object.assign(chart.data.datasets[p80Index], styleToApply); // Apply style so it's ready
+                 }
+
+                 // Toggle band FILL areas OFF
+                 fillIndices.forEach(index => {
+                      if (chart.data.datasets[index]) chart.setDatasetVisibility(index, false);
+                 });
+
+                 // Style 50th percentile line
+                 const medianDataset = chart.data.datasets[mainMedianIndex];
+                 if (medianDataset) {
                       Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
-                  }
-             }
+                 }
+              }
+             // --- END NEW LOGIC ---
         }
 
         /**
@@ -884,6 +1014,84 @@
                 ss_res += Math.pow(logY - predictedLogY, 2);
             });
              return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); // R² = 1 - (ss_res / ss_tot)
+        }
+
+        /**
+         * NEW: Calculates and displays future price projections in the floating table.
+         */
+        function calculateProjections(slope, medianIntercept, baseData, dayOffset, tableElement) {
+            if (!baseData || baseData.length === 0 || !tableElement) {
+                console.warn("calculateProjections: Missing data or table element.");
+                if(tableElement) tableElement.classList.add('hidden');
+                return;
+            }
+
+            // 1. Get the reference date and dayIndex from the first data point
+            // We use the 'time' and 'dayIndex' from the *raw* data before the offset was added.
+            const firstDataPointDate = new Date(baseData[0].time);
+            const firstDayIndex = baseData[0].dayIndex; // This is the index *before* offset (e.g., 1)
+            
+            // 2. Define target dates dynamically
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const targetDates = [
+                { label: "Today", date: today },
+                { label: `${currentYear + 1}`, date: new Date(currentYear + 1, 0, 1) },
+                { label: `${currentYear + 2}`, date: new Date(currentYear + 2, 0, 1) },
+                { label: `${currentYear + 3}`, date: new Date(currentYear + 3, 0, 1) }
+            ];
+
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+            // 3. Helper function to get the target dayIndex
+            const getDayIndex = (targetDate) => {
+                const diffTime = targetDate.getTime() - firstDataPointDate.getTime();
+                // Round to nearest day to account for DST changes
+                const diffDays = Math.round(diffTime / MS_PER_DAY);
+                // Add to the first day's index
+                return firstDayIndex + diffDays;
+            };
+
+            // 4. Helper function to calculate price using the power law formula
+            // Price = 10^(slope * log10(Day) + medianIntercept)
+            const calculatePrice = (dayIndexWithOffset) => {
+                if (dayIndexWithOffset <= 0) return NaN; // Can't log(0) or negative
+                const logX = Math.log10(dayIndexWithOffset);
+                return Math.pow(10, slope * logX + medianIntercept);
+            };
+
+            // 5. Build HTML with NEW close button
+            let tableHtml = `
+                <h3>
+                    <span>Fair Value</span>
+                    <button onclick="document.getElementById('projectionTable').style.display='none'" type="button" title="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </h3>`;
+
+            // 6. Calculate and build HTML for each price
+            targetDates.forEach(item => {
+                const targetDayIndex = getDayIndex(item.date);
+                const dayNumberWithOffset = targetDayIndex + dayOffset;
+                const projectedPrice = calculatePrice(dayNumberWithOffset);
+                
+                const priceString = isNaN(projectedPrice) ? "N/A" : `$${projectedPrice.toFixed(2)}`;
+                const label = item.label; // Use the label directly (e.g., "Today" or "2026")
+
+                tableHtml += `
+                    <div>
+                        <span>${label}</span>
+                        <span>${priceString}</span>
+                    </div>
+                `;
+            });
+
+            tableElement.innerHTML = tableHtml;
+            // NEW: Reset inline display style in case it was hidden
+            tableElement.style.display = ''; 
+            tableElement.classList.remove('hidden');
         }
 
         // --- FULLSCREEN & MOBILE VIEW LOGIC ---
@@ -960,16 +1168,16 @@
                        }, 50); // 50ms delay
                    }
              });
-         }
+        }
 
         // --- Event Listeners ---
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
         window.addEventListener('resize', handleFullscreenChange);
          if (screen.orientation) {
-              screen.orientation.addEventListener('change', handleFullscreenChange);
+             screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-              window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
          }
 
         // Initial load
