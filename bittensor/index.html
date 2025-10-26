@@ -95,7 +95,7 @@
              padding: 0 !important;
          }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
-              display: flex !important;
+             display: flex !important;
          }
         /* --- END: Mobile Fullscreen Optimizations --- */
     </style>
@@ -105,7 +105,7 @@
     <!-- 
       Main application container.
       Scales with viewport height/width up to a max size.
-    -->
+     -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
 
         <!-- Overlay to show on mobile fullscreen portrait -->
@@ -167,9 +167,9 @@
                 <div id="modelFitDiv"></div>
                 <!-- Power Law status (good/bad fit) -->
                 <div id="powerLawStatusDiv" class="flex items-center">
-                     <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
-                     <span id="powerLawStatusText">Power Law&nbsp;</span>
-                     <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
+                    <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
+                    <span id="powerLawStatusText">Power Law&nbsp;</span>
+                    <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
             </div>
         </div>
@@ -182,9 +182,9 @@
 
 <script>
         /*
-        * TAO Tensor Law Model & Regression Logic
-        * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
-        */
+         * TAO Tensor Law Model & Regression Logic
+         * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
+         */
 
         // --- Global Element References ---
         const growthExponentDiv = document.getElementById('growthExponentDiv');
@@ -234,7 +234,7 @@
                 }
                 const data = await response.json();
                  if (!Array.isArray(data)) {
-                         throw new Error("Invalid data format in JSON file");
+                        throw new Error("Invalid data format in JSON file");
                  }
                 // Map to { time, dayIndex (i+1), y (price) } and filter invalid prices
                 return data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
@@ -358,7 +358,7 @@
             if (!baseData || baseData.length === 0) {
                  // Handle data loading failure
                  if (!statusDiv.innerHTML.includes('Error')) {
-                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
                  modelFitDiv.innerHTML = '';
@@ -526,26 +526,26 @@
                  // Find first data point for each year within data
                  let lastYearFound = minYear - 1;
                  for (const p of priceData) {
-                      const year = new Date(p.time).getFullYear();
-                      if (year > lastYearFound) {
-                           if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                                newTicks.push({ value: p.x, label: year.toString() });
-                           }
-                           lastYearFound = year;
-                      }
+                     const year = new Date(p.time).getFullYear();
+                     if (year > lastYearFound) {
+                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
+                             newTicks.push({ value: p.x, label: year.toString() });
+                         }
+                         lastYearFound = year;
+                     }
                  }
                  
                  // Estimate ticks for future projected years
                  const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
                  if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                      for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                           const yearStartTime = new Date(year, 0, 1).getTime();
-                           const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                           const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                           if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                                newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                           }
-                      }
+                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                         const yearStartTime = new Date(year, 0, 1).getTime();
+                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
+                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
+                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
+                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
+                         }
+                     }
                  }
                  axis.ticks.length = 0; // Clear existing ticks
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
@@ -691,14 +691,14 @@
                                  fill: 4, // Fill to index 4
                                  backgroundColor: greenFillColor,
                              },
-                            { // 9: Fill P50-P80 (Hidden)
+                             { // 9: Fill P50-P80 (Hidden)
                                  ...fillDatasetDefaults,
                                  label: 'Expensive Band (P50-P80)',
                                  data: p80LineData,
                                  fill: 1, // Fill to index 1
                                  backgroundColor: yellowFillColor,
                              },
-                            { // 10: Fill P80-P99 (Hidden)
+                             { // 10: Fill P80-P99 (Hidden)
                                  ...fillDatasetDefaults,
                                  label: 'Bubble Band (P80-P99)',
                                  data: p99LineData,
@@ -752,8 +752,8 @@
                                     color: '#4b5563', autoSkip: false,
                                     // Use the generated label (year) for the tick
                                     callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null;
                                     }
                                 },
                                 afterBuildTicks: xAxisAfterBuildTicks, // Custom tick builder
@@ -765,8 +765,8 @@
                                 ticks: { 
                                     color: '#4b5563',
                                     callback: function(value) {
-                                         const tick = this.getTicks().find(t => t.value === value);
-                                         return tick ? tick.label : null;
+                                        const tick = this.getTicks().find(t => t.value === value);
+                                        return tick ? tick.label : null;
                                     }
                                 },
                                 // Y-axis tick builder (powers of 10)
@@ -781,9 +781,21 @@
                                      // Start from the nearest power of 10 below min
                                      let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
                                      while (tickValue <= axisMax * 1.1) {
+                                         // Add the major tick (1, 10, 100, 1000...)
                                          if (tickValue >= axisMin * 0.9) {
                                              newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
                                          }
+                                         
+                                         // --- START: Add minor ticks (2-9, 20-90, 200-900...) ---
+                                         for (let i = 2; i <= 9; i++) {
+                                             const minorTickValue = tickValue * i;
+                                             // Only add if within the visible axis range
+                                             if (minorTickValue <= axisMax * 1.1 && minorTickValue >= axisMin * 0.9) {
+                                                 newTicks.push({ value: minorTickValue, label: null }); // No label for minor ticks
+                                             }
+                                         }
+                                         // --- END: Add minor ticks ---
+
                                          let nextTick = tickValue * 10;
                                          if (nextTick <= tickValue || !isFinite(nextTick)) { break; } // Safety break
                                          tickValue = nextTick;
@@ -849,7 +861,7 @@
              if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
              if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
              fillIndices.forEach(index => {
-                   if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
+                  if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
              });
 
              // Change style of main 50th percentile line
@@ -960,16 +972,16 @@
                        }, 50); // 50ms delay
                    }
              });
-         }
+        }
 
         // --- Event Listeners ---
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
         window.addEventListener('resize', handleFullscreenChange);
          if (screen.orientation) {
-              screen.orientation.addEventListener('change', handleFullscreenChange);
+             screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-              window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
          }
 
         // Initial load
@@ -981,4 +993,3 @@
 
 </body>
 </html>
-
