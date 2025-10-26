@@ -102,8 +102,8 @@
         /* --- NEW: Projection Table Styles --- */
         #projectionTable {
             position: absolute;
-            top: 5%; /* Changed from 10px */
-            left: 10%; /* Changed from 10px to clear Y-axis labels */
+            top: 2%; /* Changed from 10px */
+            left: 8%; /* Changed from 10px to clear Y-axis labels */
             z-index: 5; /* Below loader (10) but above chart */
             background-color: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(4px);
@@ -1019,9 +1019,9 @@
             const currentYear = today.getFullYear();
             const targetDates = [
                 { label: "Today", date: today },
-                { label: `Jan 1, ${currentYear + 1}`, date: new Date(currentYear + 1, 0, 1) },
-                { label: `Jan 1, ${currentYear + 2}`, date: new Date(currentYear + 2, 0, 1) },
-                { label: `Jan 1, ${currentYear + 3}`, date: new Date(currentYear + 3, 0, 1) }
+                { label: `${currentYear + 1}`, date: new Date(currentYear + 1, 0, 1) },
+                { label: `${currentYear + 2}`, date: new Date(currentYear + 2, 0, 1) },
+                { label: `${currentYear + 3}`, date: new Date(currentYear + 3, 0, 1) }
             ];
 
             const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -1052,7 +1052,7 @@
                 const projectedPrice = calculatePrice(dayNumberWithOffset);
                 
                 const priceString = isNaN(projectedPrice) ? "N/A" : `$${projectedPrice.toFixed(2)}`;
-                const label = item.label; // Use the label directly (e.g., "Today" or "Jan 1, 2026")
+                const label = item.label; // Use the label directly (e.g., "Today" or "2026")
 
                 tableHtml += `
                     <div>
@@ -1161,3 +1161,4 @@
 
 </body>
 </html>
+
