@@ -776,7 +776,10 @@
                                         if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
                                             return `$${value.toLocaleString()}`; // Show label for major ticks
                                         }
-                                        return null; // Hide label for all minor ticks (2, 3, 20, 30...)
+                                        // --- NEW FIX ---
+                                        // Return an empty string '' instead of null.
+                                        // This should draw the grid line but no label.
+                                        return ''; 
                                         
                                     }
                                 },
@@ -983,9 +986,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
