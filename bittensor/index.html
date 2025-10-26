@@ -765,6 +765,11 @@
                                 ticks: { 
                                     color: '#4b5563',
                                     callback: function(value, index, ticks) {
+                                        // --- DEBUGGING STEP as requested ---
+                                        // Always return a label to see if the ticks and lines are generated.
+                                        return `$${value.toLocaleString()}`;
+
+                                        /* --- Original Logic ---
                                         const logVal = Math.log10(value);
                                         // If logVal is an integer (or very close), it's a major tick (1, 10, 100...)
                                         // Also check if it's the first or last tick to ensure axis bounds are labeled if they aren't powers of 10
@@ -772,6 +777,7 @@
                                             return `$${value.toLocaleString()}`; // Show label for major ticks
                                         }
                                         return null; // Hide label for all minor ticks (2, 3, 20, 30...)
+                                        */
                                     }
                                 },
                                 // Y-axis tick builder (powers of 10)
@@ -977,6 +983,7 @@
 
 </body>
 </html>
+
 
 
 
