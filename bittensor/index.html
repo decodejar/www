@@ -221,6 +221,17 @@
             borderColor: '#ff6d00',
             borderWidth: 2,
         };
+        // --- NEW ---
+        const grayDashedLineStyle = {
+            borderColor: 'rgba(156, 163, 175, 0.7)',
+            borderWidth: 1,
+            borderDash: [5, 5] // 5px dash, 5px gap
+        };
+        const grayFineLineStyle = {
+            borderColor: 'rgba(156, 163, 175, 0.7)',
+            borderWidth: 0.5, // "Very fine"
+            borderDash: [] // Solid
+        };
 
         /**
          * Fetches and parses price data from JSON file.
@@ -838,21 +849,34 @@
              }
              // Dataset Indices
              const mainMedianIndex = 1;
+             const p1Index = 2;
+             const p99Index = 3;
              const p20Index = 4;
              const redundantP50Index = 5;
              const p80Index = 6;
              const fillIndices = [7, 8, 9, 10];
+             const percentileLineIndices = [p1Index, p99Index, p20Index, p80Index];
 
              // Ensure core lines are always visible (or hidden)
              if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
              if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true);
-             if (chart.data.datasets[2]) chart.setDatasetVisibility(2, true); // P1
-             if (chart.data.datasets[3]) chart.setDatasetVisibility(3, true); // P99
              if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Always hidden
 
-             // Toggle band lines and fill areas
-             if (chart.data.datasets[p20Index]) chart.setDatasetVisibility(p20Index, showBands);
-             if (chart.data.datasets[p80Index]) chart.setDatasetVisibility(p80Index, showBands);
+             // --- MODIFIED LOGIC ---
+             // 1. Determine style based on showBands
+             const styleToApply = showBands ? grayFineLineStyle : grayDashedLineStyle;
+
+             // 2. Apply style and visibility to all 4 percentile lines
+             percentileLineIndices.forEach(index => {
+                 if (chart.data.datasets[index]) {
+                     chart.setDatasetVisibility(index, true); // Ensure all 4 are visible
+                     Object.assign(chart.data.datasets[index], styleToApply);
+                 }
+             });
+             // --- END MODIFIED LOGIC ---
+
+
+             // Toggle band FILL areas
              fillIndices.forEach(index => {
                   if (chart.data.datasets[index]) chart.setDatasetVisibility(index, showBands);
              });
