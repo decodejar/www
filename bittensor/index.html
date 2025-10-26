@@ -785,9 +785,9 @@
                                          if (tickValue >= axisMin * 0.9) {
                                              newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
                                          }
-                                         
-                                         // --- START: Add minor ticks (2-9, 20-90, 200-900...) ---
-                                         for (let i = 2; i <= 9; i++) {
+                                 },
+                                // Y-axis tick builder (powers of 10)
+                                afterBuildTicks: (axis) => {
                                              const minorTickValue = tickValue * i;
                                              // Only add if within the visible axis range
                                              if (minorTickValue <= axisMax * 1.1 && minorTickValue >= axisMin * 0.9) {
@@ -808,7 +808,16 @@
                                           axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
                                       }
                                  },
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                                grid: { 
+                                    color: function(context) {
+                                        // `context.tick` provides the tick object
+                                        // Ticks with `label: null` are our minor ticks
+                                        if (context.tick.label === null) {
+                                            return 'rgba(0, 0, 0, 0.05)'; // Fainter color for minor grid lines
+                                        }
+                                        return 'rgba(0, 0, 0, 0.1)'; // Default color for major grid lines (with labels)
+                                    }
+                                }
                             }
                         }
                     }
@@ -993,3 +1002,4 @@
 
 </body>
 </html>
+
