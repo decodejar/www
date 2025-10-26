@@ -764,50 +764,19 @@
                                 title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' },
                                 ticks: { 
                                     color: '#4b5563',
-                                    callback: function(value) {
-                                        const tick = this.getTicks().find(t => t.value === value);
-                                        return tick ? tick.label : null;
+                                    callback: function(value, index, ticks) {
+                                        const logVal = Math.log10(value);
+                                        // If logVal is an integer (or very close), it's a major tick (1, 10, 100...)
+                                        // Also check if it's the first or last tick to ensure axis bounds are labeled if they aren't powers of 10
+                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
+                                            return `$${value.toLocaleString()}`; // Show label for major ticks
+                                        }
+                                        return null; // Hide label for all minor ticks (2, 3, 20, 30...)
                                     }
                                 },
                                 // Y-axis tick builder (powers of 10)
-                                afterBuildTicks: (axis) => {
-                                     if (!axis.chart.data || !axis.chart.data.datasets || axis.chart.data.datasets.length === 0) return;
-                                     const newTicks = [];
-                                     const axisMin = axis.min;
-                                     const axisMax = axis.max;
-                                     if (axisMin <= 0 || axisMax <= 0 || axisMin >= axisMax) {
-                                          axis.ticks = [{value: 1, label: '$1'}]; return;
-                                     }
-                                     // Start from the nearest power of 10 below min
-                                     let tickValue = Math.pow(10, Math.floor(Math.log10(axisMin)));
-                                     while (tickValue <= axisMax * 1.1) {
-                                         // Add the major tick (1, 10, 100, 1000...)
-                                         if (tickValue >= axisMin * 0.9) {
-                                             newTicks.push({ value: tickValue, label: `$${tickValue.toLocaleString()}` });
-                                         }
-                                         
-                                         // --- START: Add minor ticks (2-9, 20-90, 200-900...) ---
-                                         for (let i = 2; i <= 9; i++) {
-                                             const minorTickValue = tickValue * i;
-                                             // Only add if within the visible axis range
-                                             if (minorTickValue <= axisMax * 1.1 && minorTickValue >= axisMin * 0.9) {
-                                                 newTicks.push({ value: minorTickValue, label: null }); // No label for minor ticks
-                                             }
-                                         }
-                                         // --- END: Add minor ticks ---
-
-                                         let nextTick = tickValue * 10;
-                                         if (nextTick <= tickValue || !isFinite(nextTick)) { break; } // Safety break
-                                         tickValue = nextTick;
-                                     }
-                                     axis.ticks.length = 0;
-                                     const validTicks = newTicks.filter(tick => isFinite(tick.value) && tick.value > 0);
-                                     axis.ticks.push(...validTicks);
-                                      if (axis.ticks.length === 0) { // Fallback if no ticks generated
-                                          axis.ticks.push({ value: axisMin, label: `$${axisMin.toLocaleString()}` });
-                                          axis.ticks.push({ value: axisMax, label: `$${axisMax.toLocaleString()}` });
-                                      }
-                                 },
+                                // --- REMOVED afterBuildTicks FUNCTION --- 
+                                // Let Chart.js handle tick generation natively
                                 grid: { 
                                     color: function(context) {
                                         const value = context.tick.value;
@@ -1008,6 +977,7 @@
 
 </body>
 </html>
+
 
 
 
