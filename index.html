@@ -66,12 +66,17 @@
         <!-- ===== HEADER & PROFILE SECTION ===== -->
         <div>
             <!-- 1. Banner Image -->
-            <!-- UPDATED: Reverted to absolute path '/' -->
-            <div class="h-48 sm:h-52 bg-cover bg-center" style="background-image: url('/banner.png')">
-                <!-- Fallback for if image fails to load -->
-                <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                    <!-- Banner loaded via style -->
-                </div>
+            <!-- UPDATED: Changed from a div with background-image to an <img> tag -->
+            <!-- This allows us to use onerror for a proper fallback, just like the profile pic -->
+            <img 
+                src="/banner.png" 
+                alt="Banner" 
+                class="w-full h-48 sm:h-52 object-cover object-center bg-gray-200"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <!-- Fallback for Banner -->
+            <div class="w-full h-48 sm:h-52 bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
+                <!-- Banner failed to load -->
             </div>
 
             <!-- 2. Profile Info Container -->
@@ -97,9 +102,19 @@
 
                 <!-- Bio -->
                 <p class="mt-4">
-                    Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts | Biweekly Market Intelligence Newsletter on Substack and X
+                    Your personal bio goes here. This is a great place to introduce yourself, 
+                    your work, or your interests. Keep it concise and engaging.
                 </p>
 
+                <!-- Stats (Optional) -->
+                <div class="flex space-x-4 mt-4 text-sm text-gray-500">
+                    <div>
+                        <span class="font-semibold text-gray-900">1,234</span> Following
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-900">5,678</span> Followers
+                    </div>
+                </div>
             </div>
         </div>
         <!-- ===== END HEADER & PROFILE SECTION ===== -->
