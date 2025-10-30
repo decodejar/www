@@ -57,16 +57,24 @@
     <!-- Main Content Container --><main class="max-w-[600px] mx-auto border-x border-gray-200 min-h-screen">
         
         <!-- ===== HEADER & PROFILE SECTION ===== --><div>
-            <!-- 1. Banner Image --><img 
+            <!-- 1. Banner Image --><!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) --><img 
                 src="/banner.png" 
                 alt="Banner" 
-                class="w-full h-40 sm:h-52 object-cover object-center bg-gray-200"
+                class="w-full h-[120px] sm:h-[200px] object-cover object-center bg-gray-200"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
             >
-            <!-- Fallback for Banner --><div class="w-full h-40 sm:h-52 bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
+            <!-- Fallback for Banner --><!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) --><div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
                 <!-- Banner failed to load --></div>
 
-            <!-- 2. Profile Info Container --><div class="p-4">
+            <!-- 2. Profile Info Container --><!-- UPDATED: Added relative positioning -->
+            <div class="p-4 relative">
+                
+                <!-- Website Text -->
+                <div class="absolute top-4 right-4">
+                    <p class="text-md text-gray-500">
+                        decodejar.com
+                    </p>
+                </div>
                 
                 <!-- Profile Picture --><!-- Set a fallback background color in case image fails --><!-- UPDATED: Added relative and z-10 to ensure the border is visible on top --><img 
                     src="/decode.png" 
@@ -78,8 +86,13 @@
                     D
                 </div>
 
-                <!-- Name and Handle --><h1 class="text-2xl font-bold mt-4">Decode</h1>
-                <p class="text-md text-gray-500">@decodejar</p>
+                <!-- Name, Handle, and Website --><!-- UPDATED: Removed website link and flex wrapper -->
+                <div>
+                    <div>
+                        <h1 class="text-2xl font-bold mt-4">Decode</h1>
+                        <p class="text-md text-gray-500">@decodejar</p>
+                    </div>
+                </div>
 
                 <!-- Bio --><p class="mt-4">
                     Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts<br>
@@ -95,13 +108,13 @@
             
             <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <!-- Generic Link Icon --><svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- Generic Link Icon --><svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6-3.09-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
                     <span class="font-medium">x.com/decodejar</span>
                 </div>
             </a>
             <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6-3.09-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
                     <span class="font-medium">decodejar.com/nostr</span>
                 </div>
             </a>
@@ -135,3 +148,8 @@
 
     <!-- Removed Theme Toggle Javascript --></body>
 </html>
+
+
+
+
+
