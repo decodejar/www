@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> <!-- class="dark" will be added by JS -->
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,47 +10,18 @@
       This file is a complete, self-contained HTML document.
       It includes:
       1. Tailwind CSS (via CDN)
-      2. Tailwind Dark Mode Configuration
-      3. An inline script to prevent "flash of light mode"
-      4. All HTML structure
-      5. An inline script for theme toggle interactivity
+      2. All HTML structure
     -->
-
-    <!-- 1. Tailwind Dark Mode Config -->
-    <!-- This MUST come before the main Tailwind script -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class', // Enable 'class' strategy for dark mode
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
     
-    <!-- 2. Load Tailwind CSS -->
+    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 3. Initial Theme Loader (Blocks rendering to prevent flicker) -->
-    <script>
-        // This script runs before the page is rendered
-        // It checks local storage first, then system preference
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-    </script>
-
-    <!-- 4. Load Inter Font -->
+    <!-- 2. Load Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- 5. Custom Scrollbar Styles -->
+    <!-- 3. Custom Scrollbar Styles -->
     <style>
         /* Simple scrollbar for light mode */
         ::-webkit-scrollbar {
@@ -68,69 +39,59 @@
             background: #a8a8a8;
         }
 
-        /* Dark mode scrollbar */
-        .dark::-webkit-scrollbar-track {
-            background: #2d3748; /* dark:bg-gray-700 */
-        }
-        .dark::-webkit-scrollbar-thumb {
-            background: #718096; /* dark:bg-gray-500 */
-        }
-        .dark::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0; /* dark:bg-gray-400 */
-        }
-
         /* Ensure body has a background color transition for a smoother theme change */
         body {
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            font-family: 'Inter', sans-serif; /* Apply Inter font */
         }
     </style>
+    <!-- We need to tell Tailwind to use Inter -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 </head>
-<body class="font-sans bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="font-sans bg-white text-gray-900 min-h-screen">
 
     <!-- Main Content Container -->
-    <main class="max-w-xl mx-auto border-x border-gray-200 dark:border-gray-700 min-h-screen">
+    <main class="max-w-xl mx-auto border-x border-gray-200 min-h-screen">
         
         <!-- ===== HEADER & PROFILE SECTION ===== -->
         <div>
             <!-- 1. Banner Image -->
             <div class="h-48 sm:h-52 bg-cover bg-center" style="background-image: url('https://decodejar.com/banner.png')">
                 <!-- Fallback for if image fails to load -->
-                <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
                     <!-- Banner loaded via style -->
                 </div>
             </div>
 
             <!-- 2. Profile Info Container -->
-            <div class="p-4 relative"> <!-- Added relative class for button positioning -->
-                
-                <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none" aria-label="Toggle light/dark mode">
-                    <!-- Sun Icon (Shows when in dark mode, switches TO light) -->
-                    <svg class="block dark:hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-6.364-.386l1.591-1.591M3 12h2.25m.386-6.364l1.591 1.591M12 12a2.25 2.25 0 00-2.25 2.25c0 1.242.668 2.33 1.636 2.844.27.14.55.22.84.22s.57-.08.84-.22c.968-.514 1.636-1.602 1.636-2.844A2.25 2.25 0 0012 12z" />
-                    </svg>
-                    <!-- Moon Icon (Shows when in light mode, switches TO dark) -->
-                    <svg class="hidden dark:block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                    </svg>
-                </button>
+            <div class="p-4">
                 
                 <!-- Profile Picture -->
                 <!-- Set a fallback background color in case image fails -->
                 <img 
                     src="https://decodejar.com/decode.png" 
                     alt="Profile Picture"
-                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600"
+                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                 >
                 <!-- Fallback "initials" circle -->
-                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 hidden items-center justify-center text-4xl font-bold text-gray-700 dark:text-gray-200" style="display: none;">
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700" style="display: none;">
                     D
                 </div>
 
                 <!-- Name and Handle -->
                 <h1 class="text-2xl font-bold mt-4">Your Name</h1>
-                <p class="text-md text-gray-500 dark:text-gray-400">@yourhandle</p>
+                <p class="text-md text-gray-500">@yourhandle</p>
 
                 <!-- Bio -->
                 <p class="mt-4">
@@ -139,12 +100,12 @@
                 </p>
 
                 <!-- Stats (Optional) -->
-                <div class="flex space-x-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                <div class="flex space-x-4 mt-4 text-sm text-gray-500">
                     <div>
-                        <span class="font-semibold text-gray-900 dark:text-gray-100">1,234</span> Following
+                        <span class="font-semibold text-gray-900">1,234</span> Following
                     </div>
                     <div>
-                        <span class="font-semibold text-gray-900 dark:text-gray-100">5,678</span> Followers
+                        <span class="font-semibold text-gray-900">5,678</span> Followers
                     </div>
                 </div>
             </div>
@@ -153,19 +114,19 @@
 
 
         <!-- ===== LINKS SECTION ===== -->
-        <div class="border-t border-gray-200 dark:border-gray-700">
+        <div class="border-t border-gray-200">
             
             <!-- Group 1: Follow -->
             <h2 class="text-xl font-bold p-4 pb-2">Follow Decode</h2>
             
-            <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <!-- Generic Link Icon -->
                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
                     <span class="font-medium">x.com/decodejar</span>
                 </div>
             </a>
-            <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
                     <span class="font-medium">decodejar.com/nostr</span>
@@ -175,13 +136,13 @@
             <!-- Group 2: TradingView -->
             <h2 class="text-xl font-bold p-4 pb-2 pt-6">Trading View Indicators</h2>
             
-            <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
                     <span class="font-medium">DECODE Moving Average Toolkit</span>
                 </div>
             </a>
-            <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
                     <span class="font-medium">DECODE Global Liquidity Index</span>
@@ -191,7 +152,7 @@
             <!-- Group 3: Affiliates -->
             <h2 class="text-xl font-bold p-4 pb-2 pt-6">Trading Affiliate Links</h2>
             
-            <a href="https://www.mexc.com/acquisition/custom-sign-up?shareCode=mexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <a href="httpsmexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12L17.438 9.154a4.5 4.5 0 00-3.09-3.09L11.5 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L18.25 12l-2.846.813a4.5 4.5 0 00-3.09 3.09L11.5 18.75l.813-2.846a4.5 4.5 0 003.09-3.09L18.25 12z" /></svg>
                     <span class="font-medium">MEXC ($8k bonus)</span>
@@ -203,39 +164,7 @@
 
     </main>
 
-    <!-- 6. Theme Toggle Javascript -->
-    <script>
-        // This script runs after the DOM is loaded
-        
-        // Get references to all the elements
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const htmlEl = document.documentElement;
-
-        // Add click listener to the toggle button
-        themeToggleBtn.addEventListener('click', () => {
-            // Toggle the 'dark' class on the <html> element
-            const isDark = htmlEl.classList.toggle('dark');
-            
-            // Save the user's preference to local storage
-            if (isDark) {
-                localStorage.setItem('theme', 'dark');
-            } else {
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
-        // Listen for changes in system preference
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            // Only change if user hasn't manually set a theme in local storage
-            if (!('theme' in localStorage)) {
-                if (e.matches) {
-                    htmlEl.classList.add('dark');
-                } else {
-                    htmlEl.classList.remove('dark');
-                }
-            }
-        });
-    </script>
+    <!-- Removed Theme Toggle Javascript -->
 
 </body>
 </html>
