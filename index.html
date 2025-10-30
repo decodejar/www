@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html lang="en"> <!-- Removed class="dark" here, script will manage it -->
+<html lang="en"> <!-- class="dark" will be added by JS -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - Personal Page</title>
-    
-    <!-- 1. Add Tailwind Config -->
+    <title>Personal Page</title>
+
+    <!--
+      NOTE:
+      This file is a complete, self-contained HTML document.
+      It includes:
+      1. Tailwind CSS (via CDN)
+      2. Tailwind Dark Mode Configuration
+      3. An inline script to prevent "flash of light mode"
+      4. All HTML structure
+      5. An inline script for theme toggle interactivity
+    -->
+
+    <!-- 1. Tailwind Dark Mode Config -->
+    <!-- This MUST come before the main Tailwind script -->
     <script>
         tailwind.config = {
-            darkMode: 'class', // Enable class-based dark mode
+            darkMode: 'class', // Enable 'class' strategy for dark mode
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'], // Add Inter font to Tailwind's config
+                        sans: ['Inter', 'sans-serif'],
                     },
                 }
             }
@@ -25,203 +37,173 @@
     <!-- 3. Initial Theme Loader (Blocks rendering to prevent flicker) -->
     <script>
         // This script runs before the page is rendered
-        // Check for saved theme in local storage
-        const savedTheme = localStorage.getItem('theme');
-        // Check for system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        let isDark;
-        if (savedTheme === 'dark') {
-            isDark = true;
-        } else if (savedTheme === 'light') {
-            isDark = false;
+        // It checks local storage first, then system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
         } else {
-            isDark = prefersDark; // Fallback to system preference
+          document.documentElement.classList.remove('dark');
         }
-
-        if (isDark) {
-            // If dark, add class to <html> tag before paint
-            document.documentElement.classList.add('dark');
-        }
-        // No 'else' needed, as 'light' is the default (no class)
     </script>
 
     <!-- 4. Load Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- 4. Apply Font and Dark Mode Config -->
+
+    <!-- 5. Custom Scrollbar Styles -->
     <style>
-        body {
-            /* Fallback font */
-            font-family: 'Inter', sans-serif;
-        }
-        
-        /* Light mode scrollbar styling */
+        /* Simple scrollbar for light mode */
         ::-webkit-scrollbar {
-            width: 12px;
+            width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #F3F4F6; /* bg-gray-100 */
+            background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
-            background-color: #9CA3AF; /* bg-gray-400 */
-            border-radius: 20px;
-            border: 3px solid #F3F4F6; /* bg-gray-100 */
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
-        /* Dark mode scrollbar styling */
-        html.dark ::-webkit-scrollbar-track {
-            background: #000000; /* dark:bg-black */
+        /* Dark mode scrollbar */
+        .dark::-webkit-scrollbar-track {
+            background: #2d3748; /* dark:bg-gray-700 */
         }
-        html.dark ::-webkit-scrollbar-thumb {
-            background-color: #374151; /* dark:bg-gray-700 */
-            border-color: #000000; /* dark:bg-black */
+        .dark::-webkit-scrollbar-thumb {
+            background: #718096; /* dark:bg-gray-500 */
+        }
+        .dark::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0; /* dark:bg-gray-400 */
+        }
+
+        /* Ensure body has a background color transition for a smoother theme change */
+        body {
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-black text-gray-900 dark:text-white transition-colors duration-200 font-sans"> <!-- Apply the sans font family -->
+<body class="font-sans bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
 
-    <!-- 
-      Main container that creates the "central column" effect.
-      - max-w-2xl: Sets a max width (like Twitter's central column)
-      - mx-auto: Centers the column
-      - bg-white dark:bg-gray-900: Sets the background for the column content
-      - min-h-screen: Ensures it fills at least the height of the screen
-      - border-l/r: Adds the subtle side borders, similar to the reference
-    -->
-    <main class="max-w-2xl mx-auto bg-white dark:bg-gray-900 min-h-screen border-l border-r border-gray-200 dark:border-gray-800">
-
-        <!-- ===== HEADER SECTION ===== -->
-        <!-- This section contains the banner and profile picture -->
+    <!-- Main Content Container -->
+    <main class="max-w-xl mx-auto border-x border-gray-200 dark:border-gray-700 min-h-screen">
+        
+        <!-- ===== HEADER & PROFILE SECTION ===== -->
         <div>
             <!-- 1. Banner Image -->
-            <!-- Replace this with your own banner URL. 600x200 is a good aspect ratio. -->
             <div class="h-48 sm:h-52 bg-cover bg-center" style="background-image: url('https://decodejar.com/banner.png')">
-                <!-- This div is intentionally left empty to act as the banner -->
+                <!-- Fallback for if image fails to load -->
+                <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+                    <!-- Banner loaded via style -->
+                </div>
             </div>
 
             <!-- 2. Profile Info Container -->
-            <div class="p-4 relative"> <!-- Added relative class -->
+            <div class="p-4 relative"> <!-- Added relative class for button positioning -->
                 
                 <!-- Theme Toggle Button -->
-                <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none">
-                    <!-- Moon Icon (Shown in Dark Mode) -->
-                    <svg class="hidden dark:block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                    </svg>
-                    <!-- Sun Icon (Shown in Light Mode) -->
+                <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none" aria-label="Toggle light/dark mode">
+                    <!-- Sun Icon (Shows when in dark mode, switches TO light) -->
                     <svg class="block dark:hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-6.364-.386l1.591-1.591M3 12h2.25m.386-6.364l1.591 1.591M12 12a2.25 2.25 0 00-2.25 2.25c0 1.242.668 2.33 1.636 2.844.27.14.55.22.84.22s.57-.08.84-.22c.968-.514 1.636-1.602 1.636-2.844A2.25 2.25 0 0012 12z" />
+                    </svg>
+                    <!-- Moon Icon (Shows when in light mode, switches TO dark) -->
+                    <svg class="hidden dark:block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
                     </svg>
                 </button>
                 
                 <!-- Profile Picture -->
-                <!-- 
-                  - We use a negative margin (-mt-20) to pull the image up, overlapping the banner.
-                  - border-4 creates the "cutout" effect.
-                -->
+                <!-- Set a fallback background color in case image fails -->
                 <img 
                     src="https://decodejar.com/decode.png" 
-                    alt="Your Name"
-                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white dark:border-gray-900"
+                    alt="Profile Picture"
+                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                 >
-
-                <!-- Name and Handle -->
-                <div class="mt-4">
-                    <h1 class="text-2xl font-bold">Your Name</h1>
-                    <p class="text-md text-gray-500 dark:text-gray-400">@yourhandle</p>
+                <!-- Fallback "initials" circle -->
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 hidden items-center justify-center text-4xl font-bold text-gray-700 dark:text-gray-200" style="display: none;">
+                    D
                 </div>
 
-                <!-- Bio Text -->
-                <p class="my-4 text-gray-800 dark:text-gray-200">
-                    This is your bio section. Write a short summary about yourself, your skills,
-                    and what you do. Make it engaging and informative.
+                <!-- Name and Handle -->
+                <h1 class="text-2xl font-bold mt-4">Your Name</h1>
+                <p class="text-md text-gray-500 dark:text-gray-400">@yourhandle</p>
+
+                <!-- Bio -->
+                <p class="mt-4">
+                    Your personal bio goes here. This is a great place to introduce yourself, 
+                    your work, or your interests. Keep it concise and engaging.
                 </p>
 
-                <!-- Metadata (Location, Website, Joined) -->
-                <div class="flex flex-wrap text-sm text-gray-500 dark:text-gray-400 space-x-0 sm:space-x-4">
-                    <div class="flex items-center mr-4 mb-2 sm:mb-0">
-                        <!-- Location Icon -->
-                        <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Your Location
+                <!-- Stats (Optional) -->
+                <div class="flex space-x-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div>
+                        <span class="font-semibold text-gray-900 dark:text-gray-100">1,234</span> Following
                     </div>
-                    <div class="flex items-center mr-4 mb-2 sm:mb-0">
-                        <!-- Link Icon -->
-                        <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        <a href="#" class="text-blue-500 hover:underline">yourwebsite.com</a>
-                    </div>
-                    <div class="flex items-center">
-                        <!-- Joined Date Icon -->
-                        <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                        Joined October 2025
+                    <div>
+                        <span class="font-semibold text-gray-900 dark:text-gray-100">5,678</span> Followers
                     </div>
                 </div>
             </div>
         </div>
-        <!-- ===== END HEADER SECTION ===== -->
+        <!-- ===== END HEADER & PROFILE SECTION ===== -->
 
-        <!-- Divider -->
-        <hr class="border-gray-200 dark:border-gray-800">
 
         <!-- ===== LINKS SECTION ===== -->
-        <!-- This section replaces the "Tweets" feed with your links. -->
-        <div class="p-4 space-y-6"> <!-- Added more space between groups -->
-
-            <!-- Group 1: Follow Decode -->
-            <div>
-                <h2 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Follow Decode</h2>
-                <div class="space-y-4">
-                    <!-- Link Item 1: Follow on X -->
-                    <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-4 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <strong class="text-lg font-semibold">Follow on X (Twitter)</strong>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">x.com/decodejar</p>
-                    </a>
-
-                    <!-- Link Item 2: Follow on Nostr -->
-                    <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-4 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <strong class="text-lg font-semibold">Follow on Nostr</strong>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">decodejar.com/nostr</p>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Group 2: Trading View Indicators -->
-            <div>
-                <h2 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Trading View Indicators</h2>
-                <div class="space-y-4">
-                    <!-- Link Item 3: TradingView MA Toolkit -->
-                    <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-4 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <strong class="text-lg font-semibold">TradingView: Moving Average Toolkit</strong>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">View the DECODE Moving Average Toolkit indicator.</p>
-                    </a>
-
-                    <!-- Link Item 4: TradingView Global Liquidity -->
-                    <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-4 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <strong class="text-lg font-semibold">TradingView: Global Liquidity Index</strong>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">View the DECODE Global Liquidity Index indicator.</p>
-                    </a>
-                </div>
-            </div>
+        <div class="border-t border-gray-200 dark:border-gray-700">
             
-            <!-- Group 3: Trading Affiliate Links -->
-            <div>
-                <h2 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Trading Affiliate Links</h2>
-                <div class="space-y-4">
-                    <!-- Link Item 5: MEXC Affiliate -->
-                    <a href="https://www.mexc.com/acquisition/custom-sign-up?shareCode=mexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-4 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <strong class="text-lg font-semibold">MEXC Affiliate ($8k Bonus)</strong>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Sign up for MEXC and receive an $8,000 bonus.</p>
-                    </a>
+            <!-- Group 1: Follow -->
+            <h2 class="text-xl font-bold p-4 pb-2">Follow Decode</h2>
+            
+            <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- Generic Link Icon -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <span class="font-medium">x.com/decodejar</span>
                 </div>
-            </div>
+            </a>
+            <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <span class="font-medium">decodejar.com/nostr</span>
+                </div>
+            </a>
+
+            <!-- Group 2: TradingView -->
+            <h2 class="text-xl font-bold p-4 pb-2 pt-6">Trading View Indicators</h2>
+            
+            <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                    <span class="font-medium">DECODE Moving Average Toolkit</span>
+                </div>
+            </a>
+            <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                    <span class="font-medium">DECODE Global Liquidity Index</span>
+                </div>
+            </a>
+
+            <!-- Group 3: Affiliates -->
+            <h2 class="text-xl font-bold p-4 pb-2 pt-6">Trading Affiliate Links</h2>
+            
+            <a href="https://www.mexc.com/acquisition/custom-sign-up?shareCode=mexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12L17.438 9.154a4.5 4.5 0 00-3.09-3.09L11.5 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L18.25 12l-2.846.813a4.5 4.5 0 00-3.09 3.09L11.5 18.75l.813-2.846a4.5 4.5 0 003.09-3.09L18.25 12z" /></svg>
+                    <span class="font-medium">MEXC ($8k bonus)</span>
+                </div>
+            </a>
 
         </div>
         <!-- ===== END LINKS SECTION ===== -->
 
     </main>
 
+    <!-- 6. Theme Toggle Javascript -->
     <script>
         // This script runs after the DOM is loaded
         
@@ -231,20 +213,21 @@
 
         // Add click listener to the toggle button
         themeToggleBtn.addEventListener('click', () => {
-            const isCurrentlyDark = htmlEl.classList.contains('dark');
-            if (isCurrentlyDark) {
-                htmlEl.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                htmlEl.classList.add('dark');
+            // Toggle the 'dark' class on the <html> element
+            const isDark = htmlEl.classList.toggle('dark');
+            
+            // Save the user's preference to local storage
+            if (isDark) {
                 localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
             }
         });
 
         // Listen for changes in system preference
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            // Only change if user hasn't manually set a theme
-            if (!localStorage.getItem('theme')) {
+            // Only change if user hasn't manually set a theme in local storage
+            if (!('theme' in localStorage)) {
                 if (e.matches) {
                     htmlEl.classList.add('dark');
                 } else {
