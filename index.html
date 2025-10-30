@@ -68,13 +68,13 @@
 
             <!-- 2. Profile Info Container --><div class="p-4">
                 
-                <!-- Profile Picture --><!-- Set a fallback background color in case image fails --><!-- UPDATED: Added border-4 border-white for a white circular border --><img 
+                <!-- Profile Picture --><!-- Set a fallback background color in case image fails --><!-- UPDATED: Added relative and z-10 to ensure the border is visible on top --><img 
                     src="/decode.png" 
                     alt="Profile Picture"
-                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300"
+                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 relative z-10"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                 >
-                <!-- Fallback "initials" circle --><!-- UPDATED: Added border-4 border-white for consistency --><div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700" style="display: none;">
+                <!-- Fallback "initials" circle --><!-- UPDATED: Added relative and z-10 for consistency --><div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10" style="display: none;">
                     D
                 </div>
 
@@ -135,5 +135,6 @@
 
     <!-- Removed Theme Toggle Javascript --></body>
 </html>
+
 
 
