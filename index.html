@@ -11,13 +11,17 @@
       It includes:
       1. Tailwind CSS (via CDN)
       2. All HTML structure
-    --><!-- 1. Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    -->
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. Load Inter Font --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- 2. Load Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- 3. Custom Scrollbar Styles --><style>
+    <!-- 3. Custom Scrollbar Styles -->
+    <style>
         /* Simple scrollbar for light mode */
         ::-webkit-scrollbar {
             width: 8px;
@@ -40,7 +44,8 @@
             font-family: 'Inter', sans-serif; /* Apply Inter font */
         }
     </style>
-    <!-- We need to tell Tailwind to use Inter --><script>
+    <!-- We need to tell Tailwind to use Inter -->
+    <script>
         tailwind.config = {
             theme: {
                 extend: {
@@ -54,22 +59,31 @@
 </head>
 <body class="font-sans bg-white text-gray-900 min-h-screen">
 
-    <!-- Main Content Container --><main class="max-w-[600px] mx-auto border-x border-gray-200 min-h-screen">
+    <!-- Main Content Container -->
+    <main class="max-w-[600px] mx-auto border-x border-gray-200 min-h-screen">
         
-        <!-- ===== HEADER & PROFILE SECTION ===== --><div>
-            <!-- 1. Banner Image --><!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) --><img 
+        <!-- ===== HEADER & PROFILE SECTION ===== -->
+        <div>
+            <!-- 1. Banner Image -->
+            <!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) -->
+            <img 
                 src="/banner.png" 
                 alt="Banner" 
                 class="w-full h-[120px] sm:h-[200px] object-cover object-center bg-gray-200"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
             >
-            <!-- Fallback for Banner --><!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) --><div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
-                <!-- Banner failed to load --></div>
+            <!-- Fallback for Banner -->
+            <!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) -->
+            <div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
+                <!-- Banner failed to load -->
+            </div>
 
-            <!-- 2. Profile Info Container --><!-- UPDATED: p-4 to p-3 -->
+            <!-- 2. Profile Info Container -->
+            <!-- UPDATED: p-4 to p-3 -->
             <div class="p-3 relative">
                 
-                <!-- Website Text --><!-- UPDATED: top-4 right-4 to top-3 right-3 -->
+                <!-- Website Text -->
+                <!-- UPDATED: top-4 right-4 to top-3 right-3 -->
                 <div class="absolute top-3 right-3">
                     <!-- UPDATED: Added responsive text size -->
                     <p class="text-md sm:text-sm text-gray-500">
@@ -77,17 +91,23 @@
                     </p>
                 </div>
                 
-                <!-- Profile Picture --><!-- Set a fallback background color in case image fails --><!-- UPDATED: Added relative and z-10 to ensure the border is visible on top --><img 
+                <!-- Profile Picture -->
+                <!-- Set a fallback background color in case image fails -->
+                <!-- UPDATED: Added relative and z-10 to ensure the border is visible on top -->
+                <img 
                     src="/decode.png" 
                     alt="Profile Picture"
                     class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 relative z-10"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                 >
-                <!-- Fallback "initials" circle --><!-- UPDATED: Added relative and z-10 for consistency --><div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10" style="display: none;">
+                <!-- Fallback "initials" circle -->
+                <!-- UPDATED: Added relative and z-10 for consistency -->
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10" style="display: none;">
                     D
                 </div>
 
-                <!-- Name, Handle, and Website --><!-- UPDATED: Removed website link and flex wrapper -->
+                <!-- Name, Handle, and Website -->
+                <!-- UPDATED: Removed website link and flex wrapper -->
                 <div>
                     <div>
                         <!-- UPDATED: mt-4 to mt-3 -->
@@ -99,7 +119,9 @@
                     </div>
                 </div>
 
-                <!-- Bio --><!-- UPDATED: mt-4 to mt-3 --><!-- UPDATED: Removed links from Substack and X -->
+                <!-- Bio -->
+                <!-- UPDATED: mt-4 to mt-3 -->
+                <!-- UPDATED: Removed links from Substack and X -->
                 <!-- UPDATED: Added responsive text size -->
                 <p class="mt-3 text-base sm:text-sm">
                     Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts<br>
@@ -109,7 +131,10 @@
 
             </div>
         </div>
-        <!-- ===== END HEADER & PROFILE SECTION ===== --><!-- ===== LINKS SECTION ===== --><div class="border-t border-gray-200">
+        <!-- ===== END HEADER & PROFILE SECTION ===== -->
+
+        <!-- ===== LINKS SECTION ===== -->
+        <div class="border-t border-gray-200">
             
             <!-- Group 0: Subscribe -->
             <!-- UPDATED: Added responsive text size -->
@@ -117,14 +142,20 @@
             
             <a href="https://substack.decodejar.com" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <!-- Generic Link Icon --><svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'newspaper' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Read on Substack</span>
                 </div>
             </a>
             <a href="https://x.com/decodejar/superfollows" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'newspaper' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Read on X</span>
                 </div>
@@ -136,33 +167,46 @@
             
             <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <!-- Generic Link Icon --><svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'user-circle' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Follow on X</span>
                 </div>
             </a>
             <a href="https://substack.com/@decodejar" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'user-circle' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Follow on Substack</span>
                 </div>
             </a>
             <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'user-circle' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Follow on Nostr</span>
                 </div>
             </a>
 
-            <!-- Group 2: Asset Models --><!-- UPDATED: Added this new section -->
+            <!-- Group 2: Asset Models -->
+            <!-- UPDATED: Added this new section -->
             <!-- UPDATED: Added responsive text size -->
             <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5">Asset Models</h2>
             
             <a href="https://decodejar.com/bittensor" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                    <!-- UPDATED: Icon changed to 'cpu-chip' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 21v-1.5M15.75 3v1.5M12 4.5V3m0 18v-1.5M15.75 21v-1.5m-3.75-18v1.5M12 19.5V21m0-18h.008v.008H12V3Zm0 18h.008v.008H12V21Zm3.75-18h.008v.008H15.75V3Zm0 18h.008v.008H15.75V21Zm-7.5-18h.008v.008H8.25V3Zm0 18h.008v.008H8.25V21Zm-3.75-18h.008v.008H4.5V3Zm0 18h.008v.008H4.5V21Zm15-18h.008v.008H19.5V3Zm0 18h.008v.008H19.5V21Zm-7.5-6h.008v.008H12V15Zm0-3.75h.008v.008H12v-.008Zm0 7.5h.008v.008H12V18.75Zm3.75-3.75h.008v.008H15.75v-.008Zm0 3.75h.008v.008H15.75V18.75Zm-7.5-3.75h.008v.008H8.25v-.008Zm0 3.75h.008v.008H8.25V18.75Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">TAO Tensor Law Model</span>
                 </div>
@@ -174,14 +218,20 @@
 
             <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                    <!-- NOTE: Kept 'arrow-trending-up' icon as it is relevant -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Global Liquidity Index</span>
                 </div>
-            </a>            
+            </a>
             <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                    <!-- NOTE: Kept 'arrow-trending-up' icon as it is relevant -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">Moving Average Toolkit</span>
                 </div>
@@ -193,14 +243,20 @@
             
             <a href="https://www.mexc.com/acquisition/custom-sign-up?shareCode=mexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-50 transition-colors">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12L17.438 9.154a4.5 4.5 0 00-3.09-3.09L11.5 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L18.25 12l-2.846.813a4.5 4.5 0 00-3.09 3.09L11.5 18.75l.813-2.846a4.5 4.5 0 003.09-3.09L18.25 12z" /></svg>
+                    <!-- UPDATED: Icon changed to 'gift' for the bonus -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535.98.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048m-1.9-3.57a.375.375 0 0 0-.71.125v2.961c0 .03.01.059.028.082a.75.75 0 0 0 .558.397l.43.105c.29.07.545.26.708.506l.51.766a.75.75 0 0 0 1.125 0l.51-.766c.163-.246.418-.436.708-.506l.43-.105a.75.75 0 0 0 .558-.397.375.375 0 0 0 .028-.082V4.5a.375.375 0 0 0-.71-.125m-1.9 3.57-1.068-.89a.75.75 0 0 0-.405-.864v-.568m0 0a3.001 3.001 0 0 0-3.001-3.001 3.001 3.001 0 0 0-3.001 3.001v.568c0 .334-.148.65-.405.864l-1.068.89a.75.75 0 0 0-.216 1.49l.51.766c.319.481.82.78 1.38.78h1.121c.56 0 1.061-.299 1.38-.78l.51-.766a.75.75 0 0 0-.216-1.49Z M3.75 12h16.5v6.75a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V12Z" />
+                    </svg>
                     <!-- UPDATED: Added responsive text size -->
                     <span class="font-medium text-base sm:text-sm text-blue-700">MEXC ($10k bonus)</span>
                 </div>
             </a>
             
         </div>
-        <!-- ===== END LINKS SECTION ===== --><!-- ===== FOOTER SECTION ===== --><footer class="mt-6 p-6">
+        <!-- ===== END LINKS SECTION ===== -->
+
+        <!-- ===== FOOTER SECTION ===== -->
+        <footer class="mt-6 p-6">
             <div class="text-xs sm:text-xxs text-gray-500 space-y-4">
                 <p class="font-semibold text-gray-600">&copy; 2025 DecodeJar. All Rights Reserved.</p>
                 <p class="font-semibold text-gray-600 pt-2">Disclaimer</p>
@@ -209,8 +265,11 @@
                 </p>
             </div>
         </footer>
-        <!-- ===== END FOOTER SECTION ===== --></main>
+        <!-- ===== END FOOTER SECTION ===== -->
 
-    <!-- Removed Theme Toggle Javascript --></body>
+    </main>
+
+    <!-- Removed Theme Toggle Javascript -->
+
+</body>
 </html>
-
