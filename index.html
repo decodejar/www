@@ -22,7 +22,31 @@
     <!-- 2. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 3. Load Inter Font -->
+    <!-- 3. Initial Theme Loader (Blocks rendering to prevent flicker) -->
+    <script>
+        // This script runs before the page is rendered
+        // Check for saved theme in local storage
+        const savedTheme = localStorage.getItem('theme');
+        // Check for system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        let isDark;
+        if (savedTheme === 'dark') {
+            isDark = true;
+        } else if (savedTheme === 'light') {
+            isDark = false;
+        } else {
+            isDark = prefersDark; // Fallback to system preference
+        }
+
+        if (isDark) {
+            // If dark, add class to <html> tag before paint
+            document.documentElement.classList.add('dark');
+        }
+        // No 'else' needed, as 'light' is the default (no class)
+    </script>
+
+    <!-- 4. Load Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -83,12 +107,12 @@
                 
                 <!-- Theme Toggle Button -->
                 <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none">
-                    <!-- Moon Icon -->
-                    <svg id="theme-toggle-dark-icon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <!-- Moon Icon (Shown in Dark Mode) -->
+                    <svg class="hidden dark:block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
                     </svg>
-                    <!-- Sun Icon -->
-                    <svg id="theme-toggle-light-icon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <!-- Sun Icon (Shown in Light Mode) -->
+                    <svg class="block dark:hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-6.364-.386l1.591-1.591M3 12h2.25m.386-6.364l1.591 1.591M12 12a2.25 2.25 0 00-2.25 2.25c0 1.242.668 2.33 1.636 2.844.27.14.55.22.84.22s.57-.08.84-.22c.968-.514 1.636-1.602 1.636-2.844A2.25 2.25 0 0012 12z" />
                     </svg>
                 </button>
@@ -112,7 +136,8 @@
 
                 <!-- Bio Text -->
                 <p class="my-4 text-gray-800 dark:text-gray-200">
-                    Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts | Biweekly Market Intelligence Newsletter on Substack and X
+                    This is your bio section. Write a short summary about yourself, your skills,
+                    and what you do. Make it engaging and informative.
                 </p>
 
                 <!-- Metadata (Location, Website, Joined) -->
@@ -198,57 +223,37 @@
     </main>
 
     <script>
+        // This script runs after the DOM is loaded
+        
         // Get references to all the elements
         const themeToggleBtn = document.getElementById('theme-toggle');
-        const darkIcon = document.getElementById('theme-toggle-dark-icon');
-        const lightIcon = document.getElementById('theme-toggle-light-icon');
         const htmlEl = document.documentElement;
-
-        // Function to set the theme
-        function setTheme(isDark) {
-            if (isDark) {
-                htmlEl.classList.add('dark');
-                darkIcon.classList.remove('hidden');
-                lightIcon.classList.add('hidden');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                htmlEl.classList.remove('dark');
-                darkIcon.classList.add('hidden');
-                lightIcon.classList.remove('hidden');
-                localStorage.setItem('theme', 'light');
-            }
-        }
-
-        // Check for saved theme in local storage
-        const savedTheme = localStorage.getItem('theme');
-        // Check for system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        // Determine initial theme
-        // User's saved theme > System preference
-        if (savedTheme === 'dark') {
-            setTheme(true);
-        } else if (savedTheme === 'light') {
-            setTheme(false);
-        } else {
-            // No saved theme, use system preference
-            setTheme(prefersDark);
-        }
 
         // Add click listener to the toggle button
         themeToggleBtn.addEventListener('click', () => {
             const isCurrentlyDark = htmlEl.classList.contains('dark');
-            setTheme(!isCurrentlyDark);
+            if (isCurrentlyDark) {
+                htmlEl.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlEl.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
         });
 
         // Listen for changes in system preference
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             // Only change if user hasn't manually set a theme
             if (!localStorage.getItem('theme')) {
-                setTheme(e.matches);
+                if (e.matches) {
+                    htmlEl.classList.add('dark');
+                } else {
+                    htmlEl.classList.remove('dark');
+                }
             }
         });
     </script>
 
 </body>
 </html>
+
