@@ -149,7 +149,7 @@
             line-height: 1;
         }
          #projectionTable h3 button:hover {
-             color: #374151; /* hover:text-gray-700 */
+           color: #374151; /* hover:text-gray-700 */
          }
         /* --- END: Projection Table Styles --- */
     </style>
@@ -221,26 +221,27 @@
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>
                 <div id="optimalOffsetDiv"></div>
-                <div id="modelFitDiv"></div>
-                <!-- Power Law status (good/bad fit) -->
-                <div id="powerLawStatusDiv" class="flex items-center">
-                    <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
-                    <span id="powerLawStatusText">Power Law&nbsp;</span>
-                    <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
+                <!-- Use Optimal Offset Checkbox (Moved) -->
+                <div class="flex items-center">
+                    <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
+                    <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
+                <div id="modelFitDiv"></div>
+                <!-- Power Law status (REMOVED) -->
             </div>
         </div>
     </div>
 
     <!-- Footer -->
     <footer class="text-center p-1 mt-2">
-        <p class="text-gray-600 text-xs">&copy; 2025 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DecodeJar</a> | Disclaimer: This tool is for informational and research purposes only and does not constitute financial or trading advice. Past performance is not indicative of future results.</p>
+        <p class="text-gray-600 text-xs">&copy; 2025 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DECODEJAR.COM</a>. All Rights Reserved. Disclaimer: This tool is for informational and research purposes only and does not constitute financial or trading advice. Past performance is not indicative of future results.</p>
     </footer>
 
 <script>
         /*
          * TAO Tensor Law Model & Regression Logic
-         * Copyright (c) 2025 DecodeJar, https://x.com/decodejar. All Rights Reserved.
+         * Copyright (c) 2025 Decodejar.com. All Rights Reserved.
          */
 
         // --- Global Element References ---
@@ -250,19 +251,21 @@
         const statusDiv = document.getElementById('statusDiv');
         const lastUpdateDiv = document.getElementById('lastUpdateDiv');
         const lastPriceDiv = document.getElementById('lastPriceDiv');
-        const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
-        const powerLawStatusDot = document.getElementById('powerLawStatusDot');
-        const powerLawStatusText = document.getElementById('powerLawStatusText');
+        // const powerLawStatusDiv = document.getElementById('powerLawStatusDiv'); // REMOVED
+        // const powerLawStatusDot = document.getElementById('powerLawStatusDot'); // REMOVED
+        // const powerLawStatusText = document.getElementById('powerLawStatusText'); // REMOVED
         const priceZoneDiv = document.getElementById('priceZoneDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
         const showBandsContainer = document.getElementById('showBandsContainer');
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
-        const projectionTable = document.getElementById('projectionTable'); // NEW
+        const projectionTable = document.getElementById('projectionTable');
+        const useOptimalOffsetCheckbox = document.getElementById('useOptimalOffsetCheckbox'); // NEW
 
         // --- Chart Configuration ---
-        const DAY_OFFSET = 81; // Configured day offset for chart display.
+        const DAY_OFFSET = 365; // Configured day offset for chart display.
         let chart; // Global chart instance
+        let activeDayOffset = DAY_OFFSET; // NEW: Stores the currently active offset for tooltips
 
         // Band Fill Colors
         const blueFillColor = 'rgba(147, 197, 253, 0.1)';
@@ -279,16 +282,15 @@
             borderColor: '#ff6d00',
             borderWidth: 2,
         };
-        // --- NEW ---
         const grayDashedLineStyle = {
-            borderColor: 'rgba(156, 163, 175, 0.9)', // Made slightly darker (increased alpha)
+            borderColor: 'rgba(156, 163, 175, 0.9)', 
             borderWidth: 1,
-            borderDash: [2, 2] // 2px dash, 2px gap for 'dotted' look
+            borderDash: [2, 2] 
         };
         const grayFineLineStyle = {
             borderColor: 'rgba(156, 163, 175, 0.7)',
-            borderWidth: 0.5, // "Very fine"
-            borderDash: [] // Solid
+            borderWidth: 0.5, 
+            borderDash: [] 
         };
 
         /**
@@ -429,20 +431,37 @@
                  if (!statusDiv.innerHTML.includes('Error')) {
                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
-                 growthExponentDiv.innerHTML = `<span class="text-red-400">Cannot calculate model without data.</span>`;
-                 modelFitDiv.innerHTML = '';
-                 powerLawStatusDiv.style.display = 'none';
+                 
+                 // NEW: Set bottom bar elements to N/A, but keep them visible
+                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
+                 optimalOffsetDiv.innerHTML = '<strong>Offset:</strong> N/A';
+                 modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
+                 
+                 // powerLawStatusDiv.style.display = 'flex'; // REMOVED
+                 // if (powerLawStatusDot) { // REMOVED
+                 //    powerLawStatusDot.className = 'status-dot bg-red-500'; // REMOVED
+                 // } // REMOVED
+                 
+                 if (useOptimalOffsetCheckbox) {
+                    useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
+                    useOptimalOffsetCheckbox.disabled = true; // Disable checkbox
+                 }
+                 
                  showBandsContainer.classList.add('hidden');
                  loader.style.display = 'none';
-                 return;
+                 return; // Stop execution, no chart to plot
             }
 
-            // 2. Find optimal offset
+            // 2. Find optimal offset (always do this)
             const maxDaysInData = baseData.length > 0 ? baseData.length : 1;
             const { optimalOffset, bestFit } = findOptimalOffset(baseData, 1, maxDaysInData);
             
-            // 3. Apply the hard-coded DAY_OFFSET for all chart rendering
-            const priceData = baseData.map(p => ({ ...p, x: p.dayIndex + DAY_OFFSET }));
+            // 3. NEW: Determine Active Offset
+            const useOptimal = useOptimalOffsetCheckbox.checked;
+            activeDayOffset = useOptimal && optimalOffset !== -1 ? optimalOffset : DAY_OFFSET;
+
+            // 4. Apply the ACTIVE offset for all chart rendering
+            const priceData = baseData.map(p => ({ ...p, x: p.dayIndex + activeDayOffset }));
 
             // --- Update Top Status Bar ---
             const lastDataPoint = priceData[priceData.length - 1];
@@ -483,7 +502,7 @@
             const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9;
             const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4;
 
-            // --- Model Calculations ---
+            // --- Model Calculations (using active offset) ---
             const { slope, intercept: meanIntercept } = linearRegression(priceData);
             const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
 
@@ -507,7 +526,7 @@
             else if (lastResidual > p20Residual) { priceZone = "Value"; priceZoneColor = "bg-green-500"; }
             else { priceZone = "Discount"; priceZoneColor = "bg-blue-300"; }
 
-            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Price Band:</strong>&nbsp;${priceZone}`;
+            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Rating:</strong>&nbsp;${priceZone}`;
             priceZoneDiv.classList.remove('hidden');
 
             // --- Calculate All Line Intercepts ---
@@ -517,19 +536,24 @@
             const p20Intercept = meanIntercept + p20Residual;
             const p80Intercept = meanIntercept + p80Residual;
 
-            // --- NEW: Call projection function ---
-            // Must pass baseData, not priceData, to get original day 1
-            calculateProjections(slope, medianIntercept, baseData, DAY_OFFSET, projectionTable);
-            // --- END NEW ---
+            // --- Call projection function (uses active offset) ---
+            calculateProjections(slope, medianIntercept, baseData, activeDayOffset, projectionTable);
 
             // --- Update Bottom Status Bar ---
-            const rSquared = calculateRSquared(priceData, slope, meanIntercept);
-            const modelFitGood = rSquared >= 0.9;
-
-            powerLawStatusDiv.style.display = 'flex';
-            if (powerLawStatusDot) {
-                 powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
+            // Re-enable checkbox on successful load
+            if (useOptimalOffsetCheckbox) {
+                useOptimalOffsetCheckbox.disabled = false;
             }
+            const rSquared = calculateRSquared(priceData, slope, meanIntercept); // R² for active model
+            // const modelFitGood = rSquared >= 0.9; // REMOVED
+
+            // powerLawStatusDiv.style.display = 'flex'; // REMOVED
+            if (useOptimalOffsetCheckbox) { // NEW: Ensure checkbox div is visible
+                useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
+            }
+            // if (powerLawStatusDot) { // REMOVED
+            //      powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`; // REMOVED
+            // } // REMOVED
 
             growthExponentDiv.innerHTML = `<strong>Exponent (α):</strong> ${slope.toFixed(3)}`;
             
@@ -544,18 +568,19 @@
             } else {
                 fitColorClass = "bg-red-500";
             }
-            // --- END ---
             
-            // --- MODIFIED: Add dot to modelFitDiv innerHTML ---
+            // --- MODIFIED: Show R² for the *active* model ---
             modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span><strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
-            // Conditionally show optimal offset info
-            if (DAY_OFFSET === optimalOffset) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${DAY_OFFSET}`;
-            } else if (optimalOffset !== -1) { 
-                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
+            // --- MODIFIED: Update offset display logic ---
+            if (optimalOffset === -1) {
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model)`;
+            } else if (useOptimal) {
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Optimal)`;
+            } else if (activeDayOffset === optimalOffset) {
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model, Optimal)`;
             } else {
-                optimalOffsetDiv.innerHTML = `<strong>Day Offset:</strong> ${DAY_OFFSET}`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model) | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
             }
 
             // --- Generate Line Data for Chart ---
@@ -805,7 +830,8 @@
                                                      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                                                  }
                                              }
-                                             const displayDay = !isNaN(dayNumber) ? (dayNumber - DAY_OFFSET).toFixed(0) : 'N/A';
+                                             // MODIFIED: Use activeDayOffset global
+                                             const displayDay = !isNaN(dayNumber) ? (dayNumber - activeDayOffset).toFixed(0) : 'N/A';
                                              return `Day ~${displayDay}`;
                                          }
                                          return '';
@@ -839,27 +865,15 @@
                                 ticks: { 
                                     color: '#4b5563',
                                     callback: function(value, index, ticks) {
-                                        /* --- DEBUGGING STEP as requested ---
-                                        // Always return a label to see if the ticks and lines are generated.
-                                        return `$${value.toLocaleString()}`;
-                                        */
-
-                                        /* --- Original Logic --- */
                                         const logVal = Math.log10(value);
                                         // If logVal is an integer (or very close), it's a major tick (1, 10, 100...)
                                         if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
                                             return `$${value.toLocaleString()}`; // Show label for major ticks
                                         }
-                                        // --- NEW FIX ---
                                         // Return an empty string '' instead of null.
-                                        // This should draw the grid line but no label.
                                         return ''; 
-                                        
                                     }
                                 },
-                                // Y-axis tick builder (powers of 10)
-                                // --- REMOVED afterBuildTicks FUNCTION --- 
-                                // Let Chart.js handle tick generation natively
                                 grid: { 
                                     color: function(context) {
                                         const value = context.tick.value;
@@ -868,7 +882,6 @@
                                         const logVal = Math.log10(value);
                                         
                                         // Check if logVal is very close to an integer (a power of 10)
-                                        // Use a small epsilon for float comparison
                                         if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
                                             return 'rgba(0, 0, 0, 0.1)'; // Major tick (1, 10, 100...)
                                         } else {
@@ -887,8 +900,13 @@
             showBandsContainer.classList.remove('hidden');
             showBandsCheckbox.removeEventListener('change', handleBandToggle);
             showBandsCheckbox.addEventListener('change', handleBandToggle);
+
+            // NEW: Attach listener to "Use Optimal" checkbox
+            useOptimalOffsetCheckbox.removeEventListener('change', createOrUpdateChart);
+            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
+
             // Apply initial band visibility state
-            applyBandVisibility(showBandsCheckbox.checked);
+            applyBandVisibility(showBbandsCheckbox.checked);
             if(chart) chart.update('none'); // Update chart without animation
         }
 
@@ -907,8 +925,8 @@
          */
         function applyBandVisibility(showBands) {
              if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 11) {
-                console.error("Chart or datasets not fully initialized for applyBandVisibility.");
-                return;
+                 console.error("Chart or datasets not fully initialized for applyBandVisibility.");
+                 return;
              }
              // Dataset Indices
              const mainMedianIndex = 1;
@@ -918,13 +936,12 @@
              const redundantP50Index = 5;
              const p80Index = 6;
              const fillIndices = [7, 8, 9, 10];
- 
+
              // Ensure core lines are always visible (or hidden)
              if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
              if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true);
              if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Always hidden
- 
-             // --- NEW LOGIC ---
+
              if (showBands) {
                  // BANDS ON: Show all 4 percentile lines as fine solid lines
                  const styleToApply = grayFineLineStyle;
@@ -947,7 +964,7 @@
                  
                  // Toggle band FILL areas ON
                  fillIndices.forEach(index => {
-                      if (chart.data.datasets[index]) chart.setDatasetVisibility(index, true);
+                     if (chart.data.datasets[index]) chart.setDatasetVisibility(index, true);
                  });
 
                  // Style 50th percentile line
@@ -958,7 +975,7 @@
 
              } else {
                  // BANDS OFF: Show 1st/99th as dotted, HIDE 20th/80th
-                 const styleToApply = grayDashedLineStyle; // This is now [2, 2] and darker
+                 const styleToApply = grayDashedLineStyle; 
                  
                  if (chart.data.datasets[p1Index]) {
                      chart.setDatasetVisibility(p1Index, true);
@@ -981,7 +998,7 @@
 
                  // Toggle band FILL areas OFF
                  fillIndices.forEach(index => {
-                      if (chart.data.datasets[index]) chart.setDatasetVisibility(index, false);
+                     if (chart.data.datasets[index]) chart.setDatasetVisibility(index, false);
                  });
 
                  // Style 50th percentile line
@@ -989,8 +1006,7 @@
                  if (medianDataset) {
                       Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
                  }
-              }
-             // --- END NEW LOGIC ---
+             }
         }
 
         /**
@@ -1027,7 +1043,6 @@
             }
 
             // 1. Get the reference date and dayIndex from the first data point
-            // We use the 'time' and 'dayIndex' from the *raw* data before the offset was added.
             const firstDataPointDate = new Date(baseData[0].time);
             const firstDayIndex = baseData[0].dayIndex; // This is the index *before* offset (e.g., 1)
             
@@ -1053,7 +1068,6 @@
             };
 
             // 4. Helper function to calculate price using the power law formula
-            // Price = 10^(slope * log10(Day) + medianIntercept)
             const calculatePrice = (dayIndexWithOffset) => {
                 if (dayIndexWithOffset <= 0) return NaN; // Can't log(0) or negative
                 const logX = Math.log10(dayIndexWithOffset);
@@ -1089,7 +1103,6 @@
             });
 
             tableElement.innerHTML = tableHtml;
-            // NEW: Reset inline display style in case it was hidden
             tableElement.style.display = ''; 
             tableElement.classList.remove('hidden');
         }
@@ -1161,12 +1174,12 @@
 
                  // Resize chart after a short delay to ensure container is sized
                   if (chart) {
-                       setTimeout(() => {
-                           requestAnimationFrame(() => {
-                                if (chart) chart.resize();
-                           });
-                       }, 50); // 50ms delay
-                   }
+                     setTimeout(() => {
+                         requestAnimationFrame(() => {
+                             if (chart) chart.resize();
+                         });
+                     }, 50); // 50ms delay
+                  }
              });
         }
 
@@ -1183,10 +1196,11 @@
         // Initial load
         window.onload = () => {
             createOrUpdateChart();
+            // NEW: Add listener for optimal offset checkbox
+            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
             setTimeout(handleFullscreenChange, 150); // Initial check for mobile state
         }
     </script>
 
 </body>
 </html>
-
