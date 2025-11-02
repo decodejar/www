@@ -274,6 +274,7 @@
         let isPanning = false;
         let panStartX = 0;
         let panStartMin = 0;
+        let panStartLogRange = 0; // NEW
  
         // Band Fill Colors
         const blueFillColor = 'rgba(147, 197, 253, 0.1)';
@@ -1080,6 +1081,63 @@
         }
  
         /**
+         * NEW: Recalculates Y-axis limits based on the current X-axis view.
+         */
+        function refitYAxis() {
+            if (!chart || !chartPriceData || chartPriceData.length === 0) return;
+
+            const currentXMin = chart.options.scales.x.min;
+            const currentXMax = chart.options.scales.x.max;
+
+            // 1. Filter data to visible range
+            const visibleData = chartPriceData.filter(p => p.x >= currentXMin && p.x <= currentXMax);
+
+            if (visibleData.length < 2) {
+                 // Not enough data to refit, use full data as fallback
+                const allPrices = chartPriceData.map(p => p.y);
+                const minPrice = Math.min(...allPrices);
+                const maxPrice = Math.max(...allPrices);
+                const logMinPrice = Math.log10(minPrice);
+                const logMaxPrice = Math.log10(maxPrice);
+                const logPriceRange = logMaxPrice - logMinPrice;
+                
+                if (logPriceRange > 0) {
+                    chart.options.scales.y.min = Math.pow(10, logMinPrice - logPriceRange * 0.1);
+                    chart.options.scales.y.max = Math.pow(10, logMaxPrice + logPriceRange * 0.4);
+                } else {
+                    chart.options.scales.y.min = minPrice * 0.9;
+                    chart.options.scales.y.max = maxPrice * 1.1;
+                }
+                return; // Exit
+            }
+
+            // 2. Find min/max price in visible range
+            const prices = visibleData.map(p => p.y);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+
+            // 3. Recalculate Y-axis limits with padding
+            const logMinPrice = Math.log10(minPrice);
+            const logMaxPrice = Math.log10(maxPrice);
+            const logPriceRange = logMaxPrice - logMinPrice;
+
+            let extendedMinPrice, extendedMaxPrice;
+            
+            if (logPriceRange > 0) {
+                 extendedMinPrice = Math.pow(10, logMinPrice - logPriceRange * 0.1); // 10% padding below
+                 extendedMaxPrice = Math.pow(10, logMaxPrice + logPriceRange * 0.4); // 40% padding above
+            } else {
+                // Fallback for single point or flat line
+                 extendedMinPrice = minPrice * 0.9;
+                 extendedMaxPrice = maxPrice * 1.1;
+            }
+
+            // 4. Apply new Y-axis limits
+            chart.options.scales.y.min = extendedMinPrice;
+            chart.options.scales.y.max = extendedMaxPrice;
+        }
+
+        /**
          * NEW: Handles zooming the X-axis with the mouse wheel.
          */
         function handleWheelZoom(event) {
@@ -1110,10 +1168,83 @@
             // APPLY THE ZOOM
             if (newMin !== currentMin) {
                 chart.options.scales.x.min = newMin;
+                
+                // NEW: Refit Y-axis
+                refitYAxis();
+
                 chart.update('none'); // Update without animation
             }
         }
  
+        /**
+         * NEW: Handles starting the pan action.
+         */
+        function handlePanStart(event) {
+            if (!chart) return;
+            isPanning = true;
+            panStartX = event.clientX;
+            panStartMin = chart.options.scales.x.min;
+            panStartLogRange = Math.log10(chart.options.scales.x.max) - Math.log10(panStartMin);
+            event.target.style.cursor = 'grabbing';
+        }
+
+        /**
+         * NEW: Handles moving the chart during a pan.
+         */
+        function handlePanMove(event) {
+            if (!chart || !isPanning) return;
+
+            const chartArea = chart.chartArea;
+            if (!chartArea) return;
+
+            // 1. Calculate how many pixels per "log unit"
+            const currentMinLog = Math.log10(chart.options.scales.x.min);
+            const currentMaxLog = Math.log10(chart.options.scales.x.max);
+            const logRange = currentMaxLog - currentMinLog;
+            const pixelRange = chartArea.right - chartArea.left;
+            if (pixelRange <= 0) return;
+            const logPerPixel = logRange / pixelRange;
+
+            // 2. Calculate the change in log value
+            const deltaX = event.clientX - panStartX;
+            const logDelta = deltaX * logPerPixel;
+
+            // 3. Calculate new min
+            let newLogMin = Math.log10(panStartMin) - logDelta;
+            
+            // 4. Calculate new max based on the original range
+            let newLogMax = newLogMin + panStartLogRange;
+            
+            // 5. Boundary checks
+            if (Math.pow(10, newLogMin) < originalExtendedMinDay) {
+                newLogMin = Math.log10(originalExtendedMinDay);
+                newLogMax = newLogMin + panStartLogRange;
+            }
+            if (Math.pow(10, newLogMax) > originalExtendedMaxDay) {
+                newLogMax = Math.log10(originalExtendedMaxDay);
+                newLogMin = newLogMax - panStartLogRange;
+            }
+            
+            // 6. Apply new X-axis
+            chart.options.scales.x.min = Math.pow(10, newLogMin);
+            chart.options.scales.x.max = Math.pow(10, newLogMax);
+
+            // 7. Refit Y-axis
+            refitYAxis();
+
+            // 8. Update chart
+            chart.update('none');
+        }
+
+        /**
+         * NEW: Handles ending the pan action.
+         */
+        function handlePanEnd(event) {
+            if (!chart) return;
+            isPanning = false;
+            event.target.style.cursor = 'grab';
+        }
+
         // --- Event Listeners ---
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
@@ -1134,6 +1265,13 @@
             const canvas = document.getElementById('powerLawChart');
             if (canvas) {
                 canvas.addEventListener('wheel', handleWheelZoom, { passive: false });
+                
+                // NEW: Add pan listeners
+                canvas.addEventListener('mousedown', handlePanStart);
+                canvas.addEventListener('mousemove', handlePanMove);
+                canvas.addEventListener('mouseup', handlePanEnd);
+                canvas.addEventListener('mouseleave', handlePanEnd);
+                canvas.style.cursor = 'grab'; // NEW: Set initial cursor
             }
 
             setTimeout(handleFullscreenChange, 150); // Initial check for mobile state
