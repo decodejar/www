@@ -257,8 +257,8 @@
         const modelSelect = document.getElementById('modelSelect'); // NEW
 
         // --- Chart Configuration ---
-        const HARDCODED_OFFSET = 365; // Renamed from DAY_OFFSET
-        const MIN_DATA_POINTS_FOR_TRUNCATION = 30; // Min data points for MLE (Truncation) model
+        const HARDCODED_OFFSET = 75; // Renamed from DAY_OFFSET
+        const MIN_DATA_POINTS_FOR_TRUNCATION = 365; // Min data points for Truncation model
         let chart; // Global chart instance
         let activeModelParams = {}; // NEW: Stores params of the active model
 
@@ -448,7 +448,7 @@
                     slope = regression.slope;
                     meanIntercept = regression.intercept;
                     rSquared = optimalOffsetRSquared; // We already have this
-                    modelParamDiv.innerHTML = `<strong>Offset:</strong> ${optimalOffset} (Optimal)`;
+                    modelParamDiv.innerHTML = `<strong>Offset:</strong> ${optimalOffset}`;
                     break;
                 }
                 
