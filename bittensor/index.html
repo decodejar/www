@@ -215,8 +215,8 @@
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>                   
-                <!-- NEW: Replaced dropdown with checkbox -->
                 <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
+                <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
                     <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
@@ -1149,7 +1149,7 @@
             panStartX = event.clientX;
             panStartMin = chart.options.scales.x.min;
             panStartLogRange = Math.log10(chart.options.scales.x.max) - Math.log10(panStartMin);
-            event.target.style.cursor = 'grabbing';
+            event.target.style.cursor = 'move'; // CHANGED from 'grabbing'
         }
 
         /**
@@ -1206,7 +1206,7 @@
         function handlePanEnd(event) {
             if (!chart) return;
             isPanning = false;
-            event.target.style.cursor = 'grab';
+            event.target.style.cursor = 'move'; // CHANGED from 'grab'
         }
 
         // --- Event Listeners ---
@@ -1235,7 +1235,12 @@
                 canvas.addEventListener('mousemove', handlePanMove);
                 canvas.addEventListener('mouseup', handlePanEnd);
                 canvas.addEventListener('mouseleave', handlePanEnd);
-                canvas.style.cursor = 'grab'; // NEW: Set initial cursor
+                canvas.style.cursor = 'move'; // NEW: Set initial cursor to 'move'
+                
+                // NEW: Add mouseenter to reset cursor just in case
+                canvas.addEventListener('mouseenter', (e) => {
+                    e.target.style.cursor = isPanning ? 'move' : 'move';
+                });
             }
 
             setTimeout(handleFullscreenChange, 150); // Initial check for mobile state
