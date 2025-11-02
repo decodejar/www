@@ -257,6 +257,12 @@
         // --- Chart Configuration ---
         const HARDCODED_OFFSET = 74; // Renamed from DAY_OFFSET
         const MAX_OFFSET_SEARCH_LIMIT = 730; // NEW: Max offset value to test
+        // --- NEW: Configurable Padding Constants ---
+        const X_AXIS_PROJECTION_PADDING = 0.33; // 33% log-time projection
+        const Y_AXIS_BOTTOM_PADDING = 0.1; // 10% log-space padding
+        const Y_AXIS_TOP_PADDING_MIN = 0.1; // Min 10% log-space padding (zoomed in)
+        const Y_AXIS_TOP_PADDING_MAX = 0.33; // Max 33% log-space padding (zoomed out)
+        // --- END NEW ---
         let chart; // Global chart instance
         let baseData = []; // NEW: Made global for tooltip scope
         let priceData = []; // NEW: Made global for zoom and tooltips
@@ -478,7 +484,7 @@
             let extendedMaxDay;
 
             if (logDayRange > 0) {
-                const extendedLogMaxDay = logMaxDay + (logDayRange * 0.40); // 40% log-time projection
+                const extendedLogMaxDay = logMaxDay + (logDayRange * X_AXIS_PROJECTION_PADDING); // USE CONSTANT
                 extendedMaxDay = Math.pow(10, extendedLogMaxDay);
             } else {
                 // Fallback for single data point
@@ -494,8 +500,8 @@
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
             const logPriceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9;
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4;
+            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * Y_AXIS_BOTTOM_PADDING) : minPrice * 0.9; // USE CONSTANT
+            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * Y_AXIS_TOP_PADDING_MAX) : maxPrice * 1.4; // USE MAX CONSTANT
 
             // --- 3. MODEL CALCULATIONS (using *active* priceData) ---
             // NEW: Get last point from *regression* data for price zone
@@ -575,15 +581,27 @@
 
                  const { activeDayOffset } = activeModelParams;
 
-                 // Estimate the year at the end of the axis
-                 const maxDayIndex = axisMaxDay - activeDayOffset;
-                 // Find the data point closest to this
-                 let lastDayDataPoint = baseData.reduce((prev, curr) => {
-                     return (Math.abs(curr.dayIndex - maxDayIndex) < Math.abs(prev.dayIndex - maxDayIndex) ? curr : prev);
-                 });
-                 // This gives a rough idea, but it's better to just project years
-                 const maxYear = new Date(lastDayDataPoint.time).getFullYear() + 5; // Project 5 years out
+                 // --- NEW LOGIC to find maxYear ---
+                 const firstDayIndex = baseData[0].dayIndex;
+                 const firstDayTime = baseData[0].time;
+                 const lastDayIndex = baseData[baseData.length - 1].dayIndex;
+                 const lastDayTime = baseData[baseData.length - 1].time;
+                 
+                 let maxYear;
 
+                 if (lastDayIndex > firstDayIndex) {
+                     // Estimate ms per dayIndex
+                     const msPerDay = (lastDayTime - firstDayTime) / (lastDayIndex - firstDayIndex);
+                     // Find the projected dayIndex at the end of the axis
+                     const maxDayIndexOnAxis = axisMaxDay - activeDayOffset;
+                     // Estimate the time of that projected dayIndex
+                     const projectedTime = firstDayTime + (maxDayIndexOnAxis - firstDayIndex) * msPerDay;
+                     maxYear = new Date(projectedTime).getFullYear();
+                 } else {
+                     // Fallback if data is weird (e.g., only one day)
+                     maxYear = new Date(lastDayTime).getFullYear() + 5;
+                 }
+                 // --- END NEW LOGIC ---
                  
                  let lastYearFound = -1; 
                  // Iterate through all years from the start of the *base* data
@@ -1027,10 +1045,10 @@
             }
             
             // Interpolate top padding between 10% (zoomed in) and 40% (zoomed out)
-            const minTopPadding = 0.1;
-            const maxTopPadding = 0.4;
+            const minTopPadding = Y_AXIS_TOP_PADDING_MIN; // USE CONSTANT
+            const maxTopPadding = Y_AXIS_TOP_PADDING_MAX; // USE CONSTANT
             const dynamicTopPadding = minTopPadding + (maxTopPadding - minTopPadding) * zoomRatio;
-            const bottomPadding = 0.1; // Keep bottom padding constant
+            const bottomPadding = Y_AXIS_BOTTOM_PADDING; // USE CONSTANT
             // --- END NEW LOGIC ---
             
             if (logPriceRange > 0) {
