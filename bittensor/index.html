@@ -179,8 +179,19 @@
         </button>
         
         <!-- Page Header -->
-        <header class="text-center mb-3">
-            <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">TAO Tensor Law Model</h1>
+        <header class="relative text-center mb-3 h-10 flex items-center justify-center">
+            <!-- NEW: Left Element: Logo and Link (hidden on mobile) -->
+            <div class="absolute left-0 top-0 hidden sm:flex items-center space-x-2">
+                <img src="decode.png" alt="Decodejar Logo" class="w-10 h-10 rounded-full border border-gray-200" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
+                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-indigo-500 transition-colors">
+                    x.com/decodejar
+                </a>
+            </div>
+
+            <!-- Center Element: Title -->
+            <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">
+                TAO Tensor Law Model
+            </h1>
         </header>
 
         <!-- Top Status Bar: Data status, price, bands toggle -->
