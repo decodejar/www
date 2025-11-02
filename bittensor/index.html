@@ -1103,27 +1103,18 @@
                 }
             }
  
-            if (newMin !== currentMin) {
-                chart.options.scales.x.min = newMin;
-                chart.update('none'); // Update without animation
-            }
-        }
- 
-        // --- Event Listeners ---
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
-        window.addEventListener('resize', handleFullscreenChange);
-         if (screen.orientation) {
-             screen.orientation.addEventListener('change', handleFullscreenChange);
-         } else {
-             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
-         }
-
         // Initial load
         window.onload = () => {
             createOrUpdateChart();
             // Add listener for model selection
             modelSelect.addEventListener('change', createOrUpdateChart);
+            
+            // NEW: Add wheel zoom listener to the canvas
+            const canvas = document.getElementById('powerLawChart');
+            if (canvas) {
+                canvas.addEventListener('wheel', handleWheelZoom, { passive: false });
+            }
+
             setTimeout(handleFullscreenChange, 150); // Initial check for mobile state
         }
     </script>
