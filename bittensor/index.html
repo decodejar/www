@@ -1079,6 +1079,7 @@
             let cursorX = event.clientX - rect.left;
             
             // NEW: Clamp cursorX to the chartArea boundaries
+            // FIX: Use chartArea.left and chartArea.right
             if (cursorX < chartArea.left) {
                 cursorX = chartArea.left;
             }
@@ -1091,6 +1092,7 @@
             const currentLogRange = currentMaxLog - currentMinLog;
             
             // Calculate what percentage the cursor is across the chart
+            // FIX: Check for division by zero
             const cursorPct = (chartArea.right - chartArea.left > 0) ? (cursorX - chartArea.left) / (chartArea.right - chartArea.left) : 0;
             
             // Find the log value at the cursor
@@ -1106,7 +1108,8 @@
             const maxLogRange = Math.log10(originalExtendedMaxDay) - Math.log10(originalExtendedMinDay);
             
             if (newLogRange < minLogRange) newLogRange = minLogRange;
-            if (newLogRange > maxLogRange) newLogRange = maxLogRange;
+            // FIX: Check if maxLogRange is valid before comparing
+            if (maxLogRange > minLogRange && newLogRange > maxLogRange) newLogRange = maxLogRange;
 
             // 4. Calculate new min/max based on cursor position
             let newLogMin = logAtCursor - (newLogRange * cursorPct);
@@ -1149,7 +1152,7 @@
             panStartX = event.clientX;
             panStartMin = chart.options.scales.x.min;
             panStartLogRange = Math.log10(chart.options.scales.x.max) - Math.log10(panStartMin);
-            event.target.style.cursor = 'move'; // CHANGED from 'grabbing'
+            event.target.style.cursor = 'crosshair'; // CHANGED from 'move'
         }
 
         /**
@@ -1206,7 +1209,7 @@
         function handlePanEnd(event) {
             if (!chart) return;
             isPanning = false;
-            event.target.style.cursor = 'move'; // CHANGED from 'grab'
+            event.target.style.cursor = 'crosshair'; // CHANGED from 'move'
         }
 
         // --- Event Listeners ---
@@ -1235,11 +1238,11 @@
                 canvas.addEventListener('mousemove', handlePanMove);
                 canvas.addEventListener('mouseup', handlePanEnd);
                 canvas.addEventListener('mouseleave', handlePanEnd);
-                canvas.style.cursor = 'move'; // NEW: Set initial cursor to 'move'
+                canvas.style.cursor = 'crosshair'; // NEW: Set initial cursor to 'crosshair'
                 
                 // NEW: Add mouseenter to reset cursor just in case
                 canvas.addEventListener('mouseenter', (e) => {
-                    e.target.style.cursor = isPanning ? 'move' : 'move';
+                    e.target.style.cursor = isPanning ? 'crosshair' : 'crosshair';
                 });
             }
 
@@ -1249,4 +1252,3 @@
  
 </body>
 </html>
-
