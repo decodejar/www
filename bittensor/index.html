@@ -623,10 +623,11 @@
                  const lastDayTime = baseData[baseData.length - 1].time;
                  
                  let maxYear;
+                 let msPerDay = (1000 * 60 * 60 * 24); // fallback
 
                  if (lastDayIndex > firstDayIndex) {
                      // Estimate ms per dayIndex
-                     const msPerDay = (lastDayTime - firstDayTime) / (lastDayIndex - firstDayIndex);
+                     msPerDay = (lastDayTime - firstDayTime) / (lastDayIndex - firstDayIndex);
                      // Find the projected dayIndex at the end of the axis
                      const maxDayIndexOnAxis = axisMaxDay - activeDayOffset;
                      // Estimate the time of that projected dayIndex
@@ -639,20 +640,42 @@
                  // --- END NEW LOGIC ---
                  
                  let lastYearFound = -1; 
-                 // Iterate through all years from the start of the *base* data
-                 for (let year = new Date(baseData[0].time).getFullYear(); year <= maxYear; year++) {
-                    // Find the first data point in baseData for this year
+                 const firstDataYear = new Date(baseData[0].time).getFullYear();
+                 const lastDataYear = new Date(lastDayTime).getFullYear();
+
+                 // Loop 1: Find ticks for years *within* the data
+                 for (let year = firstDataYear; year <= lastDataYear; year++) {
                     const yearStartTime = new Date(year, 0, 1).getTime();
+                    // Find the first data point on or after Jan 1st of that year
                     const dayData = baseData.find(p => p.time >= yearStartTime);
                     
-                    if (!dayData) continue; // Year is too far in future
+                    if (!dayData) continue;
+                    
+                    // Get the year from the found data point's time to handle edge cases
+                    const actualYear = new Date(dayData.time).getFullYear();
+                    if (actualYear > year && year > firstDataYear) continue; // Already found a tick for the previous year
 
-                    // Convert this dayIndex to the model's x-value
-                    const xValue = dayData.dayIndex + activeDayOffset;
+                    if (year > lastYearFound) {
+                        const xValue = dayData.dayIndex + activeDayOffset;
+                        if (xValue >= axisMinDay && xValue <= axisMaxDay) {
+                             newTicks.push({ value: xValue, label: year.toString() });
+                             lastYearFound = year;
+                        }
+                    }
+                 }
 
-                    if (xValue >= axisMinDay && xValue <= axisMaxDay && year !== lastYearFound) {
+                 // Loop 2: Estimate ticks for *future* years
+                 for (let year = lastDataYear + 1; year <= maxYear; year++) {
+                    const yearStartTime = new Date(year, 0, 1).getTime();
+                    
+                    // Estimate the dayIndex for this future Jan 1st
+                    const diffTime = yearStartTime - firstDayTime;
+                    const estimatedDayIndex = firstDayIndex + (diffTime / msPerDay);
+                    
+                    const xValue = estimatedDayIndex + activeDayOffset;
+
+                    if (xValue >= axisMinDay && xValue <= axisMaxDay) {
                          newTicks.push({ value: xValue, label: year.toString() });
-                         lastYearFound = year;
                     }
                  }
                  
