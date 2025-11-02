@@ -215,13 +215,14 @@
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>                   
-                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
-                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal Offset&nbsp;</label>
                     <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
+                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
+
                 <div id="modelFitDiv"></div>
             </div>
         </div>
@@ -1017,9 +1018,27 @@
 
             let extendedMinPrice, extendedMaxPrice;
             
+            // --- NEW DYNAMIC PADDING LOGIC ---
+            // Calculate current X-axis zoom ratio
+            const currentLogRangeX = Math.log10(currentXMax) - Math.log10(currentXMin);
+            const originalLogRangeX = Math.log10(originalExtendedMaxDay) - Math.log10(originalExtendedMinDay);
+            let zoomRatio = 1.0; // Default to fully zoomed out
+            if (originalLogRangeX > 0) {
+                 zoomRatio = currentLogRangeX / originalLogRangeX;
+                 if (zoomRatio > 1.0) zoomRatio = 1.0;
+                 if (zoomRatio < 0.0) zoomRatio = 0.0;
+            }
+            
+            // Interpolate top padding between 10% (zoomed in) and 40% (zoomed out)
+            const minTopPadding = 0.1;
+            const maxTopPadding = 0.4;
+            const dynamicTopPadding = minTopPadding + (maxTopPadding - minTopPadding) * zoomRatio;
+            const bottomPadding = 0.1; // Keep bottom padding constant
+            // --- END NEW LOGIC ---
+            
             if (logPriceRange > 0) {
-                 extendedMinPrice = Math.pow(10, logMinPrice - logPriceRange * 0.1); // 10% padding below
-                 extendedMaxPrice = Math.pow(10, logMaxPrice + logPriceRange * 0.4); // 40% padding above
+                 extendedMinPrice = Math.pow(10, logMinPrice - logPriceRange * bottomPadding); // 10% padding below
+                 extendedMaxPrice = Math.pow(10, logMaxPrice + logPriceRange * dynamicTopPadding); // DYNAMIC padding above
             } else {
                 // Fallback for single point or flat line
                  extendedMinPrice = minPrice * 0.9;
@@ -1211,4 +1230,3 @@
  
 </body>
 </html>
-
