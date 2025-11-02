@@ -467,19 +467,24 @@
             // X-Axis Range (with projection)
             const n = priceData.length; // Use full data length
             const firstDayNum = priceData[0].x;
-            const firstDayTime = priceData[0].time;
             const lastDayNum = priceData[n - 1].x; // Use last point of full data
-            const lastDayTime = priceData[n - 1].time;
 
-            const timeDuration = lastDayTime - firstDayTime;
-            const extendedMaxTime = lastDayTime + (timeDuration * 1); // 100% projection
-            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - firstDayTime) / timeDuration : 1;
-            
-            const dayNumDuration = lastDayNum - firstDayNum;
-            const projectedDayCount = (dayNumDuration > 0) ? (dayNumDuration * futureTimeIndexRatio) : n;
- 
+            // --- NEW LOGIC: Project X-axis by 40% of log range ---
+            const logMinDay = Math.log10(firstDayNum);
+            const logMaxDay = Math.log10(lastDayNum);
+            const logDayRange = logMaxDay - logMinDay;
+
             const extendedMinDay = firstDayNum;
-            const extendedMaxDay = firstDayNum + projectedDayCount;
+            let extendedMaxDay;
+
+            if (logDayRange > 0) {
+                const extendedLogMaxDay = logMaxDay + (logDayRange * 0.40); // 40% log-time projection
+                extendedMaxDay = Math.pow(10, extendedLogMaxDay);
+            } else {
+                // Fallback for single data point
+                extendedMaxDay = lastDayNum * 1.4; 
+            }
+            // --- END NEW LOGIC ---
  
             // NEW: Store the full range for this model for zoom reset
             originalExtendedMinDay = extendedMinDay;
@@ -562,50 +567,42 @@
 
             // --- X-Axis Tick Generation ---
              const xAxisAfterBuildTicks = (axis) => {
-                 if (!priceData || priceData.length === 0) return;
+                 if (!priceData || priceData.length === 0 || !baseData || baseData.length === 0) return;
                  
                  const newTicks = [];
                  const axisMinDay = axis.min;
                  const axisMaxDay = axis.max;
-                 const firstDay = priceData[0];
-                 const lastDay = priceData[priceData.length - 1];
-                 if (!firstDay || !lastDay) return;
 
-                 // Map day numbers to timestamps
-                 const dayRange = lastDay.x - firstDay.x;
-                 const timeRange = lastDay.time - firstDay.time;
-                 const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0;
-                 const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
-                 const minYear = new Date(firstDay.time).getFullYear();
-                 const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
+                 const { activeDayOffset } = activeModelParams;
 
-                 // Find first data point for each year *within the active priceData*
-                 let lastYearFound = minYear - 1;
-                 for (const p of priceData) {
-                     const year = new Date(p.time).getFullYear();
-                     if (year > lastYearFound) {
-                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                             newTicks.push({ value: p.x, label: year.toString() });
-                         }
+                 // Estimate the year at the end of the axis
+                 const maxDayIndex = axisMaxDay - activeDayOffset;
+                 // Find the data point closest to this
+                 let lastDayDataPoint = baseData.reduce((prev, curr) => {
+                     return (Math.abs(curr.dayIndex - maxDayIndex) < Math.abs(prev.dayIndex - maxDayIndex) ? curr : prev);
+                 });
+                 // This gives a rough idea, but it's better to just project years
+                 const maxYear = new Date(lastDayDataPoint.time).getFullYear() + 5; // Project 5 years out
+
+                 
+                 let lastYearFound = -1; 
+                 // Iterate through all years from the start of the *base* data
+                 for (let year = new Date(baseData[0].time).getFullYear(); year <= maxYear; year++) {
+                    // Find the first data point in baseData for this year
+                    const yearStartTime = new Date(year, 0, 1).getTime();
+                    const dayData = baseData.find(p => p.time >= yearStartTime);
+                    
+                    if (!dayData) continue; // Year is too far in future
+
+                    // Convert this dayIndex to the model's x-value
+                    const xValue = dayData.dayIndex + activeDayOffset;
+
+                    if (xValue >= axisMinDay && xValue <= axisMaxDay && year !== lastYearFound) {
+                         newTicks.push({ value: xValue, label: year.toString() });
                          lastYearFound = year;
-                     }
+                    }
                  }
                  
-                 // Estimate ticks for future projected years
-                 const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                 if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                         const yearStartTime = new Date(year, 0, 1).getTime();
-                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                         
-                         // Estimate day number based on the dayRange of the *active* data
-                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                         
-                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                         }
-                     }
-                 }
                  axis.ticks.length = 0; // Clear existing ticks
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
                  axis.ticks.push(...validTicks);
