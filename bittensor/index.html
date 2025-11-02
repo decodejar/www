@@ -258,8 +258,8 @@
 
         // --- Chart Configuration ---
         const HARDCODED_OFFSET = 75; // Renamed from DAY_OFFSET
-        const MIN_DATA_POINTS_FOR_TRUNCATION = 30; // Min data points for Truncation model
-        const MAX_TRUNCATION_SEARCH_DAYS = 180; // NEW: Max days from start to test truncation
+        const MIN_DATA_POINTS_FOR_TRUNCATION = 730; // Min data points for Truncation model
+        const MAX_TRUNCATION_SEARCH_DAYS = 730; // NEW: Max days from start to test truncation
         const MAX_OFFSET_SEARCH_LIMIT = 730; // NEW: Max offset value to test
         let chart; // Global chart instance
         let baseData = []; // NEW: Made global for tooltip scope
@@ -286,7 +286,9 @@
                 if (!response.ok) throw new Error(`Failed to load data file: ${response.statusText}`);
                 const data = await response.json();
                  if (!Array.isArray(data)) throw new Error("Invalid data format in JSON file");
-                return data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
+                // Store in global baseData
+                baseData = data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
+                return baseData;
             } catch (error) {
                 console.error("Error loading price data:", error);
                 statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
@@ -416,7 +418,10 @@
          */
         async function createOrUpdateChart() {
             loader.style.display = 'flex';
-            const baseData = await loadPriceData();
+            // Use global baseData
+            if (baseData.length === 0) {
+                await loadPriceData();
+            }
 
             if (!baseData || baseData.length === 0) {
                  if (!statusDiv.innerHTML.includes('Error')) {
@@ -484,8 +489,8 @@
                     activeModelParams.startDayIndex = baseData[bestStartIndex].dayIndex; // NEW: Store the actual start day
                     // priceData is for the *regression*
                     priceData = baseData.slice(bestStartIndex).map(p => ({ ...p, x: p.dayIndex }));
-                    // chartPriceData is for *plotting* - use ALL data
-                    chartPriceData = baseData.map(p => ({ ...p, x: p.dayIndex }));
+                    // chartPriceData is for *plotting*
+                    chartPriceData = priceData; // <-- MODIFIED: Use truncated data for plotting
                     slope = truncSlope;
                     meanIntercept = truncIntercept;
                     rSquared = truncRSquared;
