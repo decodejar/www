@@ -215,14 +215,13 @@
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>                   
+                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
-                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal Offset&nbsp;</label>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
                     <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
-                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
-
                 <div id="modelFitDiv"></div>
             </div>
         </div>
@@ -1002,22 +1001,8 @@
             const visibleData = priceData.filter(p => p.x >= currentXMin && p.x <= currentXMax);
 
             if (visibleData.length < 2) {
-                 // Not enough data to refit, use full data as fallback
-                const allPrices = priceData.map(p => p.y);
-                const minPrice = Math.min(...allPrices);
-                const maxPrice = Math.max(...allPrices);
-                const logMinPrice = Math.log10(minPrice);
-                const logMaxPrice = Math.log10(maxPrice);
-                const logPriceRange = logMaxPrice - logMinPrice;
-                
-                if (logPriceRange > 0) {
-                    chart.options.scales.y.min = Math.pow(10, logMinPrice - logPriceRange * 0.1);
-                    chart.options.scales.y.max = Math.pow(10, logMaxPrice + logPriceRange * 0.4);
-                } else {
-                    chart.options.scales.y.min = minPrice * 0.9;
-                    chart.options.scales.y.max = maxPrice * 1.1;
-                }
-                return; // Exit
+                 // Not enough data to refit, just leave the Y-axis as is.
+                 return; 
             }
 
             // 2. Find min/max price in visible range
@@ -1058,11 +1043,14 @@
 
             // 1. Get cursor position and its log-scale value
             const rect = event.target.getBoundingClientRect();
-            const cursorX = event.clientX - rect.left;
+            let cursorX = event.clientX - rect.left;
             
-            // Ensure cursor is inside the chart area
-            if (cursorX < chartArea.left || cursorX > chartArea.right) {
-                return;
+            // NEW: Clamp cursorX to the chartArea boundaries
+            if (cursorX < chartArea.left) {
+                cursorX = chartArea.left;
+            }
+            if (cursorX > chartArea.right) {
+                cursorX = chartArea.right;
             }
 
             const currentMinLog = Math.log10(chart.options.scales.x.min);
@@ -1070,7 +1058,7 @@
             const currentLogRange = currentMaxLog - currentMinLog;
             
             // Calculate what percentage the cursor is across the chart
-            const cursorPct = (cursorX - chartArea.left) / (chartArea.right - chartArea.left);
+            const cursorPct = (chartArea.right - chartArea.left > 0) ? (cursorX - chartArea.left) / (chartArea.right - chartArea.left) : 0;
             
             // Find the log value at the cursor
             const logAtCursor = currentMinLog + (currentLogRange * cursorPct);
@@ -1223,3 +1211,4 @@
  
 </body>
 </html>
+
