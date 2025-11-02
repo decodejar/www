@@ -216,13 +216,12 @@
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>                   
                 <!-- NEW: Replaced dropdown with checkbox -->
+                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
-                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal Offset&nbsp;</label>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
                     <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
-                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
-
                 <div id="modelFitDiv"></div>
             </div>
         </div>
@@ -1245,3 +1244,4 @@
  
 </body>
 </html>
+
