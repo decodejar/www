@@ -149,12 +149,12 @@
                 <div class="flex items-center">
                     <label for="modelSelect" class="mr-1.5"><strong>Model:</strong></label>
                     <select id="modelSelect" class="text-sm rounded border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="optimalOffset" selected>Optimal Offset (Power Law)</option>
-                        <option value="hardcoded">Default Offset (Power Law)</option>
-                        <option value="truncation">Optimal Truncation (Power Law)</option>
-                        <option value="optimalExponentialOffset">Optimal Offset (Exponential)</option>
-                        <option value="hardcodedExponential">Default Offset (Exponential)</option>
-                        <option value="truncationExponential">Optimal Truncation (Exponential)</option>
+                        <option value="hardcoded" selected>Default Offset (P/L)</option>
+                        <option value="optimalOffset">Optimal Offset (P/L)</option>
+                        <option value="truncation">Optimal Truncation (P/L)</option>
+                        <option value="hardcodedExponential">Default Offset (Exp)</option>
+                        <option value="optimalExponentialOffset">Optimal Offset (Exp)</option>
+                        <option value="truncationExponential">Optimal Truncation (Exp)</option>
                     </select>
                 </div>
                 <div id="growthExponentDiv"></div>
@@ -191,7 +191,7 @@
         const modelSelect = document.getElementById('modelSelect');
 
         // --- Chart Configuration ---
-        const HARDCODED_OFFSET = 365; 
+        const HARDCODED_OFFSET = 75; 
         const MIN_DATA_POINTS_FOR_MODEL = 30; // Min data points for truncation/exponential models
         let chart; // Global chart instance
         let activeModelParams = {}; // Stores params of the active model
