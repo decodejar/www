@@ -781,7 +781,19 @@
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
-                            { ...datasetDefaults, type: 'line', label: 'TAO Price', data: chartPriceDataPoints, backgroundColor: 'rgba(0, 0, 0, 0.05)', borderColor: 'rgba(0, 0, 0, 1)', borderWidth: 2, pointHoverRadius: 5, tension: 0.1 },
+                            { 
+                                ...datasetDefaults, 
+                                type: 'line', 
+                                label: 'TAO Price', 
+                                data: chartPriceDataPoints, 
+                                backgroundColor: 'rgba(0, 0, 0, 0.05)', 
+                                borderColor: 'rgba(0, 0, 0, 1)', 
+                                borderWidth: 2, 
+                                tension: 0.1,
+                                pointRadius: 0, // Explicitly invisible
+                                pointHoverRadius: 10, // Larger hover radius
+                                pointHitRadius: 15 // Large invisible hit box
+                            },
                             { ...datasetDefaults, label: '50th Percentile', data: medianLineData, ...orangeLineStyle, hidden: false },
                             { ...datasetDefaults, ...grayLineStyle, label: '1st Pctl', data: p1LineData },
                             { ...datasetDefaults, ...grayLineStyle, label: '99th Pctl', data: p99LineData },
