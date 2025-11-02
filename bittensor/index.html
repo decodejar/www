@@ -1103,6 +1103,23 @@
                 }
             }
  
+            // APPLY THE ZOOM
+            if (newMin !== currentMin) {
+                chart.options.scales.x.min = newMin;
+                chart.update('none'); // Update without animation
+            }
+        }
+ 
+        // --- Event Listeners ---
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+        window.addEventListener('resize', handleFullscreenChange);
+         if (screen.orientation) {
+             screen.orientation.addEventListener('change', handleFullscreenChange);
+         } else {
+             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+         }
+
         // Initial load
         window.onload = () => {
             createOrUpdateChart();
