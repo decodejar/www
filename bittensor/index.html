@@ -289,6 +289,44 @@
         const grayFineLineStyle = { borderColor: 'rgba(156, 163, 175, 0.7)', borderWidth: 0.5, borderDash: [] };
 
         /**
+         * NEW: Chart.js plugin to add a watermark to the background.
+         */
+        const watermarkPlugin = {
+            id: 'watermark',
+            afterDraw: (chart, args, options) => {
+                const { ctx, chartArea: { top, right, bottom, left, width, height } } = chart;
+                
+                if (width <= 0 || height <= 0) return; // Don't draw if chart is not visible
+
+                ctx.save();
+                
+                // --- Watermark Text ---
+                const text = 'x.com/decodejar';
+                // Dynamically set font size based on chart width.
+                const baseFontSize = Math.max(20, Math.min(60, width / 20)); 
+                ctx.font = `bold ${baseFontSize.toFixed(0)}px Inter, sans-serif`;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // Very light, semi-transparent black
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // --- Rotation ---
+                const centerX = left + width / 2;
+                const centerY = top + height / 2;
+                const angle = -Math.PI / 6; // Rotate 30 degrees counter-clockwise
+                
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle);
+                
+                // --- Draw Text ---
+                ctx.fillText(text, 0, 0);
+                
+                ctx.restore();
+            }
+        };
+        // Register the plugin globally
+        Chart.register(watermarkPlugin);
+
+        /**
          * Fetches and parses price data from JSON file.
          */
         async function loadPriceData() {
@@ -1282,3 +1320,4 @@
  
 </body>
 </html>
+
