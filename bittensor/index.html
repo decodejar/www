@@ -218,9 +218,9 @@
                 <div class="flex items-center">
                     <label for="modelSelect" class="mr-1.5"><strong>Model:</strong></label>
                     <select id="modelSelect" class="text-sm rounded border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="hardcoded">Default Offset</option>
                         <option value="optimalOffset" selected>Optimal Offset</option>
-                        <option value="hardcoded">Hardcoded (365)</option>
-                        <option value="mleTruncation">MLE (Truncation)</option>
+                        <option value="mleTruncation">Optimal Truncation</option>
                     </select>
                 </div>
                 <div id="growthExponentDiv"></div>
@@ -461,9 +461,9 @@
                     rSquared = calculateRSquared(priceData, slope, meanIntercept);
                     // Show comparison to optimal
                     if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET} (Hardcoded) | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
+                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
                     } else {
-                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET} (Hardcoded)`;
+                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET}`;
                     }
                     break;
                 }
