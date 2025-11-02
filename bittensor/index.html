@@ -152,7 +152,9 @@
                         <option value="optimalOffset" selected>Optimal Offset (Power Law)</option>
                         <option value="hardcoded">Default Offset (Power Law)</option>
                         <option value="truncation">Optimal Truncation (Power Law)</option>
-                        <option value="exponential">Optimal Exponential</option>
+                        <option value="optimalExponentialOffset">Optimal Offset (Exponential)</option>
+                        <option value="hardcodedExponential">Default Offset (Exponential)</option>
+                        <option value="truncationExponential">Optimal Truncation (Exponential)</option>
                     </select>
                 </div>
                 <div id="growthExponentDiv"></div>
@@ -248,7 +250,7 @@
         }
         
         /**
-         * NEW: Performs linear regression on log(y) vs x. (Exponential)
+         * Performs linear regression on log(y) vs x. (Exponential)
          */
         function exponentialRegression(data) {
             let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
@@ -278,7 +280,8 @@
             const validData = data.filter(p => p.y > 0);
             if (validData.length === 0) return [];
             
-            const getPredictedLogY = (modelType === 'exponential')
+            const isExponential = modelType.includes('Exponential');
+            const getPredictedLogY = isExponential
                 ? (p) => slope * p.x + intercept // x is linear
                 : (p) => (p.x > 0) ? slope * Math.log10(p.x) + intercept : -Infinity; // x is log
 
@@ -318,7 +321,8 @@
             validData.forEach(p => y_mean += Math.log10(p.y));
             y_mean /= validData.length;
 
-            const getPredictedLogY = (modelType === 'exponential')
+            const isExponential = modelType.includes('Exponential');
+            const getPredictedLogY = isExponential
                 ? (p) => slope * p.x + intercept
                 : (p) => (p.x > 0) ? slope * Math.log10(p.x) + intercept : -Infinity;
 
@@ -349,6 +353,30 @@
                 if (n < 2) continue;
                 
                 const rSquared = calculateRSquared(offsetData, slope, intercept, 'powerLaw');
+                if (rSquared > bestRSquared) {
+                    bestRSquared = rSquared;
+                    bestOffset = offset;
+                }
+            }
+            return { optimalOffset: bestOffset, bestFit: bestRSquared };
+        }
+
+        /**
+         * NEW: Finds the optimal day offset by testing a range of values. (Exponential)
+         */
+        function findOptimalExponentialOffset(baseData, minOffset = 1, maxOffset) {
+            let bestOffset = -1;
+            let bestRSquared = -Infinity;
+
+            if (baseData.length < 2) return { optimalOffset: -1, bestFit: 0 };
+            if (typeof maxOffset === 'undefined' || maxOffset < minOffset) maxOffset = baseData.length; 
+
+            for (let offset = minOffset; offset <= maxOffset; offset++) {
+                const offsetData = baseData.map(p => ({ x: p.dayIndex + offset, y: p.y }));
+                const { slope, intercept, n } = exponentialRegression(offsetData); // Changed
+                if (n < 2) continue;
+                
+                const rSquared = calculateRSquared(offsetData, slope, intercept, 'exponential'); // Changed
                 if (rSquared > bestRSquared) {
                     bestRSquared = rSquared;
                     bestOffset = offset;
@@ -390,7 +418,7 @@
         }
 
         /**
-         * NEW: Finds the optimal start day (truncation) for an Exponential model.
+         * Finds the optimal start day (truncation) for an Exponential model.
          */
         function findOptimalExponentialFit(baseData) {
             let bestStartIndex = -1;
@@ -405,7 +433,6 @@
 
             for (let startIndex = 0; startIndex <= maxStartIndex; startIndex++) {
                 const truncatedData = baseData.slice(startIndex);
-                // For exponential, x *is* the dayIndex (linear time)
                 const regressionData = truncatedData.map(p => ({ x: p.dayIndex, y: p.y }));
                 
                 const { slope, intercept, n } = exponentialRegression(regressionData);
@@ -448,14 +475,16 @@
             let priceData, slope, meanIntercept, rSquared;
             
             activeModelParams = {
-                modelType: selectedModel, // 'optimalOffset', 'hardcoded', 'truncation', 'exponential'
+                modelType: selectedModel, 
                 activeDayOffset: 0, 
                 truncationStartIndex: 0
             };
 
             const maxDaysInData = baseData.length > 0 ? baseData.length : 1;
-            // Always find optimal offset for comparison
+            // Always find optimal values for comparison
             const { optimalOffset, bestFit: optimalOffsetRSquared } = findOptimalOffset(baseData, 1, maxDaysInData);
+            const { optimalOffset: optimalExpOffset, bestFit: optimalExpOffsetRSquared } = findOptimalExponentialOffset(baseData, 1, maxDaysInData);
+
 
             switch (selectedModel) {
                 case 'optimalOffset': {
@@ -498,15 +527,43 @@
                     break;
                 }
 
-                case 'exponential': {
+                case 'optimalExponentialOffset': {
+                    activeModelParams.activeDayOffset = optimalExpOffset;
+                    priceData = baseData.map(p => ({ ...p, x: p.dayIndex + optimalExpOffset }));
+                    const regression = exponentialRegression(priceData);
+                    slope = regression.slope;
+                    meanIntercept = regression.intercept;
+                    rSquared = optimalExpOffsetRSquared;
+                    modelParamDiv.innerHTML = `<strong>Offset:</strong> ${optimalExpOffset} (Optimal Exp.)`;
+                    growthExponentDiv.innerHTML = `<strong>Growth (k):</strong> ${slope.toFixed(5)}`;
+                    break;
+                }
+
+                case 'hardcodedExponential': {
+                    activeModelParams.activeDayOffset = HARDCODED_OFFSET;
+                    priceData = baseData.map(p => ({ ...p, x: p.dayIndex + HARDCODED_OFFSET }));
+                    const regression = exponentialRegression(priceData);
+                    slope = regression.slope;
+                    meanIntercept = regression.intercept;
+                    rSquared = calculateRSquared(priceData, slope, meanIntercept, 'exponential');
+                    if (optimalExpOffset !== -1 && optimalExpOffset !== HARDCODED_OFFSET) {
+                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalExpOffset} (R² ${optimalExpOffsetRSquared.toFixed(4)})`;
+                    } else {
+                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET}`;
+                    }
+                    growthExponentDiv.innerHTML = `<strong>Growth (k):</strong> ${slope.toFixed(5)}`;
+                    break;
+                }
+                
+                case 'truncationExponential': { 
                     const { bestStartIndex, slope: expSlope, intercept: expIntercept, bestFit: expRSquared } = findOptimalExponentialFit(baseData);
                     activeModelParams.truncationStartIndex = bestStartIndex;
                     priceData = baseData.slice(bestStartIndex).map(p => ({ ...p, x: p.dayIndex }));
-                    slope = expSlope; // This is 'k'
-                    meanIntercept = expIntercept; // This is 'log10(C)'
+                    slope = expSlope; 
+                    meanIntercept = expIntercept; 
                     rSquared = expRSquared;
                     modelParamDiv.innerHTML = `<strong>Start Day:</strong> ${baseData[bestStartIndex].dayIndex} (Truncated)`;
-                    growthExponentDiv.innerHTML = `<strong>Growth (k):</strong> ${slope.toFixed(5)}`; // Different label
+                    growthExponentDiv.innerHTML = `<strong>Growth (k):</strong> ${slope.toFixed(5)}`; 
                     break;
                 }
             }
@@ -534,7 +591,6 @@
             const maxPrice = Math.max(...prices);
 
             // X-Axis Range (with projection)
-            // This logic needs to work for both offset and truncated models
             const n = priceData.length;
             const firstDayNum = priceData[0].x;
             const firstDayTime = priceData[0].time;
@@ -544,7 +600,10 @@
             const timeDuration = lastDayTime - firstDayTime;
             let extendedMinDay, extendedMaxDay;
 
-            if (selectedModel === 'exponential' || selectedModel === 'truncation') {
+            const isExponential = selectedModel.includes('Exponential');
+            const isTruncation = selectedModel.includes('truncation'); 
+
+            if (isExponential || isTruncation) { 
                 // For linear-time models, project based on days
                 const dayDuration = lastDayNum - firstDayNum;
                 const projectionDays = dayDuration * 1; // 100% projection
@@ -576,16 +635,16 @@
 
             // Determine current price zone
             let lastLogX;
-            if (selectedModel === 'exponential') {
+            if (isExponential) {
                 lastLogX = lastDataPoint.x; // linear
             } else {
                 lastLogX = Math.log10(lastDataPoint.x); // log
             }
             const lastLogY = Math.log10(lastDataPoint.y);
             
-            const predictedLastLogY = (selectedModel === 'exponential')
+            const predictedLastLogY = isExponential
                 ? slope * lastLogX + meanIntercept
-                : slope * lastLogX + meanIntercept; // Same formula, different lastLogX
+                : slope * lastLogX + meanIntercept; 
 
             const lastResidual = lastLogY - predictedLastLogY;
 
@@ -625,7 +684,7 @@
                  const safeStartIndex = Math.max(startIndex, 1); 
                  const safeEndIndex = Math.max(endIndex, 1);
                  
-                 if (selectedModel === 'exponential') {
+                 if (isExponential) {
                     // Generate more points for a smooth curve on a log-log chart
                     const points = [];
                     const numSteps = 50;
@@ -674,7 +733,6 @@
                  const minYear = new Date(firstBaseDay.time).getFullYear();
                  const maxYear = new Date(lastBaseDay.time).getFullYear() + 5; // Project 5 years out
 
-                 // Find first data point for each year *within the active priceData*
                  let lastYearFound = -1; 
                  for (let year = minYear; year <= maxYear; year++) {
                     const yearStartTime = new Date(year, 0, 1).getTime();
@@ -684,7 +742,7 @@
 
                     let xValue;
                     // Calculate the x-value for this day based on the active model
-                    if (selectedModel === 'exponential' || selectedModel === 'truncation') {
+                    if (isExponential || isTruncation) { 
                         xValue = dayData.dayIndex;
                     } else {
                         xValue = dayData.dayIndex + activeModelParams.activeDayOffset;
@@ -730,11 +788,11 @@
                         data: dsInfo.data, label: dsInfo.label, ...(dsInfo.style || {}),
                         ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
                         hidden: dsInfo.index === 5 ? true : dsInfo.hidden,
-                        tension: (selectedModel === 'exponential') ? 0.1 : 0, // Add tension for smooth curve
+                        tension: isExponential ? 0.1 : 0, 
                     });
                 });
                 // Update median line tension
-                chart.data.datasets[1].tension = (selectedModel === 'exponential') ? 0.1 : 0;
+                chart.data.datasets[1].tension = isExponential ? 0.1 : 0;
 
 
                  applyBandVisibility(showBandsCheckbox.checked);
@@ -752,16 +810,16 @@
                     data: {
                         datasets: [
                             { ...datasetDefaults, type: 'line', label: 'TAO Price', data: chartPriceData, backgroundColor: 'rgba(0, 0, 0, 0.05)', borderColor: 'rgba(0, 0, 0, 1)', borderWidth: 2, pointHoverRadius: 5, tension: 0.1 },
-                            { ...datasetDefaults, label: '50th Percentile', data: medianLineData, ...orangeLineStyle, hidden: false, tension: (selectedModel === 'exponential') ? 0.1 : 0 },
-                            { ...datasetDefaults, ...grayLineStyle, label: '1st Pctl', data: p1LineData },
-                            { ...datasetDefaults, ...grayLineStyle, label: '99th Pctl', data: p99LineData },
-                            { ...datasetDefaults, ...grayLineStyle, label: '20th Pctl', data: p20LineData, hidden: true },
-                            { ...datasetDefaults, ...grayLineStyle, label: '50th Pctl (Hidden)', data: medianLineData, hidden: true },
-                            { ...datasetDefaults, ...grayLineStyle, label: '80th Pctl', data: p80LineData, hidden: true },
-                            { ...fillDatasetDefaults, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, tension: (selectedModel === 'exponential') ? 0.1 : 0 },
-                            { ...fillDatasetDefaults, label: 'Value Band (P20-P50)', data: medianLineData, fill: 4, backgroundColor: greenFillColor, tension: (selectedModel === 'exponential') ? 0.1 : 0 },
-                            { ...fillDatasetDefaults, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 1, backgroundColor: yellowFillColor, tension: (selectedModel === 'exponential') ? 0.1 : 0 },
-                            { ...fillDatasetDefaults, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, tension: (selectedModel === 'exponential') ? 0.1 : 0 },
+                            { ...datasetDefaults, label: '50th Percentile', data: medianLineData, ...orangeLineStyle, hidden: false, tension: isExponential ? 0.1 : 0 },
+                            { ...datasetDefaults, ...grayLineStyle, label: '1st Pctl', data: p1LineData, tension: isExponential ? 0.1 : 0 },
+                            { ...datasetDefaults, ...grayLineStyle, label: '99th Pctl', data: p99LineData, tension: isExponential ? 0.1 : 0 },
+                            { ...datasetDefaults, ...grayLineStyle, label: '20th Pctl', data: p20LineData, hidden: true, tension: isExponential ? 0.1 : 0 },
+                            { ...datasetDefaults, ...grayLineStyle, label: '50th Pctl (Hidden)', data: medianLineData, hidden: true, tension: isExponential ? 0.1 : 0 },
+                            { ...datasetDefaults, ...grayLineStyle, label: '80th Pctl', data: p80LineData, hidden: true, tension: isExponential ? 0.1 : 0 },
+                            { ...fillDatasetDefaults, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, tension: isExponential ? 0.1 : 0 },
+                            { ...fillDatasetDefaults, label: 'Value Band (P20-P50)', data: medianLineData, fill: 4, backgroundColor: greenFillColor, tension: isExponential ? 0.1 : 0 },
+                            { ...fillDatasetDefaults, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 1, backgroundColor: yellowFillColor, tension: isExponential ? 0.1 : 0 },
+                            { ...fillDatasetDefaults, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, tension: isExponential ? 0.1 : 0 },
                         ]
                     },
                     options: {
@@ -785,10 +843,9 @@
                                                 dataPoint = priceData.find(p => p.x === dayNumber);
                                              } else {
                                                 // For lines, we need to estimate the date
-                                                // This is tricky, let's find the *closest* point in baseData by x-value
-                                                const { modelType, activeDayOffset, truncationStartIndex } = activeModelParams;
+                                                const { modelType, activeDayOffset } = activeModelParams;
                                                 let targetDayIndex;
-                                                if (modelType === 'exponential' || modelType === 'truncation') {
+                                                if (modelType.includes('Exponential') || modelType.includes('truncation')) {
                                                     targetDayIndex = dayNumber;
                                                 } else {
                                                     targetDayIndex = dayNumber - activeDayOffset;
@@ -805,7 +862,7 @@
                                              const { modelType, activeDayOffset } = activeModelParams;
                                              let displayDay = 'N/A';
                                              if (!isNaN(dayNumber)) {
-                                                if (modelType === 'exponential' || modelType === 'truncation') {
+                                                if (modelType.includes('Exponential') || modelType.includes('truncation')) {
                                                     displayDay = dayNumber.toFixed(0); // It's just the day index
                                                 } else {
                                                     displayDay = (dayNumber - activeDayOffset).toFixed(0); // It's day index + offset
@@ -961,25 +1018,29 @@
 
             const calculatePrice = (targetDayIndex) => {
                 let dayForModel;
-                if (modelType === 'exponential') {
-                    // Exponential model uses linear dayIndex
-                    const modelStartDay = baseData[truncationStartIndex].dayIndex;
-                    if (targetDayIndex < modelStartDay) return NaN;
-                    dayForModel = targetDayIndex;
+                if (modelType.includes('Exponential')) { 
+                    // Exponential models
+                    if (modelType === 'truncationExponential') {
+                        const modelStartDay = baseData[truncationStartIndex].dayIndex;
+                        if (targetDayIndex < modelStartDay) return NaN;
+                        dayForModel = targetDayIndex;
+                    } else {
+                        // Offset Exponential
+                        dayForModel = targetDayIndex + activeDayOffset;
+                    }
                     if (dayForModel <= 0) return NaN;
                     return Math.pow(10, slope * dayForModel + meanIntercept);
 
-                } else if (modelType === 'truncation') {
-                    // Truncated Power Law uses linear dayIndex (but log in formula)
-                    const modelStartDay = baseData[truncationStartIndex].dayIndex;
-                    if (targetDayIndex < modelStartDay) return NaN;
-                    dayForModel = targetDayIndex;
-                    if (dayForModel <= 0) return NaN;
-                    return Math.pow(10, slope * Math.log10(dayForModel) + meanIntercept);
-
-                } else {
-                    // Offset Power Law uses dayIndex + offset
-                    dayForModel = targetDayIndex + activeDayOffset;
+                } else { 
+                    // Power Law models
+                    if (modelType === 'truncation') { 
+                        const modelStartDay = baseData[truncationStartIndex].dayIndex;
+                        if (targetDayIndex < modelStartDay) return NaN;
+                        dayForModel = targetDayIndex;
+                    } else {
+                        // Offset Power Law
+                        dayForModel = targetDayIndex + activeDayOffset;
+                    }
                     if (dayForModel <= 0) return NaN;
                     return Math.pow(10, slope * Math.log10(dayForModel) + meanIntercept);
                 }
@@ -1087,3 +1148,4 @@
 
 </body>
 </html>
+
