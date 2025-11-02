@@ -214,9 +214,10 @@
 
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
+                <div id="growthExponentDiv"></div>                   
                 <!-- NEW: Model Selection Dropdown -->
                 <div class="flex items-center">
-                    <label for="modelSelect" class="mr-1.5"><strong>Method:</strong></label>
+                    <label for="modelSelect" class="mr-1.5"><strong>Fit Method:</strong></label>
                     <select id="modelSelect" class="text-sm rounded border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="hardcoded">Default Offset</option>
                         <option value="optimalOffset" selected>Optimal Offset</option>
@@ -224,7 +225,7 @@
                     </select>
                 </div>
                 <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
-                <div id="growthExponentDiv"></div>
+
                 <div id="modelFitDiv"></div>
             </div>
         </div>
@@ -428,7 +429,7 @@
                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
-                 modelParamDiv.innerHTML = '<strong>Model:</strong> N/A';
+                 modelParamDiv.innerHTML = '<strong>Fit Method:</strong> N/A';
                  modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
                  if (modelSelect) modelSelect.disabled = true;
                  showBandsContainer.classList.add('hidden');
