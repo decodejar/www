@@ -221,19 +221,14 @@
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>
                 <div id="optimalOffsetDiv"></div>
-                <div id="modelFitDiv"></div>
-                <!-- Power Law status (good/bad fit) -->
-                <div id="powerLawStatusDiv" class="flex items-center">
-                    <span id="powerLawStatusDot" class="status-dot bg-yellow-400"></span>
-                    <span id="powerLawStatusText">Power Law&nbsp;</span>
-                    <span title="Green indicates a strong model fit (R² >= 0.9)" class="ml-1 text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
-                </div>
-                <!-- NEW: Use Optimal Offset Checkbox (Moved from top) -->
+                <!-- Use Optimal Offset Checkbox (Moved) -->
                 <div class="flex items-center">
-                    <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal Offset&nbsp;</label>
+                    <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
                     <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
+                <div id="modelFitDiv"></div>
+                <!-- Power Law status (REMOVED) -->
             </div>
         </div>
     </div>
@@ -256,9 +251,9 @@
         const statusDiv = document.getElementById('statusDiv');
         const lastUpdateDiv = document.getElementById('lastUpdateDiv');
         const lastPriceDiv = document.getElementById('lastPriceDiv');
-        const powerLawStatusDiv = document.getElementById('powerLawStatusDiv');
-        const powerLawStatusDot = document.getElementById('powerLawStatusDot');
-        const powerLawStatusText = document.getElementById('powerLawStatusText');
+        // const powerLawStatusDiv = document.getElementById('powerLawStatusDiv'); // REMOVED
+        // const powerLawStatusDot = document.getElementById('powerLawStatusDot'); // REMOVED
+        // const powerLawStatusText = document.getElementById('powerLawStatusText'); // REMOVED
         const priceZoneDiv = document.getElementById('priceZoneDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
@@ -442,10 +437,10 @@
                  optimalOffsetDiv.innerHTML = '<strong>Offset:</strong> N/A';
                  modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
                  
-                 powerLawStatusDiv.style.display = 'flex';
-                 if (powerLawStatusDot) {
-                    powerLawStatusDot.className = 'status-dot bg-red-500';
-                 }
+                 // powerLawStatusDiv.style.display = 'flex'; // REMOVED
+                 // if (powerLawStatusDot) { // REMOVED
+                 //    powerLawStatusDot.className = 'status-dot bg-red-500'; // REMOVED
+                 // } // REMOVED
                  
                  if (useOptimalOffsetCheckbox) {
                     useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
@@ -550,15 +545,15 @@
                 useOptimalOffsetCheckbox.disabled = false;
             }
             const rSquared = calculateRSquared(priceData, slope, meanIntercept); // R² for active model
-            const modelFitGood = rSquared >= 0.9;
+            // const modelFitGood = rSquared >= 0.9; // REMOVED
 
-            powerLawStatusDiv.style.display = 'flex';
+            // powerLawStatusDiv.style.display = 'flex'; // REMOVED
             if (useOptimalOffsetCheckbox) { // NEW: Ensure checkbox div is visible
                 useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
             }
-            if (powerLawStatusDot) {
-                 powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`;
-            }
+            // if (powerLawStatusDot) { // REMOVED
+            //      powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`; // REMOVED
+            // } // REMOVED
 
             growthExponentDiv.innerHTML = `<strong>Exponent (α):</strong> ${slope.toFixed(3)}`;
             
@@ -579,13 +574,13 @@
             
             // --- MODIFIED: Update offset display logic ---
             if (optimalOffset === -1) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Hardcoded)`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model)`;
             } else if (useOptimal) {
                 optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Optimal)`;
             } else if (activeDayOffset === optimalOffset) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Hardcoded, Matches Optimal)`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model, Optimal)`;
             } else {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Hardcoded) | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
+                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model) | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
             }
 
             // --- Generate Line Data for Chart ---
@@ -1209,4 +1204,3 @@
 
 </body>
 </html>
-
