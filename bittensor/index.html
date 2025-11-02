@@ -215,14 +215,11 @@
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
                 <div id="growthExponentDiv"></div>                   
-                <!-- NEW: Model Selection Dropdown -->
+                <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
-                    <label for="modelSelect" class="mr-1.5"><strong>Fit Method:</strong></label>
-                    <select id="modelSelect" class="text-sm rounded border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="hardcoded">Default Offset</option>
-                        <option value="optimalOffset" selected>Optimal Offset</option>
-                        <option value="mleTruncation">Optimal Truncation</option>
-                    </select>
+                    <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
+                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal Offset&nbsp;</label>
+                    <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
                 </div>
                 <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
 
@@ -255,12 +252,10 @@
         const showBandsContainer = document.getElementById('showBandsContainer');
         const showBandsCheckbox = document.getElementById('showBandsCheckbox');
         const projectionTable = document.getElementById('projectionTable');
-        const modelSelect = document.getElementById('modelSelect'); // NEW
+        const useOptimalOffsetCheckbox = document.getElementById('useOptimalOffsetCheckbox'); // NEW
 
         // --- Chart Configuration ---
         const HARDCODED_OFFSET = 74; // Renamed from DAY_OFFSET
-        const MIN_DATA_POINTS_FOR_TRUNCATION = 730; // Min data points for Truncation model
-        const MAX_TRUNCATION_SEARCH_DAYS = 730; // NEW: Max days from start to test truncation
         const MAX_OFFSET_SEARCH_LIMIT = 730; // NEW: Max offset value to test
         let chart; // Global chart instance
         let baseData = []; // NEW: Made global for tooltip scope
@@ -387,44 +382,6 @@
         }
 
         /**
-         * NEW: Finds the optimal start day (truncation) by testing different start points.
-         */
-        function findOptimalTruncation(baseData) {
-            let bestStartIndex = -1;
-            let bestRSquared = -Infinity;
-            let bestSlope = 0;
-            let bestIntercept = 0;
-
-            // Ensure we have at least MIN_DATA_POINTS_FOR_TRUNCATION days to regress on
-            const maxStartIndexByMinData = baseData.length - MIN_DATA_POINTS_FOR_TRUNCATION;
-            // NEW: Limit the search to the first MAX_TRUNCATION_SEARCH_DAYS
-            const maxStartIndex = Math.min(maxStartIndexByMinData, MAX_TRUNCATION_SEARCH_DAYS);
-            
-            if (maxStartIndex < 0) {
-                return { bestStartIndex: 0, slope: 0, intercept: 0, bestFit: 0 };
-            }
-
-            for (let startIndex = 0; startIndex <= maxStartIndex; startIndex++) {
-                const truncatedData = baseData.slice(startIndex);
-                // For truncation, x *is* the dayIndex (no offset)
-                const regressionData = truncatedData.map(p => ({ x: p.dayIndex, y: p.y }));
-                
-                const { slope, intercept } = linearRegression(regressionData);
-                if (slope === 0 && intercept === 0 && regressionData.length > 1) continue;
-
-                const rSquared = calculateRSquared(regressionData, slope, intercept);
-                if (rSquared > bestRSquared) {
-                    bestRSquared = rSquared;
-                    bestStartIndex = startIndex;
-                    bestSlope = slope;
-                    bestIntercept = intercept;
-                }
-            }
-            return { bestStartIndex, slope: bestSlope, intercept: bestIntercept, bestFit: bestRSquared };
-        }
-
-
-        /**
          * Main function to load data, run calculations, and create or update the chart.
          */
         async function createOrUpdateChart() {
@@ -439,83 +396,55 @@
                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
-                 modelParamDiv.innerHTML = '<strong>Fit Method:</strong> N/A';
+                 modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
                  modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
-                 if (modelSelect) modelSelect.disabled = true;
+                 if (useOptimalOffsetCheckbox) useOptimalOffsetCheckbox.disabled = true;
                  showBandsContainer.classList.add('hidden');
                  loader.style.display = 'none';
                  return;
             }
 
             // --- 1. GET MODEL PARAMETERS BASED ON SELECTION ---
-            const selectedModel = modelSelect.value;
-            let slope, meanIntercept, rSquared; // Removed priceData from here
+            const useOptimal = useOptimalOffsetCheckbox.checked;
+            let slope, meanIntercept, rSquared;
+            let activeDayOffset;
             
-            // Store results in the global activeModelParams
-            activeModelParams = {
-                modelType: selectedModel,
-                activeDayOffset: 0, // Default to 0, will be set by offset models
-                truncationStartIndex: 0 // Default to 0, will be set by truncation model
-            };
-
             // Find optimal offset, but only search up to our defined limit
             const { optimalOffset, bestFit: optimalOffsetRSquared } = findOptimalOffset(baseData, 1, MAX_OFFSET_SEARCH_LIMIT);
-
-            // NEW: Define chartPriceData here, based on the *full* baseData
-            let chartPriceData;
-
-            switch (selectedModel) {
-                case 'optimalOffset': {
-                    activeModelParams.activeDayOffset = optimalOffset;
-                    priceData = baseData.map(p => ({ ...p, x: p.dayIndex + optimalOffset }));
-                    chartPriceData = priceData; // For this model, they are the same
-                    const regression = linearRegression(priceData);
-                    slope = regression.slope;
-                    meanIntercept = regression.intercept;
-                    rSquared = optimalOffsetRSquared; // We already have this
-                    modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${optimalOffset}`;
-                    break;
-                }
-                
-                case 'hardcoded': {
-                    activeModelParams.activeDayOffset = HARDCODED_OFFSET;
-                    priceData = baseData.map(p => ({ ...p, x: p.dayIndex + HARDCODED_OFFSET }));
-                    chartPriceData = priceData; // For this model, they are the same
-                    const regression = linearRegression(priceData);
-                    slope = regression.slope;
-                    meanIntercept = regression.intercept;
-                    rSquared = calculateRSquared(priceData, slope, meanIntercept);
-                    // Show comparison to optimal
-                    if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                         modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
-                    } else {
-                         modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET}`;
-                    }
-                    break;
-                }
-                
-                case 'mleTruncation': {
-                    const { bestStartIndex, slope: truncSlope, intercept: truncIntercept, bestFit: truncRSquared } = findOptimalTruncation(baseData);
-                    activeModelParams.truncationStartIndex = bestStartIndex;
-                    activeModelParams.startDayIndex = baseData[bestStartIndex].dayIndex; // NEW: Store the actual start day
-                    // priceData is for the *regression*
-                    priceData = baseData.slice(bestStartIndex).map(p => ({ ...p, x: p.dayIndex }));
-                    // chartPriceData is for *plotting*
-                    chartPriceData = priceData; // <-- MODIFIED: Use truncated data for plotting
-                    slope = truncSlope;
-                    meanIntercept = truncIntercept;
-                    rSquared = truncRSquared;
-                    modelParamDiv.innerHTML = `<strong>Start Day:</strong> ${baseData[bestStartIndex].dayIndex}`;
-                    break;
+            
+            if (useOptimal) {
+                activeDayOffset = optimalOffset;
+                priceData = baseData.map(p => ({ ...p, x: p.dayIndex + optimalOffset }));
+                const regression = linearRegression(priceData);
+                slope = regression.slope;
+                meanIntercept = regression.intercept;
+                rSquared = optimalOffsetRSquared; // We already have this
+                modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${optimalOffset}`;
+            } else {
+                activeDayOffset = HARDCODED_OFFSET;
+                priceData = baseData.map(p => ({ ...p, x: p.dayIndex + HARDCODED_OFFSET }));
+                const regression = linearRegression(priceData);
+                slope = regression.slope;
+                meanIntercept = regression.intercept;
+                rSquared = calculateRSquared(priceData, slope, meanIntercept);
+                // Show comparison to optimal
+                if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
+                     modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
+                } else {
+                     modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET}`;
                 }
             }
             
             // Store final model params
-            activeModelParams.slope = slope;
-            activeModelParams.meanIntercept = meanIntercept;
+            activeModelParams = {
+                modelType: useOptimal ? 'optimalOffset' : 'hardcoded',
+                activeDayOffset: activeDayOffset,
+                slope: slope,
+                meanIntercept: meanIntercept
+            };
 
             // --- 2. UPDATE UI & CALCULATE AXES (using model data) ---
-            if (modelSelect) modelSelect.disabled = false;
+            if (useOptimalOffsetCheckbox) useOptimalOffsetCheckbox.disabled = false;
             
             // NEW: Use the *last point of the full baseData* for UI
             const lastBaseDataPoint = baseData[baseData.length - 1];
@@ -530,17 +459,17 @@
             lastUpdateDiv.classList.remove('hidden');
             lastPriceDiv.classList.remove('hidden');
 
-            // NEW: Calculate axis ranges based on the *full chartPriceData*
-            const chartPrices = chartPriceData.map(p => p.y);
+            // NEW: Calculate axis ranges based on the *full priceData*
+            const chartPrices = priceData.map(p => p.y);
             const minPrice = Math.min(...chartPrices);
             const maxPrice = Math.max(...chartPrices);
 
             // X-Axis Range (with projection)
-            const n = chartPriceData.length; // Use full data length
-            const firstDayNum = chartPriceData[0].x;
-            const firstDayTime = chartPriceData[0].time;
-            const lastDayNum = chartPriceData[n - 1].x; // Use last point of full data
-            const lastDayTime = chartPriceData[n - 1].time;
+            const n = priceData.length; // Use full data length
+            const firstDayNum = priceData[0].x;
+            const firstDayTime = priceData[0].time;
+            const lastDayNum = priceData[n - 1].x; // Use last point of full data
+            const lastDayTime = priceData[n - 1].time;
 
             const timeDuration = lastDayTime - firstDayTime;
             const extendedMaxTime = lastDayTime + (timeDuration * 1); // 100% projection
@@ -611,8 +540,7 @@
             modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span><strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
             
             // --- 4. GENERATE CHART DATA ---
-            // NEW: Regression lines should start from the beginning of the *model data*
-            const startIndex = (selectedModel === 'mleTruncation') ? priceData[0].x : extendedMinDay;
+            const startIndex = extendedMinDay;
             const endIndex = extendedMaxDay;
             const calculateLinePoints = (intercept) => {
                  const safeStartIndex = Math.max(startIndex, 1); 
@@ -628,7 +556,7 @@
             const p20LineData = calculateLinePoints(p20Intercept);
             const p80LineData = calculateLinePoints(p80Intercept);
 
-            const chartPriceDataMap = chartPriceData.map(p => ({ x: p.x, y: p.y }));
+            const chartPriceDataPoints = priceData.map(p => ({ x: p.x, y: p.y }));
 
             loader.style.display = 'none';
 
@@ -693,7 +621,7 @@
 
             if (chart) {
                 // --- Update Existing Chart ---
-                chart.data.datasets[0].data = chartPriceDataMap;
+                chart.data.datasets[0].data = chartPriceDataPoints;
                 chart.data.datasets[1].data = medianLineData;
                 chart.data.datasets[2].data = p1LineData;
                 chart.data.datasets[3].data = p99LineData;
@@ -740,7 +668,7 @@
                 chart = new Chart(ctx, {
                     data: {
                         datasets: [
-                            { ...datasetDefaults, type: 'line', label: 'TAO Price', data: chartPriceDataMap, backgroundColor: 'rgba(0, 0, 0, 0.05)', borderColor: 'rgba(0, 0, 0, 1)', borderWidth: 2, pointHoverRadius: 5, tension: 0.1 },
+                            { ...datasetDefaults, type: 'line', label: 'TAO Price', data: chartPriceDataPoints, backgroundColor: 'rgba(0, 0, 0, 0.05)', borderColor: 'rgba(0, 0, 0, 1)', borderWidth: 2, pointHoverRadius: 5, tension: 0.1 },
                             { ...datasetDefaults, label: '50th Percentile', data: medianLineData, ...orangeLineStyle, hidden: false },
                             { ...datasetDefaults, ...grayLineStyle, label: '1st Pctl', data: p1LineData },
                             { ...datasetDefaults, ...grayLineStyle, label: '99th Pctl', data: p99LineData },
@@ -769,19 +697,9 @@
                                              const item = tooltipItems[0];
                                              const dayNumber = item.parsed.x; // This is the x-value on the chart
                                              
-                                             // Find the corresponding data point in the *original* baseData
-                                             // This requires converting the x-value back to a dayIndex
-                                             const { modelType, activeDayOffset } = activeModelParams;
-                                             let targetDayIndex;
-                                             if (modelType === 'mleTruncation') {
-                                                targetDayIndex = dayNumber;
-                                             } else {
-                                                targetDayIndex = dayNumber - activeDayOffset;
-                                             }
+                                             const { activeDayOffset } = activeModelParams;
+                                             let targetDayIndex = dayNumber - activeDayOffset;
                                              
-                                             // Find the *closest* point in baseData by dayIndex
-                                             // This will work for both price points and line points
-                                             // Use a linear search on baseData, it's already sorted by dayIndex
                                              let dataPoint = baseData.find(p => p.dayIndex === Math.round(targetDayIndex));
                                              
                                              if (!dataPoint) {
@@ -796,8 +714,7 @@
                                                  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                                              }
 
-                                             // Fallback (should rarely be hit)
-                                     return `Day ~${targetDayIndex.toFixed(0)}`;
+                                             return `Day ~${targetDayIndex.toFixed(0)}`;
                                  }
                                          return '';
                                      },
@@ -858,8 +775,8 @@
             showBandsCheckbox.removeEventListener('change', handleBandToggle);
             showBandsCheckbox.addEventListener('change', handleBandToggle);
 
-            modelSelect.removeEventListener('change', createOrUpdateChart);
-            modelSelect.addEventListener('change', createOrUpdateChart);
+            useOptimalOffsetCheckbox.removeEventListener('change', createOrUpdateChart);
+            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
 
             applyBandVisibility(showBandsCheckbox.checked);
             if(chart) chart.update('none'); 
@@ -946,7 +863,7 @@
                 return;
             }
 
-            const { slope, meanIntercept, modelType, activeDayOffset, truncationStartIndex } = modelParams;
+            const { slope, meanIntercept, modelType, activeDayOffset } = modelParams;
 
             // 1. Get the reference date and dayIndex from the *first data point* in the full dataset
             const firstDataPointDate = new Date(baseData[0].time);
@@ -974,16 +891,8 @@
             // 4. Helper function to calculate price using the active model's formula
             const calculatePrice = (targetDayIndex) => {
                 let dayForLog;
-                if (modelType === 'mleTruncation') {
-                    // For truncation, we just use the dayIndex.
-                    // We must also check if this day is *before* our model's start.
-                    const modelStartDay = baseData[truncationStartIndex].dayIndex;
-                    if (targetDayIndex < modelStartDay) return NaN; // Date is before model starts
-                    dayForLog = targetDayIndex;
-                } else {
-                    // For offset models, we add the offset
-                    dayForLog = targetDayIndex + activeDayOffset;
-                }
+                // For offset models, we add the offset
+                dayForLog = targetDayIndex + activeDayOffset;
 
                 if (dayForLog <= 0) return NaN; // Can't log(0) or negative
                 const logX = Math.log10(dayForLog);
@@ -1084,17 +993,17 @@
          * NEW: Recalculates Y-axis limits based on the current X-axis view.
          */
         function refitYAxis() {
-            if (!chart || !chartPriceData || chartPriceData.length === 0) return;
+            if (!chart || !priceData || priceData.length === 0) return;
 
             const currentXMin = chart.options.scales.x.min;
             const currentXMax = chart.options.scales.x.max;
 
             // 1. Filter data to visible range
-            const visibleData = chartPriceData.filter(p => p.x >= currentXMin && p.x <= currentXMax);
+            const visibleData = priceData.filter(p => p.x >= currentXMin && p.x <= currentXMax);
 
             if (visibleData.length < 2) {
                  // Not enough data to refit, use full data as fallback
-                const allPrices = chartPriceData.map(p => p.y);
+                const allPrices = priceData.map(p => p.y);
                 const minPrice = Math.min(...allPrices);
                 const maxPrice = Math.max(...allPrices);
                 const logMinPrice = Math.log10(minPrice);
@@ -1293,7 +1202,7 @@
         window.onload = () => {
             createOrUpdateChart();
             // Add listener for model selection
-            modelSelect.addEventListener('change', createOrUpdateChart);
+            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
             
             // NEW: Add wheel zoom listener to the canvas
             const canvas = document.getElementById('powerLawChart');
@@ -1314,5 +1223,3 @@
  
 </body>
 </html>
-
-
