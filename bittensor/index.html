@@ -270,6 +270,10 @@
         let originalExtendedMinDay = 1;
         let originalExtendedMaxDay = 1000;
         const ZOOM_FACTOR = 1.2; // 20% zoom per scroll
+        // NEW: Panning state
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartMin = 0;
  
         // Band Fill Colors
         const blueFillColor = 'rgba(147, 197, 253, 0.1)';
