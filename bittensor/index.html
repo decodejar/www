@@ -269,7 +269,7 @@
         // NEW: Zoom state
         let originalExtendedMinDay = 1;
         let originalExtendedMaxDay = 1000;
-        const ZOOM_FACTOR = 1.2; // 20% zoom per scroll
+        const ZOOM_FACTOR = 0.1; // NEW: Zoom 10% per scroll
         // NEW: Panning state
         let isPanning = false;
         let panStartX = 0;
@@ -1142,38 +1142,72 @@
          */
         function handleWheelZoom(event) {
             if (!chart || !priceData || priceData.length === 0) return;
- 
             event.preventDefault(); // Stop the page from scrolling
  
-            const currentMin = chart.options.scales.x.min;
-            const lastDataX = priceData[priceData.length - 1].x;
-            let newMin;
- 
-            if (event.deltaY < 0) {
-                // Zooming In (wheel up)
-                newMin = currentMin * ZOOM_FACTOR;
-                // Don't let zoom go past 80% of the last data point
-                if (newMin >= lastDataX * 0.8) {
-                    newMin = lastDataX * 0.8;
-                }
-            } else {
-                // Zooming Out (wheel down)
-                newMin = currentMin / ZOOM_FACTOR;
-                // Don't let zoom go out further than the original full view
-                if (newMin <= originalExtendedMinDay) {
-                    newMin = originalExtendedMinDay;
-                }
-            }
- 
-            // APPLY THE ZOOM
-            if (newMin !== currentMin) {
-                chart.options.scales.x.min = newMin;
-                
-                // NEW: Refit Y-axis
-                refitYAxis();
+            const chartArea = chart.chartArea;
+            if (!chartArea) return;
 
-                chart.update('none'); // Update without animation
+            // 1. Get cursor position and its log-scale value
+            const rect = event.target.getBoundingClientRect();
+            const cursorX = event.clientX - rect.left;
+            
+            // Ensure cursor is inside the chart area
+            if (cursorX < chartArea.left || cursorX > chartArea.right) {
+                return;
             }
+
+            const currentMinLog = Math.log10(chart.options.scales.x.min);
+            const currentMaxLog = Math.log10(chart.options.scales.x.max);
+            const currentLogRange = currentMaxLog - currentMinLog;
+            
+            // Calculate what percentage the cursor is across the chart
+            const cursorPct = (cursorX - chartArea.left) / (chartArea.right - chartArea.left);
+            
+            // Find the log value at the cursor
+            const logAtCursor = currentMinLog + (currentLogRange * cursorPct);
+
+            // 2. Calculate new range
+            // zoomDirection will be < 1 for zooming in, > 1 for zooming out
+            const zoomDirection = event.deltaY < 0 ? (1 - ZOOM_FACTOR) : (1 + ZOOM_FACTOR);
+            let newLogRange = currentLogRange * zoomDirection;
+
+            // 3. Boundary checks for zoom level
+            const minLogRange = 0.1; // Don't allow zoom to be *too* tight
+            const maxLogRange = Math.log10(originalExtendedMaxDay) - Math.log10(originalExtendedMinDay);
+            
+            if (newLogRange < minLogRange) newLogRange = minLogRange;
+            if (newLogRange > maxLogRange) newLogRange = maxLogRange;
+
+            // 4. Calculate new min/max based on cursor position
+            let newLogMin = logAtCursor - (newLogRange * cursorPct);
+            let newLogMax = newLogMin + newLogRange;
+            
+            // 5. Boundary checks for panning
+            const originalMinLog = Math.log10(originalExtendedMinDay);
+            const originalMaxLog = Math.log10(originalExtendedMaxDay);
+
+            if (newLogMin < originalMinLog) {
+                newLogMin = originalMinLog;
+                newLogMax = newLogMin + newLogRange;
+            }
+            if (newLogMax > originalMaxLog) {
+                newLogMax = originalMaxLog;
+                newLogMin = newLogMax - newLogRange;
+            }
+            
+            // Ensure min is still less than max after all adjustments
+            if (newLogMin < originalMinLog) newLogMin = originalMinLog;
+
+
+            // 6. Apply new X-axis
+            chart.options.scales.x.min = Math.pow(10, newLogMin);
+            chart.options.scales.x.max = Math.pow(10, newLogMax);
+
+            // 7. Refit Y-axis
+            refitYAxis();
+
+            // 8. Update chart
+            chart.update('none');
         }
  
         /**
@@ -1280,4 +1314,5 @@
  
 </body>
 </html>
+
 
