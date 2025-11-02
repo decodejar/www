@@ -315,7 +315,7 @@
                 const text = 'decodejar'; // MODIFIED
                 // Dynamically set font size based on chart width.
                 const baseFontSize = Math.max(40, Math.min(100, width / 10)); // MODIFIED: Made larger
-                ctx.font = `bold ${baseFontSize.toFixed(0)}px Inter, sans-serif`;
+                ctx.font = `${baseFontSize.toFixed(0)}px Inter, sans-serif`;
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // Very light, semi-transparent black
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
