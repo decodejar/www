@@ -3,1204 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAO Tensor Law Model</title>
-    <!-- External Libraries -->
+    <title>DecodeJar</title>
+    <!--
+      NOTE:
+      This file is a complete, self-contained HTML document.
+      It includes:
+      1. Tailwind CSS (via CDN)
+      2. All HTML structure
+    -->
+    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- Fonts -->
+    
+    <!-- 2. Load Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Internal Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 3. Custom Scrollbar Styles -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Loader animation */
-        .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #ff6d00;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        /* Simple scrollbar for light mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        /* Colored status dot */
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-        
-        /* --- Fullscreen CSS Logic --- */
-        
-        /* Override body flex-centering when in fullscreen */
-        body:has(#mainContainer:fullscreen) {
-            display: block;
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
-        /* Main container expands to fill viewport in fullscreen */
-        #mainContainer:fullscreen {
-            width: 100vw;
-            height: 100vh;
-            max-width: none !important;
-            border-radius: 0 !important;
-            display: flex;
-            flex-direction: column;
+        /* Ensure body has a background color transition for a smoother theme change */
+        body {
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            font-family: 'Inter', sans-serif; /* Apply Inter font */
         }
-
-        /* Chart card grows to fill available space */
-        #mainContainer:fullscreen #chartCard {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Chart wrapper (which contains canvas) grows */
-        #mainContainer:fullscreen #chartWrapper {
-            height: 100% !important;
-            flex-grow: 1;
-        }
-
-        /* Hide footer when in fullscreen */
-        body:has(#mainContainer:fullscreen) footer {
-            display: none;
-        }
-
-        /* --- Mobile Fullscreen Optimizations --- */
-
-        /* Show "Please Rotate" overlay in portrait fullscreen */
-        @media (max-width: 639px) and (orientation: portrait) {
-            #mainContainer:fullscreen #rotateOverlay {
-                display: flex !important;
-            }
-            /* Hide all other UI elements */
-            #mainContainer:fullscreen header,
-            #mainContainer:fullscreen #topStatusBar,
-            #mainContainer:fullscreen #chartCard,
-            #mainContainer:fullscreen #bottomModelBar,
-            #mainContainer:fullscreen #fullscreenBtn {
-                display: none !important;
-            }
-        }
-
-        /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        #mainContainer.mobile-fullscreen-landscape header,
-        #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
-             display: none !important;
-        }
-         #mainContainer.mobile-fullscreen-landscape #chartCard {
-             padding: 0 !important;
-         }
-         #mainContainer.mobile-fullscreen-landscape #topStatusBar {
-             display: flex !important;
-         }
-        /* --- END: Mobile Fullscreen Optimizations --- */
-
-        /* --- NEW: Projection Table Styles --- */
-        #projectionTable {
-            position: absolute;
-            top: 12%;
-            left: 10%;
-            z-index: 5; /* Below loader (10) but above chart */
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 0.5rem 0.75rem; /* p-2 p-3 */
-            font-size: 0.75rem; /* text-xs */
-            line-height: 1.15rem;
-            color: #374151; /* text-gray-700 */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        #projectionTable h3 {
-            font-weight: 600; /* font-semibold */
-            color: #1f2937; /* text-gray-800 */
-            margin-bottom: 0.25rem; /* mb-1 */
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding-bottom: 0.25rem;
-            /* NEW: Added flex for alignment of title and button */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #projectionTable div {
-            display: flex;
-            justify-content: space-between;
-        }
-        #projectionTable div span:first-child {
-            margin-right: 1.25rem; /* mr-5 */
-            color: #4b5563; /* text-gray-600 */
-        }
-        #projectionTable div span:last-child {
-            font-weight: 500; /* font-medium */
-            color: #1f2937; /* text-gray-800 */
-        }
-        /* NEW: Style for the close button */
-        #projectionTable h3 button {
-            margin-left: 0.5rem; /* ml-2 */
-            color: #9ca3af; /* text-gray-400 */
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            line-height: 1;
-        }
-         #projectionTable h3 button:hover {
-           color: #374151; /* hover:text-gray-700 */
-         }
-        /* --- END: Projection Table Styles --- */
     </style>
-</head>
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-2">
-
-    <!-- 
-      Main application container.
-      Scales with viewport height/width up to a max size.
-     -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
-
-        <!-- Overlay to show on mobile fullscreen portrait -->
-        <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-600 mb-4 animate-pulse">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Please Rotate Your Device</h2>
-            <p class="text-gray-600">This chart is best viewed in landscape mode.</p>
-        </div>
-
-        <!-- Fullscreen toggle button -->
-        <button id="fullscreenBtn" onclick="toggleFullScreen()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
-            <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-            </svg>
-            <svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hidden">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9L3.75 3.75M9 9h4.5m-4.5 0v4.5m0-4.5L3.75 3.75M9 15l-5.25 5.25M9 15h4.5m-4.5 0v-4.5m0 4.5l-5.25 5.25M15 9l5.25-5.25M15 9h-4.5m4.5 0v4.5m0-4.5l5.25-5.25M15 15l5.25 5.25M15 15h-4.5m4.5 0v-4.5m0 4.5l5.25 5.25" />
-            </svg>
-        </button>
-        
-        <!-- Page Header -->
-        <header class="text-center mb-3">
-            <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900">TAO Tensor Law Model</h1>
-        </header>
-
-        <!-- Top Status Bar: Data status, price, bands toggle -->
-        <div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
-             <div id="statusDiv" class="flex items-center">
-                 <span class="status-dot bg-yellow-400"></span>Loading latest data...
-             </div>
-             <div id="lastUpdateDiv" class="hidden sm:block"></div>
-             <div id="lastPriceDiv" class="hidden sm:block"></div>
-             <div id="priceZoneDiv" class="flex items-center hidden sm:block"></div>
-             
-             <!-- Bands Toggle Checkbox -->
-             <div id="showBandsContainer" class="flex items-center hidden">
-                 <input type="checkbox" id="showBandsCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                 <label for="showBandsCheckbox" class="cursor-pointer mr-1">Bands&nbsp;</label>
-                 <span title="Blue: Discount (P1-P20), Green: Value (P20-P50), Yellow: Expensive (P50-P80), Red: Bubble (P80-P99)" class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
-             </div>
-        </div>
-
-        <!-- Chart Card: Contains loader and canvas wrapper -->
-        <div id="chartCard" class="bg-white p-2 rounded-lg relative flex-grow flex flex-col min-h-0">
-            <!-- Loading Spinner -->
-            <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                <div class="loader"></div>
-            </div>
-            <!-- Canvas Wrapper: Scales to fill parent card -->
-            <div id="chartWrapper" class="relative flex-grow min-h-0">
-                <!-- NEW: Floating projection table -->
-                <div id="projectionTable" class="hidden"></div>
-                <!-- END NEW -->
-                <canvas id="powerLawChart"></canvas>
-            </div>
-
-            <!-- Bottom Model Info Bar: Model parameters -->
-            <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
-                <div id="growthExponentDiv"></div>
-                <div id="optimalOffsetDiv"></div>
-                <!-- Use Optimal Offset Checkbox (Moved) -->
-                <div class="flex items-center">
-                    <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
-                    <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
-                    <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
-                </div>
-                <div id="modelFitDiv"></div>
-                <!-- Power Law status (REMOVED) -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="text-center p-1 mt-2">
-        <p class="text-gray-600 text-xs">&copy; 2025 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DECODEJAR.COM</a>. All Rights Reserved. Disclaimer: This tool is for informational and research purposes only and does not constitute financial or trading advice. Past performance is not indicative of future results.</p>
-    </footer>
-
-<script>
-        /*
-         * TAO Tensor Law Model & Regression Logic
-         * Copyright (c) 2025 Decodejar.com. All Rights Reserved.
-         */
-
-        // --- Global Element References ---
-        const growthExponentDiv = document.getElementById('growthExponentDiv');
-        const modelFitDiv = document.getElementById('modelFitDiv');
-        const loader = document.getElementById('loader');
-        const statusDiv = document.getElementById('statusDiv');
-        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
-        const lastPriceDiv = document.getElementById('lastPriceDiv');
-        // const powerLawStatusDiv = document.getElementById('powerLawStatusDiv'); // REMOVED
-        // const powerLawStatusDot = document.getElementById('powerLawStatusDot'); // REMOVED
-        // const powerLawStatusText = document.getElementById('powerLawStatusText'); // REMOVED
-        const priceZoneDiv = document.getElementById('priceZoneDiv');
-        const ctx = document.getElementById('powerLawChart').getContext('2d');
-        const optimalOffsetDiv = document.getElementById('optimalOffsetDiv');
-        const showBandsContainer = document.getElementById('showBandsContainer');
-        const showBandsCheckbox = document.getElementById('showBandsCheckbox');
-        const projectionTable = document.getElementById('projectionTable');
-        const useOptimalOffsetCheckbox = document.getElementById('useOptimalOffsetCheckbox'); // NEW
-
-        // --- Chart Configuration ---
-        const DAY_OFFSET = 365; // Configured day offset for chart display.
-        let chart; // Global chart instance
-        let activeDayOffset = DAY_OFFSET; // NEW: Stores the currently active offset for tooltips
-
-        // Band Fill Colors
-        const blueFillColor = 'rgba(147, 197, 253, 0.1)';
-        const greenFillColor = 'rgba(34, 197, 94, 0.1)';
-        const yellowFillColor = 'rgba(250, 204, 21, 0.1)';
-        const redFillColor = 'rgba(239, 68, 68, 0.1)';
-
-        // Reusable Line Styles
-        const grayLineStyle = {
-            borderColor: 'rgba(156, 163, 175, 0.7)',
-            borderWidth: 1,
-        };
-        const orangeLineStyle = {
-            borderColor: '#ff6d00',
-            borderWidth: 2,
-        };
-        const grayDashedLineStyle = {
-            borderColor: 'rgba(156, 163, 175, 0.9)', 
-            borderWidth: 1,
-            borderDash: [2, 2] 
-        };
-        const grayFineLineStyle = {
-            borderColor: 'rgba(156, 163, 175, 0.7)',
-            borderWidth: 0.5, 
-            borderDash: [] 
-        };
-
-        /**
-         * Fetches and parses price data from JSON file.
-         * Returns data without any day offset applied.
-         */
-        async function loadPriceData() {
-            try {
-                const response = await fetch(`./price_data.json?t=${new Date().getTime()}`); // Cache-bust
-                if (!response.ok) {
-                    throw new Error(`Failed to load data file: ${response.statusText}`);
-                }
-                const data = await response.json();
-                 if (!Array.isArray(data)) {
-                        throw new Error("Invalid data format in JSON file");
-                 }
-                // Map to { time, dayIndex (i+1), y (price) } and filter invalid prices
-                return data.map((p, i) => ({ time: p[0] * 1000, dayIndex: i + 1, y: p[1] })).filter(p => p.y > 0);
-            } catch (error) {
-                console.error("Error loading price data:", error);
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
-                loader.style.display = 'none';
-                return null;
-            }
-        }
-
-        /**
-         * Performs linear regression on log-transformed data.
-         * Input data expects { x, y } format.
-         */
-        function linearRegression(data) {
-            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            const n = validData.length;
-            if (n < 2) return { slope: 0, intercept: 0 }; // Not enough data
-            
-            // Sums of log-transformed values
-            for (const { x, y } of validData) {
-                const logX = Math.log10(x);
-                const logY = Math.log10(y);
-                sumX += logX; sumY += logY; sumXY += logX * logY; sumX2 += logX * logX;
-            }
-
-            const denominator = (n * sumX2 - sumX * sumX);
-            if (denominator === 0) return { slope: 0, intercept: 0 }; // Avoid division by zero
-            
-            const slope = (n * sumXY - sumX * sumY) / denominator;
-            const intercept = (sumY - slope * sumX) / n;
-            return { slope, intercept };
-        }
-
-        /**
-         * Calculates sorted residuals (logY - predictedLogY) from the mean regression line.
-         */
-        function calculateResiduals(data, slope, intercept) {
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length === 0) return [];
-            return validData.map(p => {
-                const logX = Math.log10(p.x);
-                const logY = Math.log10(p.y);
-                const predictedLogY = slope * logX + intercept;
-                return logY - predictedLogY;
-            }).sort((a, b) => a - b); // Sort for percentile calculation
-        }
-
-        /**
-         * Gets a specific percentile value from a pre-sorted array of residuals.
-         */
-        function getPercentile(sortedResiduals, percentile) {
-            if (!sortedResiduals || sortedResiduals.length === 0) return 0;
-            const index = (percentile / 100) * (sortedResiduals.length - 1);
-            const lowerIndex = Math.floor(index);
-            const upperIndex = Math.ceil(index);
-            
-            if (lowerIndex === upperIndex) {
-                 return sortedResiduals[lowerIndex]; // Exact match
-            } else {
-                 // Linear interpolation between the two closest indices
-                 const weight = index - lowerIndex;
-                 return sortedResiduals[lowerIndex] * (1 - weight) + sortedResiduals[upperIndex] * weight;
-            }
-        }
-
-        /**
-         * Finds the optimal day offset by testing a range of values to get the highest R² fit.
-         * @param {Array} baseData - Raw data from loadPriceData().
-         * @param {number} minOffset - Starting offset to test.
-         * @param {number} maxOffset - Max offset to test (e.g., data length).
-         */
-        function findOptimalOffset(baseData, minOffset = 1, maxOffset) {
-            let bestOffset = -1;
-            let bestRSquared = -Infinity;
-
-            if (baseData.length < 2) {
-                return { optimalOffset: -1, bestFit: 0 };
-            }
-
-            if (typeof maxOffset === 'undefined' || maxOffset < minOffset) {
-                console.error("findOptimalOffset called without a valid maxOffset.");
-                maxOffset = baseData.length; // Fallback
-            }
-
-            // Loop through all possible offsets
-            for (let offset = minOffset; offset <= maxOffset; offset++) {
-                // Apply the test offset
-                const offsetData = baseData.map(p => ({
-                    x: p.dayIndex + offset,
-                    y: p.y
-                }));
-
-                // Run regression and get R²
-                const { slope, intercept } = linearRegression(offsetData);
-                if (slope === 0 && intercept === 0 && offsetData.length > 1) {
-                    continue; // Skip if regression failed
-                }
-                const rSquared = calculateRSquared(offsetData, slope, intercept);
-
-                // Track the best R²
-                if (rSquared > bestRSquared) {
-                    bestRSquared = rSquared;
-                    bestOffset = offset;
-                }
-            }
-            return { optimalOffset: bestOffset, bestFit: bestRSquared };
-        }
-
-        /**
-         * Main function to load data, run calculations, and create or update the chart.
-         */
-        async function createOrUpdateChart() {
-            loader.style.display = 'flex';
-
-            // 1. Load base data (no offset)
-            const baseData = await loadPriceData();
-
-            if (!baseData || baseData.length === 0) {
-                 // Handle data loading failure
-                 if (!statusDiv.innerHTML.includes('Error')) {
-                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
-                 }
-                 
-                 // NEW: Set bottom bar elements to N/A, but keep them visible
-                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
-                 optimalOffsetDiv.innerHTML = '<strong>Offset:</strong> N/A';
-                 modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
-                 
-                 // powerLawStatusDiv.style.display = 'flex'; // REMOVED
-                 // if (powerLawStatusDot) { // REMOVED
-                 //    powerLawStatusDot.className = 'status-dot bg-red-500'; // REMOVED
-                 // } // REMOVED
-                 
-                 if (useOptimalOffsetCheckbox) {
-                    useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
-                    useOptimalOffsetCheckbox.disabled = true; // Disable checkbox
-                 }
-                 
-                 showBandsContainer.classList.add('hidden');
-                 loader.style.display = 'none';
-                 return; // Stop execution, no chart to plot
-            }
-
-            // 2. Find optimal offset (always do this)
-            const maxDaysInData = baseData.length > 0 ? baseData.length : 1;
-            const { optimalOffset, bestFit } = findOptimalOffset(baseData, 1, maxDaysInData);
-            
-            // 3. NEW: Determine Active Offset
-            const useOptimal = useOptimalOffsetCheckbox.checked;
-            activeDayOffset = useOptimal && optimalOffset !== -1 ? optimalOffset : DAY_OFFSET;
-
-            // 4. Apply the ACTIVE offset for all chart rendering
-            const priceData = baseData.map(p => ({ ...p, x: p.dayIndex + activeDayOffset }));
-
-            // --- Update Top Status Bar ---
-            const lastDataPoint = priceData[priceData.length - 1];
-            const lastPrice = lastDataPoint.y;
-            const lastTimestamp = lastDataPoint.time;
-            const lastUpdateDate = new Date(lastTimestamp).toLocaleDateString(undefined, {
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Updated:</strong> ${lastUpdateDate}`;
-            lastPriceDiv.innerHTML = `<strong>Price:</strong> $${lastPrice.toFixed(2)}`;
-            lastUpdateDiv.classList.remove('hidden');
-            lastPriceDiv.classList.remove('hidden');
-
-            // --- Calculate Axis Ranges ---
-            const times = priceData.map(p => p.time);
-            const prices = priceData.map(p => p.y);
-            const minTime = Math.min(...times);
-            const maxTime = Math.max(...times);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-
-            // X-Axis Range (with projection)
-            const n = priceData.length;
-            const firstDayNum = priceData[0].x;
-            const timeDuration = maxTime - minTime;
-            const extendedMaxTime = maxTime + (timeDuration * 1); // 100% projection
-            const futureTimeIndexRatio = (timeDuration > 0) ? (extendedMaxTime - minTime) / timeDuration : 1;
-            const projectedDayCount = n * futureTimeIndexRatio;
-            const extendedMinDay = firstDayNum;
-            const extendedMaxDay = firstDayNum + projectedDayCount - 1;
-
-            // Y-Axis Range (with padding)
-            const logMinPrice = Math.log10(minPrice);
-            const logMaxPrice = Math.log10(maxPrice);
-            const logPriceRange = logMaxPrice - logMinPrice;
-            const extendedMinPrice = logPriceRange > 0 ? Math.pow(10, logMinPrice - logPriceRange * 0.1) : minPrice * 0.9;
-            const extendedMaxPrice = logPriceRange > 0 ? Math.pow(10, logMaxPrice + logPriceRange * 0.4) : maxPrice * 1.4;
-
-            // --- Model Calculations (using active offset) ---
-            const { slope, intercept: meanIntercept } = linearRegression(priceData);
-            const sortedResiduals = calculateResiduals(priceData, slope, meanIntercept);
-
-            // Get percentile residuals
-            const medianResidual = getPercentile(sortedResiduals, 50);
-            const p1Residual = getPercentile(sortedResiduals, 1);
-            const p99Residual = getPercentile(sortedResiduals, 99);
-            const p20Residual = getPercentile(sortedResiduals, 20);
-            const p80Residual = getPercentile(sortedResiduals, 80);
-
-            // Determine current price zone
-            const lastLogX = Math.log10(lastDataPoint.x);
-            const lastLogY = Math.log10(lastDataPoint.y);
-            const predictedLastLogY = slope * lastLogX + meanIntercept;
-            const lastResidual = lastLogY - predictedLastLogY;
-
-            let priceZone = "";
-            let priceZoneColor = "";
-            if (lastResidual > p80Residual) { priceZone = "Bubble"; priceZoneColor = "bg-red-500"; }
-            else if (lastResidual > medianResidual) { priceZone = "Expensive"; priceZoneColor = "bg-yellow-400"; }
-            else if (lastResidual > p20Residual) { priceZone = "Value"; priceZoneColor = "bg-green-500"; }
-            else { priceZone = "Discount"; priceZoneColor = "bg-blue-300"; }
-
-            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Rating:</strong>&nbsp;${priceZone}`;
-            priceZoneDiv.classList.remove('hidden');
-
-            // --- Calculate All Line Intercepts ---
-            const medianIntercept = meanIntercept + medianResidual;
-            const p1Intercept = meanIntercept + p1Residual;
-            const p99Intercept = meanIntercept + p99Residual;
-            const p20Intercept = meanIntercept + p20Residual;
-            const p80Intercept = meanIntercept + p80Residual;
-
-            // --- Call projection function (uses active offset) ---
-            calculateProjections(slope, medianIntercept, baseData, activeDayOffset, projectionTable);
-
-            // --- Update Bottom Status Bar ---
-            // Re-enable checkbox on successful load
-            if (useOptimalOffsetCheckbox) {
-                useOptimalOffsetCheckbox.disabled = false;
-            }
-            const rSquared = calculateRSquared(priceData, slope, meanIntercept); // R² for active model
-            // const modelFitGood = rSquared >= 0.9; // REMOVED
-
-            // powerLawStatusDiv.style.display = 'flex'; // REMOVED
-            if (useOptimalOffsetCheckbox) { // NEW: Ensure checkbox div is visible
-                useOptimalOffsetCheckbox.parentElement.style.display = 'flex';
-            }
-            // if (powerLawStatusDot) { // REMOVED
-            //      powerLawStatusDot.className = `status-dot ${modelFitGood ? 'bg-green-500' : 'bg-red-500'}`; // REMOVED
-            // } // REMOVED
-
-            growthExponentDiv.innerHTML = `<strong>Exponent (α):</strong> ${slope.toFixed(3)}`;
-            
-            // --- Determine Fit (R²) color ---
-            let fitColorClass = "";
-            if (rSquared >= 0.9) {
-                fitColorClass = "bg-blue-300";
-            } else if (rSquared >= 0.7) {
-                fitColorClass = "bg-green-500";
-            } else if (rSquared >= 0.5) {
-                fitColorClass = "bg-yellow-400";
-            } else {
-                fitColorClass = "bg-red-500";
-            }
-            
-            // --- MODIFIED: Show R² for the *active* model ---
-            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span><strong>Fit (R²):</strong> ${rSquared.toFixed(4)}`;
-            
-            // --- MODIFIED: Update offset display logic ---
-            if (optimalOffset === -1) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model)`;
-            } else if (useOptimal) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Optimal)`;
-            } else if (activeDayOffset === optimalOffset) {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model, Optimal)`;
-            } else {
-                optimalOffsetDiv.innerHTML = `<strong>Offset:</strong> ${activeDayOffset} (Model) | <strong>Optimal:</strong> ${optimalOffset} (R² ${bestFit.toFixed(4)})`;
-            }
-
-            // --- Generate Line Data for Chart ---
-            const startIndex = extendedMinDay;
-            const endIndex = extendedMaxDay;
-            const calculateLinePoints = (intercept) => {
-                 const safeStartIndex = Math.max(startIndex, 1); // log10(0) is invalid
-                 const safeEndIndex = Math.max(endIndex, 1);
-                 return [
-                      { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
-                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
-                 ];
-            };
-            const medianLineData = calculateLinePoints(medianIntercept);
-            const p1LineData = calculateLinePoints(p1Intercept);
-            const p99LineData = calculateLinePoints(p99Intercept);
-            const p20LineData = calculateLinePoints(p20Intercept);
-            const p80LineData = calculateLinePoints(p80Intercept);
-
-            const chartPriceData = priceData.map(p => ({ x: p.x, y: p.y }));
-
-            loader.style.display = 'none';
-
-            // --- X-Axis Tick Generation ---
-             const xAxisAfterBuildTicks = (axis) => {
-                 if (!priceData || priceData.length === 0) return;
-                 const newTicks = [];
-                 const axisMinDay = axis.min;
-                 const axisMaxDay = axis.max;
-                 const firstDay = priceData[0];
-                 const lastDay = priceData[priceData.length - 1];
-                 if (!firstDay || !lastDay) return;
-
-                 // Map day numbers to timestamps
-                 const dayRange = lastDay.x - firstDay.x;
-                 const timeRange = lastDay.time - firstDay.time;
-                 const dayRatio = (dayRange > 0) ? (axisMaxDay - firstDay.x) / dayRange : 0;
-                 const estimatedMaxTime = firstDay.time + (dayRatio * timeRange);
-                 const minYear = new Date(firstDay.time).getFullYear();
-                 const maxYear = !isNaN(estimatedMaxTime) ? new Date(estimatedMaxTime).getFullYear() : minYear;
-
-                 // Find first data point for each year within data
-                 let lastYearFound = minYear - 1;
-                 for (const p of priceData) {
-                     const year = new Date(p.time).getFullYear();
-                     if (year > lastYearFound) {
-                         if (p.x >= axisMinDay && p.x <= axisMaxDay) {
-                             newTicks.push({ value: p.x, label: year.toString() });
-                         }
-                         lastYearFound = year;
-                     }
-                 }
-                 
-                 // Estimate ticks for future projected years
-                 const lastDataYear = lastDay ? new Date(lastDay.time).getFullYear() : minYear;
-                 if (dayRange > 0 && timeRange > 0 && !isNaN(estimatedMaxTime)) {
-                     for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                         const yearStartTime = new Date(year, 0, 1).getTime();
-                         const timeRatio = (yearStartTime - firstDay.time) / timeRange;
-                         const estimatedDayNumber = firstDay.x + (timeRatio * dayRange);
-                         if (estimatedDayNumber >= axisMinDay && estimatedDayNumber <= axisMaxDay) {
-                             newTicks.push({ value: estimatedDayNumber, label: year.toString() });
-                         }
-                     }
-                 }
-                 axis.ticks.length = 0; // Clear existing ticks
-                 const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
-                 axis.ticks.push(...validTicks);
-             };
-
-            // --- Chart Update or Creation ---
-            const datasetDefaults = {
-                type: 'line',
-                borderWidth: 1,
-                pointRadius: 0,
-                fill: false,
-                pointStyle: 'line'
-            };
-
-            const fillDatasetDefaults = {
-                type: 'line',
-                pointRadius: 0,
-                borderWidth: 0,
-                pointStyle: 'line',
-                hidden: true,
-            }
-
-            if (chart) {
-                // --- Update Existing Chart ---
-                chart.data.datasets[0].data = chartPriceData;
-                chart.data.datasets[1].data = medianLineData;
-                chart.data.datasets[2].data = p1LineData;
-                chart.data.datasets[3].data = p99LineData;
-
-                // All band datasets
-                const datasetsToUpdate = [
-                    { index: 4, label: '20th Pctl', data: p20LineData, style: grayLineStyle, hidden: true },
-                    { index: 5, label: '50th Pctl (Hidden)', data: medianLineData, style: grayLineStyle, hidden: true },
-                    { index: 6, label: '80th Pctl', data: p80LineData, style: grayLineStyle, hidden: true },
-                    { index: 7, label: 'Discount Band (P1-P20)', data: p20LineData, fill: 2, backgroundColor: blueFillColor, hidden: true },
-                    { index: 8, label: 'Value Band (P20-P50)', data: medianLineData, fill: 4, backgroundColor: greenFillColor, hidden: true },
-                    { index: 9, label: 'Expensive Band (P50-P80)', data: p80LineData, fill: 1, backgroundColor: yellowFillColor, hidden: true },
-                    { index: 10, label: 'Bubble Band (P80-P99)', data: p99LineData, fill: 6, backgroundColor: redFillColor, hidden: true },
-                ];
-
-                datasetsToUpdate.forEach(dsInfo => {
-                    if (chart.data.datasets[dsInfo.index]) {
-                        // Update existing
-                        Object.assign(chart.data.datasets[dsInfo.index], {
-                            data: dsInfo.data,
-                            label: dsInfo.label,
-                            ...(dsInfo.style || {}),
-                            ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
-                            hidden: dsInfo.index === 5 ? true : dsInfo.hidden, // Keep index 5 hidden
-                        });
-                    } else {
-                        // Add new (should only happen if data was missing on first load)
-                         chart.data.datasets.push({
-                             ...datasetDefaults,
-                             ...(dsInfo.style || {}),
-                             ...(dsInfo.fill !== undefined ? fillDatasetDefaults : {}),
-                             label: dsInfo.label,
-                             data: dsInfo.data,
-                             hidden: dsInfo.index === 5 ? true : dsInfo.hidden,
-                             ...(dsInfo.fill !== undefined && { fill: dsInfo.fill, backgroundColor: dsInfo.backgroundColor }),
-                         });
-                    }
-                });
-
-                 applyBandVisibility(showBandsCheckbox.checked);
-
-                // Update scales and redraw
-                chart.options.scales.x.min = extendedMinDay;
-                chart.options.scales.x.max = extendedMaxDay;
-                chart.options.scales.y.min = extendedMinPrice;
-                chart.options.scales.y.max = extendedMaxPrice;
-                chart.options.scales.x.afterBuildTicks = xAxisAfterBuildTicks;
-                chart.update();
-
-            } else {
-                // --- Create New Chart ---
-                chart = new Chart(ctx, {
-                    data: {
-                        datasets: [
-                            { // 0: Price
-                                ...datasetDefaults,
-                                type: 'line',
-                                label: 'TAO Price',
-                                data: chartPriceData,
-                                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                                borderColor: 'rgba(0, 0, 0, 1)',
-                                borderWidth: 2,
-                                pointHoverRadius: 5,
-                                tension: 0.1,
-                            },
-                            { // 1: 50th Percentile (Dynamic Style)
-                                ...datasetDefaults,
-                                label: '50th Percentile',
-                                data: medianLineData,
-                                ...orangeLineStyle,
-                                hidden: false,
-                            },
-                            { // 2: P1 Line
-                                ...datasetDefaults,
-                                ...grayLineStyle,
-                                label: '1st Pctl',
-                                data: p1LineData,
-                            },
-                            { // 3: P99 Line
-                                ...datasetDefaults,
-                                ...grayLineStyle,
-                                label: '99th Pctl',
-                                data: p99LineData,
-                            },
-                            { // 4: P20 Line (Hidden)
-                                ...datasetDefaults,
-                                ...grayLineStyle,
-                                label: '20th Pctl',
-                                data: p20LineData,
-                                hidden: true,
-                            },
-                            { // 5: Redundant P50 Line (Always Hidden)
-                                ...datasetDefaults,
-                                ...grayLineStyle,
-                                label: '50th Pctl (Hidden)',
-                                data: medianLineData,
-                                hidden: true,
-                            },
-                            { // 6: P80 Line (Hidden)
-                                ...datasetDefaults,
-                                ...grayLineStyle,
-                                label: '80th Pctl',
-                                data: p80LineData,
-                                hidden: true,
-                            },
-                             { // 7: Fill P1-P20 (Hidden)
-                                 ...fillDatasetDefaults,
-                                 label: 'Discount Band (P1-P20)',
-                                 data: p20LineData,
-                                 fill: 2, // Fill to index 2
-                                 backgroundColor: blueFillColor,
-                             },
-                             { // 8: Fill P20-P50 (Hidden)
-                                 ...fillDatasetDefaults,
-                                 label: 'Value Band (P20-P50)',
-                                 data: medianLineData,
-                                 fill: 4, // Fill to index 4
-                                 backgroundColor: greenFillColor,
-                             },
-                             { // 9: Fill P50-P80 (Hidden)
-                                 ...fillDatasetDefaults,
-                                 label: 'Expensive Band (P50-P80)',
-                                 data: p80LineData,
-                                 fill: 1, // Fill to index 1
-                                 backgroundColor: yellowFillColor,
-                             },
-                             { // 10: Fill P80-P99 (Hidden)
-                                 ...fillDatasetDefaults,
-                                 label: 'Bubble Band (P80-P99)',
-                                 data: p99LineData,
-                                 fill: 6, // Fill to index 6
-                                 backgroundColor: redFillColor,
-                             },
-                        ]
+    <!-- We need to tell Tailwind to use Inter -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
                     },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#374151', usePointStyle: true, boxWidth: 30, boxHeight: 12,
-                                    // Filter out bands and hidden lines from legend
-                                    filter: (item) => !item.text.includes('Band') && item.datasetIndex !== 5,
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                     // Show date for price points, day number for lines
-                                     title: (tooltipItems) => {
-                                         if (tooltipItems.length > 0) {
-                                             const item = tooltipItems[0];
-                                             const dayNumber = item.parsed.x;
-                                             if (item.datasetIndex === 0) {
-                                                 const dataPoint = priceData.find(p => p.x === dayNumber);
-                                                 if (dataPoint) {
-                                                     const date = new Date(dataPoint.time);
-                                                     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                                                 }
-                                             }
-                                             // MODIFIED: Use activeDayOffset global
-                                             const displayDay = !isNaN(dayNumber) ? (dayNumber - activeDayOffset).toFixed(0) : 'N/A';
-                                             return `Day ~${displayDay}`;
-                                         }
-                                         return '';
-                                     },
-                                     // Format tooltip label with price
-                                     label: (context) => {
-                                         if (context.dataset.label.includes('Band') || context.datasetIndex === 5) return null;
-                                         return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-                                     }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'logarithmic', min: extendedMinDay, max: extendedMaxDay,
-                                title: { display: true, text: `Time (Log Scale)`, color: '#4b5563' },
-                                ticks: { 
-                                    color: '#4b5563', autoSkip: false,
-                                    // Use the generated label (year) for the tick
-                                    callback: function(value) {
-                                        const tick = this.getTicks().find(t => t.value === value);
-                                        return tick ? tick.label : null;
-                                    }
-                                },
-                                afterBuildTicks: xAxisAfterBuildTicks, // Custom tick builder
-                                grid: { color: 'rgba(0, 0, 0, 0.1)' }
-                            },
-                            y: {
-                                type: 'logarithmic', min: extendedMinPrice, max: extendedMaxPrice,
-                                title: { display: true, text: 'Price (Log Scale)', color: '#4b5563' },
-                                ticks: { 
-                                    color: '#4b5563',
-                                    callback: function(value, index, ticks) {
-                                        const logVal = Math.log10(value);
-                                        // If logVal is an integer (or very close), it's a major tick (1, 10, 100...)
-                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
-                                            return `$${value.toLocaleString()}`; // Show label for major ticks
-                                        }
-                                        // Return an empty string '' instead of null.
-                                        return ''; 
-                                    }
-                                },
-                                grid: { 
-                                    color: function(context) {
-                                        const value = context.tick.value;
-                                        if (value <= 0) return 'rgba(0, 0, 0, 0.1)'; // Safety check for log axis
-
-                                        const logVal = Math.log10(value);
-                                        
-                                        // Check if logVal is very close to an integer (a power of 10)
-                                        if (Math.abs(logVal - Math.round(logVal)) < 1e-9) {
-                                            return 'rgba(0, 0, 0, 0.1)'; // Major tick (1, 10, 100...)
-                                        } else {
-                                            return 'rgba(0, 0, 0, 0.05)'; // Minor tick (2, 3, 20, 30...)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // --- Final Setup ---
-            // Show and attach listener to "Show Bands" checkbox
-            showBandsContainer.classList.remove('hidden');
-            showBandsCheckbox.removeEventListener('change', handleBandToggle);
-            showBandsCheckbox.addEventListener('change', handleBandToggle);
-
-            // NEW: Attach listener to "Use Optimal" checkbox
-            useOptimalOffsetCheckbox.removeEventListener('change', createOrUpdateChart);
-            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
-
-            // Apply initial band visibility state
-            applyBandVisibility(showBbandsCheckbox.checked);
-            if(chart) chart.update('none'); // Update chart without animation
-        }
-
-        /**
-         * Event handler for the "Show Bands" checkbox.
-         */
-        function handleBandToggle() {
-             if (!chart) return;
-             applyBandVisibility(showBandsCheckbox.checked);
-             chart.update();
-        }
-
-        /**
-         * Toggles visibility and styles for band datasets.
-         * @param {boolean} showBands - Whether to show the bands or not.
-         */
-        function applyBandVisibility(showBands) {
-             if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 11) {
-                 console.error("Chart or datasets not fully initialized for applyBandVisibility.");
-                 return;
-             }
-             // Dataset Indices
-             const mainMedianIndex = 1;
-             const p1Index = 2;
-             const p99Index = 3;
-             const p20Index = 4;
-             const redundantP50Index = 5;
-             const p80Index = 6;
-             const fillIndices = [7, 8, 9, 10];
-
-             // Ensure core lines are always visible (or hidden)
-             if (chart.data.datasets[0]) chart.setDatasetVisibility(0, true); // Price
-             if (chart.data.datasets[mainMedianIndex]) chart.setDatasetVisibility(mainMedianIndex, true);
-             if (chart.data.datasets[redundantP50Index]) chart.setDatasetVisibility(redundantP50Index, false); // Always hidden
-
-             if (showBands) {
-                 // BANDS ON: Show all 4 percentile lines as fine solid lines
-                 const styleToApply = grayFineLineStyle;
-                 if (chart.data.datasets[p1Index]) {
-                     chart.setDatasetVisibility(p1Index, true);
-                     Object.assign(chart.data.datasets[p1Index], styleToApply);
-                 }
-                 if (chart.data.datasets[p99Index]) {
-                     chart.setDatasetVisibility(p99Index, true);
-                     Object.assign(chart.data.datasets[p99Index], styleToApply);
-                 }
-                 if (chart.data.datasets[p20Index]) {
-                     chart.setDatasetVisibility(p20Index, true);
-                     Object.assign(chart.data.datasets[p20Index], styleToApply);
-                 }
-                 if (chart.data.datasets[p80Index]) {
-                     chart.setDatasetVisibility(p80Index, true);
-                     Object.assign(chart.data.datasets[p80Index], styleToApply);
-                 }
-                 
-                 // Toggle band FILL areas ON
-                 fillIndices.forEach(index => {
-                     if (chart.data.datasets[index]) chart.setDatasetVisibility(index, true);
-                 });
-
-                 // Style 50th percentile line
-                 const medianDataset = chart.data.datasets[mainMedianIndex];
-                 if (medianDataset) {
-                      Object.assign(medianDataset, grayFineLineStyle); // Gray and fine when bands are on
-                 }
-
-             } else {
-                 // BANDS OFF: Show 1st/99th as dotted, HIDE 20th/80th
-                 const styleToApply = grayDashedLineStyle; 
-                 
-                 if (chart.data.datasets[p1Index]) {
-                     chart.setDatasetVisibility(p1Index, true);
-                     Object.assign(chart.data.datasets[p1Index], styleToApply);
-                 }
-                 if (chart.data.datasets[p99Index]) {
-                     chart.setDatasetVisibility(p99Index, true);
-                     Object.assign(chart.data.datasets[p99Index], styleToApply);
-                 }
-                 
-                 // Hide 20th and 80th
-                 if (chart.data.datasets[p20Index]) {
-                     chart.setDatasetVisibility(p20Index, false);
-                     Object.assign(chart.data.datasets[p20Index], styleToApply); // Apply style so it's ready
-                 }
-                 if (chart.data.datasets[p80Index]) {
-                     chart.setDatasetVisibility(p80Index, false);
-                     Object.assign(chart.data.datasets[p80Index], styleToApply); // Apply style so it's ready
-                 }
-
-                 // Toggle band FILL areas OFF
-                 fillIndices.forEach(index => {
-                     if (chart.data.datasets[index]) chart.setDatasetVisibility(index, false);
-                 });
-
-                 // Style 50th percentile line
-                 const medianDataset = chart.data.datasets[mainMedianIndex];
-                 if (medianDataset) {
-                      Object.assign(medianDataset, orangeLineStyle); // Orange when bands are off
-                 }
-             }
-        }
-
-        /**
-         * Calculates R-squared (coefficient of determination) for the log-log regression.
-         */
-        function calculateRSquared(data, slope, intercept) {
-            let ss_tot = 0, ss_res = 0, y_mean = 0;
-            const validData = data.filter(p => p.y > 0 && p.x > 0);
-            if (validData.length < 2) return 0;
-
-            // Calculate mean of logY
-            validData.forEach(p => y_mean += Math.log10(p.y));
-            y_mean /= validData.length;
-
-            // Calculate total sum of squares (ss_tot) and residual sum of squares (ss_res)
-            validData.forEach(p => {
-                const logY = Math.log10(p.y);
-                const logX = Math.log10(p.x);
-                const predictedLogY = slope * logX + intercept;
-                ss_tot += Math.pow(logY - y_mean, 2);
-                ss_res += Math.pow(logY - predictedLogY, 2);
-            });
-             return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); // R² = 1 - (ss_res / ss_tot)
-        }
-
-        /**
-         * NEW: Calculates and displays future price projections in the floating table.
-         */
-        function calculateProjections(slope, medianIntercept, baseData, dayOffset, tableElement) {
-            if (!baseData || baseData.length === 0 || !tableElement) {
-                console.warn("calculateProjections: Missing data or table element.");
-                if(tableElement) tableElement.classList.add('hidden');
-                return;
-            }
-
-            // 1. Get the reference date and dayIndex from the first data point
-            const firstDataPointDate = new Date(baseData[0].time);
-            const firstDayIndex = baseData[0].dayIndex; // This is the index *before* offset (e.g., 1)
-            
-            // 2. Define target dates dynamically
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            const targetDates = [
-                { label: "Today", date: today },
-                { label: `${currentYear + 1}`, date: new Date(currentYear + 1, 0, 1) },
-                { label: `${currentYear + 2}`, date: new Date(currentYear + 2, 0, 1) },
-                { label: `${currentYear + 3}`, date: new Date(currentYear + 3, 0, 1) }
-            ];
-
-            const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-            // 3. Helper function to get the target dayIndex
-            const getDayIndex = (targetDate) => {
-                const diffTime = targetDate.getTime() - firstDataPointDate.getTime();
-                // Round to nearest day to account for DST changes
-                const diffDays = Math.round(diffTime / MS_PER_DAY);
-                // Add to the first day's index
-                return firstDayIndex + diffDays;
-            };
-
-            // 4. Helper function to calculate price using the power law formula
-            const calculatePrice = (dayIndexWithOffset) => {
-                if (dayIndexWithOffset <= 0) return NaN; // Can't log(0) or negative
-                const logX = Math.log10(dayIndexWithOffset);
-                return Math.pow(10, slope * logX + medianIntercept);
-            };
-
-            // 5. Build HTML with NEW close button
-            let tableHtml = `
-                <h3>
-                    <span>Fair Value</span>
-                    <button onclick="document.getElementById('projectionTable').style.display='none'" type="button" title="Close">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </h3>`;
-
-            // 6. Calculate and build HTML for each price
-            targetDates.forEach(item => {
-                const targetDayIndex = getDayIndex(item.date);
-                const dayNumberWithOffset = targetDayIndex + dayOffset;
-                const projectedPrice = calculatePrice(dayNumberWithOffset);
-                
-                const priceString = isNaN(projectedPrice) ? "N/A" : `$${projectedPrice.toFixed(2)}`;
-                const label = item.label; // Use the label directly (e.g., "Today" or "2026")
-
-                tableHtml += `
-                    <div>
-                        <span>${label}</span>
-                        <span>${priceString}</span>
-                    </div>
-                `;
-            });
-
-            tableElement.innerHTML = tableHtml;
-            tableElement.style.display = ''; 
-            tableElement.classList.remove('hidden');
-        }
-
-        // --- FULLSCREEN & MOBILE VIEW LOGIC ---
-
-        const mainContainer = document.getElementById('mainContainer');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const fsIconEnter = document.getElementById('fsIconEnter');
-        const fsIconExit = document.getElementById('fsIconExit');
-        const headerElement = document.querySelector('header');
-        const bottomBarElement = document.getElementById('bottomModelBar');
-        const topBarElement = document.getElementById('topStatusBar');
-        const chartCardElement = document.getElementById('chartCard');
-
-        /**
-         * Toggles fullscreen mode for the main container.
-         */
-        function toggleFullScreen() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                // Enter fullscreen
-                if (mainContainer.requestFullscreen) {
-                    mainContainer.requestFullscreen().catch(err => console.error(`Error entering fullscreen: ${err.message}`));
-                } else if (mainContainer.webkitRequestFullscreen) { // Safari
-                    mainContainer.webkitRequestFullscreen();
-                }
-            } else {
-                // Exit fullscreen
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(err => console.error(`Error exiting fullscreen: ${err.message}`));
-                } else if (document.webkitExitFullscreen) { // Safari
-                    document.webkitExitFullscreen();
                 }
             }
-        }
-
-        /**
-         * Handles UI changes on fullscreen, resize, and orientation change.
-         */
-        function handleFullscreenChange() {
-             requestAnimationFrame(() => { // Use rAF to wait for layout changes
-                 const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                 const isMobile = window.innerWidth < 640;
-                 const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
-
-                 // Toggle fullscreen icon
-                 if (isInFullscreen) {
-                     fsIconEnter.classList.add('hidden');
-                     fsIconExit.classList.remove('hidden');
-                     fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-                 } else {
-                     fsIconEnter.classList.remove('hidden');
-                     fsIconExit.classList.add('hidden');
-                     fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                 }
-
-                 // Reset mobile-specific styles
-                 if (headerElement) headerElement.style.display = '';
-                 if (bottomBarElement) bottomBarElement.style.display = '';
-                 if (topBarElement) topBarElement.style.display = '';
-                 if (chartCardElement) chartCardElement.style.padding = '';
-
-                 // Apply mobile landscape fullscreen styles
-                 if (isInFullscreen && isMobile && isLandscape) {
-                     if (headerElement) headerElement.style.display = 'none';
-                     if (bottomBarElement) bottomBarElement.style.display = 'none';
-                     if (chartCardElement) chartCardElement.style.padding = '0';
-                 }
-
-                 // Resize chart after a short delay to ensure container is sized
-                  if (chart) {
-                     setTimeout(() => {
-                         requestAnimationFrame(() => {
-                             if (chart) chart.resize();
-                         });
-                     }, 50); // 50ms delay
-                  }
-             });
-        }
-
-        // --- Event Listeners ---
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
-        window.addEventListener('resize', handleFullscreenChange);
-         if (screen.orientation) {
-             screen.orientation.addEventListener('change', handleFullscreenChange);
-         } else {
-             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
-         }
-
-        // Initial load
-        window.onload = () => {
-            createOrUpdateChart();
-            // NEW: Add listener for optimal offset checkbox
-            useOptimalOffsetCheckbox.addEventListener('change', createOrUpdateChart);
-            setTimeout(handleFullscreenChange, 150); // Initial check for mobile state
         }
     </script>
+</head>
+<body class="font-sans bg-white text-gray-900 min-h-screen">
+
+    <!-- Main Content Container -->
+    <main class="max-w-[600px] mx-auto border-x border-gray-200 min-h-screen">
+        
+        <!-- ===== HEADER & PROFILE SECTION ===== -->
+        <div>
+            <!-- 1. Banner Image -->
+            <!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) -->
+            <img 
+                src="/banner.png" 
+                alt="Banner" 
+                class="w-full h-[120px] sm:h-[200px] object-cover object-center bg-gray-200"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <!-- Fallback for Banner -->
+            <!-- UPDATED: Changed heights to 120px (mobile) and 200px (desktop) -->
+            <div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
+                <!-- Banner failed to load -->
+            </div>
+
+            <!-- 2. Profile Info Container -->
+            <!-- UPDATED: p-4 to p-3 -->
+            <div class="p-3 relative">
+                
+                <!-- Website Text -->
+                <!-- UPDATED: top-4 right-4 to top-3 right-3 -->
+                <div class="absolute top-3 right-3">
+                    <!-- UPDATED: Added responsive text size -->
+                    <p class="text-md sm:text-sm text-gray-500">
+                        decodejar.com
+                    </p>
+                </div>
+                
+                <!-- Profile Picture -->
+                <!-- Set a fallback background color in case image fails -->
+                <!-- UPDATED: Added relative and z-10 to ensure the border is visible on top -->
+                <img 
+                    src="/decode.png" 
+                    alt="Profile Picture"
+                    class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 relative z-10"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <!-- Fallback "initials" circle -->
+                <!-- UPDATED: Added relative and z-10 for consistency -->
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10" style="display: none;">
+                    D
+                </div>
+
+                <!-- Name, Handle, and Website -->
+                <!-- UPDATED: Removed website link and flex wrapper -->
+                <div>
+                    <div>
+                        <!-- UPDATED: mt-4 to mt-3 -->
+                        <!-- UPDATED: Added responsive text size -->
+                        <h1 class="text-2xl sm:text-xl font-bold mt-3">Decode</h1>
+                        <!-- UPDATED: Changed <p> to <a> and added link -->
+                        <!-- UPDATED: Added responsive text size -->
+                        <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-md sm:text-sm text-gray-500 hover:text-blue-600 hover:underline">@decodejar</a>
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <!-- UPDATED: mt-4 to mt-3 -->
+                <!-- UPDATED: Removed links from Substack and X -->
+                <!-- UPDATED: Added responsive text size -->
+                <p class="mt-3 text-base sm:text-sm">
+                    Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts<br>
+                    
+                    Biweekly Market Intelligence Newsletter on Substack and X
+                </p>
+
+            </div>
+        </div>
+        <!-- ===== END HEADER & PROFILE SECTION ===== -->
+
+        <!-- ===== LINKS SECTION ===== -->
+        <div class="border-t border-gray-200">
+            
+            <!-- Group 0: Subscribe -->
+            <!-- UPDATED: Added responsive text size -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1">Decode Newsletter</h2>
+            
+            <a href="https://substack.decodejar.com" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'newspaper' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Read on Substack</span>
+                </div>
+            </a>
+            <a href="https://x.com/decodejar/superfollows" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'newspaper' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Read on X</span>
+                </div>
+            </a>
+            
+            <!-- Group 1: Follow -->
+            <!-- UPDATED: Added responsive text size -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5">Decode Profiles</h2>
+            
+            <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'user-circle' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Follow on X</span>
+                </div>
+            </a>
+            <a href="https://decodejar.com/nostr" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'user-circle' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Follow on Nostr</span>
+                </div>
+            </a>
+
+            <!-- Group 2: Asset Models -->
+            <!-- UPDATED: Added this new section -->
+            <!-- UPDATED: Added responsive text size -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5">Asset Models</h2>
+            
+            <a href="https://decodejar.com/bittensor" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'cpu-chip' -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 21v-1.5M15.75 3v1.5M12 4.5V3m0 18v-1.5M15.75 21v-1.5m-3.75-18v1.5M12 19.5V21m0-18h.008v.008H12V3Zm0 18h.008v.008H12V21Zm3.75-18h.008v.008H15.75V3Zm0 18h.008v.008H15.75V21Zm-7.5-18h.008v.008H8.25V3Zm0 18h.008v.008H8.25V21Zm-3.75-18h.008v.008H4.5V3Zm0 18h.008v.008H4.5V21Zm15-18h.008v.008H19.5V3Zm0 18h.008v.008H19.5V21Zm-7.5-6h.008v.008H12V15Zm0-3.75h.008v.008H12v-.008Zm0 7.5h.008v.008H12V18.75Zm3.75-3.75h.008v.008H15.75v-.008Zm0 3.75h.008v.008H15.75V18.75Zm-7.5-3.75h.008v.008H8.25v-.008Zm0 3.75h.008v.008H8.25V18.75Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">TAO Tensor Law Model</span>
+                </div>
+            </a>
+
+            <!-- Group 3: TradingView -->
+            <!-- UPDATED: Added responsive text size -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5">Trading View Indicators</h2>
+
+            <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- NOTE: Kept 'arrow-trending-up' icon as it is relevant -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Global Liquidity Index</span>
+                </div>
+            </a>
+            <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- NOTE: Kept 'arrow-trending-up' icon as it is relevant -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">Moving Average Toolkit</span>
+                </div>
+            </a>
+
+            <!-- Group 4: Affiliates -->
+            <!-- UPDATED: Added responsive text size -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5">Affiliate Links</h2>
+            
+            <a href="https://www.mexc.com/acquisition/custom-sign-up?shareCode=mexc-1TFoR" target="_blank" rel="noopener noreferrer" class="block p-3 border-b border-gray-200 hover:bg-orange-100 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <!-- UPDATED: Icon changed to 'gift' for the bonus -->
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535.98.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048m-1.9-3.57a.375.375 0 0 0-.71.125v2.961c0 .03.01.059.028.082a.75.75 0 0 0 .558.397l.43.105c.29.07.545.26.708.506l.51.766a.75.75 0 0 0 1.125 0l.51-.766c.163-.246.418-.436.708-.506l.43-.105a.75.75 0 0 0 .558-.397.375.375 0 0 0 .028-.082V4.5a.375.375 0 0 0-.71-.125m-1.9 3.57-1.068-.89a.75.75 0 0 0-.405-.864v-.568m0 0a3.001 3.001 0 0 0-3.001-3.001 3.001 3.001 0 0 0-3.001 3.001v.568c0 .334-.148.65-.405.864l-1.068.89a.75.75 0 0 0-.216 1.49l.51.766c.319.481.82.78 1.38.78h1.121c.56 0 1.061-.299 1.38-.78l.51-.766a.75.75 0 0 0-.216-1.49Z M3.75 12h16.5v6.75a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V12Z" />
+                    </svg>
+                    <!-- UPDATED: Added responsive text size -->
+                    <span class="font-medium text-base sm:text-sm text-blue-700">MEXC ($10k bonus)</span>
+                </div>
+            </a>
+            
+        </div>
+        <!-- ===== END LINKS SECTION ===== -->
+
+        <!-- ===== FOOTER SECTION ===== -->
+        <footer class="mt-6 p-6">
+            <div class="text-xs sm:text-xxs text-gray-400 space-y-4">
+                <p class="text-gray-400 text-xs">&copy; 2025 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">DECODEJAR.COM</a>. All Rights Reserved. Disclaimer: Content on this page is for informational purposes only and does not constitute financial, investment, or trading advice. We do not recommend any specific asset. Always conduct your own due diligence and consult a financial advisor before making investment decisions.</p>
+            </div>
+        </footer>
+        <!-- ===== END FOOTER SECTION ===== -->
+
+    </main>
+
+    <!-- Removed Theme Toggle Javascript -->
 
 </body>
 </html>
