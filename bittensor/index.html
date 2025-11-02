@@ -448,7 +448,7 @@
                     slope = regression.slope;
                     meanIntercept = regression.intercept;
                     rSquared = optimalOffsetRSquared; // We already have this
-                    modelParamDiv.innerHTML = `<strong>Offset:</strong> ${optimalOffset}`;
+                    modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${optimalOffset}`;
                     break;
                 }
                 
@@ -461,9 +461,9 @@
                     rSquared = calculateRSquared(priceData, slope, meanIntercept);
                     // Show comparison to optimal
                     if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
+                         modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET} | <strong>Optimal:</strong> ${optimalOffset} (R² ${optimalOffsetRSquared.toFixed(4)})`;
                     } else {
-                         modelParamDiv.innerHTML = `<strong>Offset:</strong> ${HARDCODED_OFFSET}`;
+                         modelParamDiv.innerHTML = `<strong>Day Offset:</strong> ${HARDCODED_OFFSET}`;
                     }
                     break;
                 }
@@ -476,7 +476,7 @@
                     slope = truncSlope;
                     meanIntercept = truncIntercept;
                     rSquared = truncRSquared;
-                    modelParamDiv.innerHTML = `<strong>Start Day:</strong> ${baseData[bestStartIndex].dayIndex} (Truncated)`;
+                    modelParamDiv.innerHTML = `<strong>Start Day:</strong> ${baseData[bestStartIndex].dayIndex}`;
                     break;
                 }
             }
