@@ -91,9 +91,7 @@
         #mainContainer.mobile-fullscreen-landscape {
              padding-top: 0.25rem !important;    /* py-1 */
              padding-bottom: 0.25rem !important; /* py-1 */
-             /* Keep existing horizontal padding from p-2 */
-             padding-left: 0.5rem !important;    /* px-2 */
-             padding-right: 0.5rem !important;   /* px-2 */
+             /* Horizontal padding will be inherited from the base 'p-2' class */
         }
         
         #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
@@ -216,8 +214,8 @@
                 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer">
                     <img src="decode.png" alt="Decodejar Logo" class="w-10 h-10 rounded-full border border-gray-200" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                 </a>
-                <!-- Text link is hidden on mobile (screens < lg) -->
-                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-indigo-500 transition-colors hidden lg:block">
+                <!-- Text link is hidden on mobile (screens < sm) -->
+                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-indigo-500 transition-colors hidden sm:block">
                     x.com/decodejar
                 </a>
             </div>
@@ -1416,4 +1414,8 @@
     </script>
 </body>
 </html>
+
+
+
+
 
