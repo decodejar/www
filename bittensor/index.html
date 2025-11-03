@@ -252,6 +252,19 @@
         <p class="text-gray-600 text-xs">&copy; 2025 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">decodejar.com</a>. All Rights Reserved. Disclaimer: This tool is for informational and research purposes only and does not constitute financial or trading advice. Past performance is not indicative of future results.</p>
     </footer>
 
+    <!-- Tooltip Modal -->
+    <div id="tooltipModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-4 relative">
+            <button id="closeTooltipModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-800" title="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Information</h3>
+            <p id="tooltipModalText" class="text-gray-600 text-sm"></p>
+        </div>
+    </div>
+
 <script>
         /*
          * TAO Tensor Law Model & Regression Logic
@@ -1360,9 +1373,58 @@
                 });
             }
 
+            // --- Tooltip Modal Logic ---
+            const tooltipModal = document.getElementById('tooltipModal');
+            const tooltipModalText = document.getElementById('tooltipModalText');
+            const closeTooltipModal = document.getElementById('closeTooltipModal');
+            const tooltipIcons = document.querySelectorAll('.cursor-help');
+
+            const showTooltip = (text) => {
+                if (tooltipModalText) tooltipModalText.textContent = text;
+                if (tooltipModal) tooltipModal.classList.remove('hidden');
+            };
+
+            const hideTooltip = () => {
+                if (tooltipModal) tooltipModal.classList.add('hidden');
+                if (tooltipModalText) tooltipModalText.textContent = '';
+            };
+
+            tooltipIcons.forEach(icon => {
+                const titleText = icon.getAttribute('title');
+                if (titleText) {
+                    // Add click listener for touch
+                    icon.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent click from bubbling
+                        e.preventDefault(); // Prevent any default action
+                        showTooltip(titleText);
+                    });
+                    // Add touchstart as well for better responsiveness on some devices
+                    icon.addEventListener('touchstart', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        showTooltip(titleText);
+                    }, { passive: false });
+                }
+            });
+
+            if (closeTooltipModal) {
+                closeTooltipModal.addEventListener('click', hideTooltip);
+            }
+
+            if (tooltipModal) {
+                // Close when clicking the background overlay
+                tooltipModal.addEventListener('click', (e) => {
+                    if (e.target === tooltipModal) {
+                        hideTooltip();
+                    }
+                });
+            }
+            // --- End Tooltip Modal Logic ---
+
             // Initial check for mobile state
             setTimeout(handleFullscreenChange, 150); 
         }
     </script>
 </body>
 </html>
+
