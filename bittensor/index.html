@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TAO Tensor Law Model | Decode</title>
-    <!-- External Libraries -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- External Libraries --><script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Internal Styles -->
-    <style>
+    <!-- Internal Styles --><style>
         body { font-family: 'Inter', sans-serif; }
         /* Loader animation */
         .loader {
@@ -87,7 +84,7 @@
         }
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        /* NEW: Rule to adjust padding */
+        /* Rule to adjust padding */
         #mainContainer.mobile-fullscreen-landscape {
              padding-top: 0.375rem !important;    /* py-1.5 */
              padding-bottom: 0.375rem !important; /* py-1.5 */
@@ -102,13 +99,13 @@
         }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
              display: flex !important;
-             /* NEW: Added styles to shrink top bar */
+             /* Shrink top bar */
              padding: 0.125rem 0.5rem !important; /* p-0.5 px-2 */
              margin-bottom: 0.125rem !important; /* MODIFIED: mb-0.5 */
              gap: 0.5rem 1rem !important; /* gap-y-2 gap-x-4 */
              font-size: 0.75rem !important; /* text-xs */
         }
-        /* NEW: Added rules for header in mobile landscape fullscreen */
+        /* Rules for header in mobile landscape fullscreen */
         #mainContainer.mobile-fullscreen-landscape header {
              height: 2.25rem !important; /* h-9 */
              margin-bottom: 0.125rem !important; /* MODIFIED: mb-0.5 */
@@ -116,12 +113,10 @@
         #mainContainer.mobile-fullscreen-landscape header h1 {
              font-size: 1.125rem !important; /* text-lg */
         }
-        /* --- THIS RULE WAS MODIFIED --- */
         #mainContainer.mobile-fullscreen-landscape header img {
              width: 1.75rem !important; /* w-7 */
              height: 1.75rem !important; /* h-7 */
         }
-        /* --- END OF MODIFICATION --- */
         #mainContainer.mobile-fullscreen-landscape header .cursor-help {
              /* Kept same size, it's already small */
         }
@@ -129,8 +124,8 @@
              width: 1.25rem !important; /* w-5 */
              height: 1.25rem !important; /* h-5 */
         }
-        /* NEW: Rule to show text link on mobile landscape */
-        #mainContainer.mobile-fullscreen-landscape header a[href="https://x.com/decodejar"].hidden {
+        /* Rule to show text link on mobile landscape */
+        #mainContainer.mobile-fullscreen-landscape header a[href="https://x.com/decodejar"].hidden-on-small {
             display: block !important;
             font-size: 0.75rem !important; /* text-xs */
         }
@@ -189,16 +184,13 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center h-screen p-2">
 
-    <!-- SEO text for search engines -->
-    <div class="sr-only">
+    <!-- SEO text for search engines --><div class="sr-only">
         This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model.
     </div>
 
-    <!-- Main application container -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
+    <!-- Main application container --><div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white rounded-lg shadow-xl p-2 sm:p-3 md:p-4 relative">
 
-        <!-- Mobile Rotate Overlay -->
-        <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8">
+        <!-- Mobile Rotate Overlay --><div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-gray-600 mb-4 animate-pulse">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
             </svg>
@@ -206,31 +198,24 @@
             <p class="text-gray-600">This chart is best viewed in landscape mode.</p>
         </div>
 
-        <!-- Page Header -->
-        <header class="relative mb-3 h-10 flex items-center justify-between">
-            <!-- Left Element: Logo and Link -->
-            <div class="flex items-center space-x-2">
-                <!-- Image is now a link and visible on all screens -->
-                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer">
+        <!-- Page Header --><header class="relative mb-3 h-10 flex items-center justify-between">
+            <!-- Left Element: Logo and Link --><div class="flex items-center space-x-2">
+                <!-- Image is now a link and visible on all screens --><a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer">
                     <img src="decode.png" alt="Decodejar Logo" class="w-10 h-10 rounded-full border border-gray-200" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                 </a>
-                <!-- Text link is hidden on mobile (screens < sm) -->
-                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-indigo-500 transition-colors hidden sm:block">
+                <!-- Text link is hidden on small screens (<800px) --><a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 hover:text-indigo-500 transition-colors hidden-on-small" style="display: none;">
                     x.com/decodejar
                 </a>
             </div>
 
-            <!-- Center Element: Title (Absolutely centered) -->
-            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center space-x-2">
+            <!-- Center Element: Title (Absolutely centered) --><div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center space-x-2">
                 <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900 whitespace-nowrap">
                     TAO Tensor Law Model
                 </h1>
-                <!-- Tooltip Icon -->
-                <span title="This tool models TAO's price history against a Power Law (Price = C * (Time + Offset)^α) to find the best-fit trend. It helps visualize price bands and project future 'fair value' based on this long-term model." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
+                <!-- Tooltip Icon --><span title="This tool models TAO's price history against a Power Law (Price = C * (Time + Offset)^α) to find the best-fit trend. It helps visualize price bands and project future 'fair value' based on this long-term model." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
             </div>
 
-             <!-- Right Element: Fullscreen Button -->
-            <button id="fullscreenBtn" onclick="toggleFullScreen()" class="text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
+             <!-- Right Element: Fullscreen Button --><button id="fullscreenBtn" onclick="toggleFullScreen()" class="text-gray-400 hover:text-gray-800 transition-colors z-20 p-1 rounded-full hover:bg-gray-100" title="Toggle Fullscreen">
                 <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                 </svg>
@@ -240,43 +225,34 @@
             </button>
         </header>
 
-        <!-- Top Status Bar: Data status, price, bands toggle -->
-        <div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
+        <!-- Top Status Bar: Data status, price, bands toggle --><div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
              <div id="dataStatusDiv" class="flex items-center">
                  <span class="status-dot bg-yellow-400"></span><strong>Updated:</strong>&nbsp;N/A (Loading)
              </div>
              <div id="lastPriceDiv" class="hidden sm:block"></div>
              <div id="priceZoneDiv" class="flex items-center hidden sm:block"></div>
              
-             <!-- Bands Toggle Checkbox -->
-             <div id="showBandsContainer" class="flex items-center hidden">
+             <!-- Bands Toggle Checkbox --><div id="showBandsContainer" class="flex items-center hidden">
                  <input type="checkbox" id="showBandsCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                 <label for="showBandsCheckbox" class="cursor-pointer mr-1">Show Bands&nbsp;</label>
+                 <label for="showBandsCheckbox" class="cursor-pointer mr-1">Bands&nbsp;</label>
                  <span title="Blue: Discount (P1-P20), Green: Value (P20-P50), Yellow: Expensive (P50-P80), Red: Bubble (P80-P99)" class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
              </div>
         </div>
 
-        <!-- Chart Card: Contains loader and canvas wrapper -->
-        <div id="chartCard" class="bg-white p-2 rounded-lg relative flex-grow flex flex-col min-h-0">
-            <!-- Loading Spinner -->
-            <div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+        <!-- Chart Card: Contains loader and canvas wrapper --><div id="chartCard" class="bg-white p-2 rounded-lg relative flex-grow flex flex-col min-h-0">
+            <!-- Loading Spinner --><div id="loader" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
                 <div class="loader"></div>
             </div>
-            <!-- Canvas Wrapper: Scales to fill parent card -->
-            <div id="chartWrapper" class="relative flex-grow min-h-0">
+            <!-- Canvas Wrapper: Scales to fill parent card --><div id="chartWrapper" class="relative flex-grow min-h-0">
                 <div id="projectionTable" class="hidden"></div>
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Bottom Model Info Bar: MOVED FROM HERE -->
-        </div>
+            <!-- Bottom Model Info Bar: MOVED FROM HERE --></div>
 
-        <!-- Bottom Model Info Bar: MOVED TO HERE -->
-        <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600 px-4">
+        <!-- Bottom Model Info Bar: MOVED TO HERE --><div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600 px-4">
             <div id="growthExponentDiv"></div>              
-            <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
-                <!-- NEW: Replaced dropdown with checkbox -->
-                <div class="flex items-center">
+            <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv --><!-- NEW: Replaced dropdown with checkbox --><div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
                     <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1">Use Optimal&nbsp;</label>
                     <span title="Overrides the hard-coded model offset and uses the dynamically calculated optimal fit." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
@@ -286,8 +262,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center p-1 mt-2">
+    <!-- Footer --><footer class="text-center p-1 mt-2">
         <p class="text-gray-600 text-xs">&copy; 2025 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">decodejar.com</a>. All Rights Reserved. Disclaimer: This tool is for informational and research purposes only and does not constitute financial or trading advice. Past performance is not indicative of future results.</p>
     </footer>
 
@@ -759,8 +734,9 @@
                    const yearStartTime = new Date(year, 0, 1).getTime();
                    
                    // Estimate the dayIndex for this future Jan 1st
-                   const diffTime = yearStartTime - firstDayTime;
-                   const estimatedDayIndex = firstDayIndex + (diffTime / msPerDay);
+                   const diffTime = yearStartTime - firstDataPointDate.getTime();
+                   const diffDays = Math.round(diffTime / MS_PER_DAY); // Use MS_PER_DAY constant
+                   const estimatedDayIndex = firstDayIndex + diffDays;
                    
                    const xValue = estimatedDayIndex + activeDayOffset;
 
@@ -1149,7 +1125,6 @@
 
         /**
          * Handles UI changes on fullscreen, resize, and orientation change.
-         * --- MODIFIED: Uncommented logic and ensured element references are used ---
          */
         function handleFullscreenChange() {
              requestAnimationFrame(() => { 
@@ -1167,25 +1142,11 @@
                     fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                 }
 
-                // --- MODIFIED: Apply/remove class instead of inline styles ---
                 if (isInFullscreen && isMobile && isLandscape) {
                    mainContainer.classList.add('mobile-fullscreen-landscape');
                 } else {
                    mainContainer.classList.remove('mobile-fullscreen-landscape');
                 }
-                // --- END: MODIFIED ---
-
-                // --- REMOVED: Old inline style logic ---
-                // if (headerElement) headerElement.style.display = '';
-                // if (bottomBarElement) bottomBarElement.style.display = '';
-                // if (topBarElement) topBarElement.style.display = '';
-                // if (chartCardElement) chartCardElement.style.padding = '';
-                
-                // if (isInFullscreen && isMobile && isLandscape) {
-                //    if (bottomBarElement) bottomBarElement.style.display = 'none'; 
-                //    if (chartCardElement) chartCardElement.style.padding = '0';
-                // }
-                // --- END: REMOVED ---
 
                  if (chart) {
                     setTimeout(() => {
@@ -1194,6 +1155,17 @@
                          });
                     }, 50); 
                  }
+
+                // --- NEW: Handle visibility of x.com/decodejar link based on window width ---
+                const decodejarLink = document.querySelector('header a[href="https://x.com/decodejar"].hidden-on-small');
+                if (decodejarLink) {
+                    if (window.innerWidth >= 800) { // Changed breakpoint here
+                        decodejarLink.style.display = 'block';
+                    } else {
+                        decodejarLink.style.display = 'none';
+                    }
+                }
+                // --- END NEW ---
             });
         }
 
