@@ -104,22 +104,24 @@
         }
         /* NEW: Added rules for header in mobile landscape fullscreen */
         #mainContainer.mobile-fullscreen-landscape header {
-            height: 2.25rem !important; /* h-9 */
-            margin-bottom: 0.25rem !important; /* mb-1 */
+             height: 2.25rem !important; /* h-9 */
+             margin-bottom: 0.25rem !important; /* mb-1 */
         }
         #mainContainer.mobile-fullscreen-landscape header h1 {
-            font-size: 1.125rem !important; /* text-lg */
+             font-size: 1.125rem !important; /* text-lg */
         }
+        /* --- THIS RULE WAS MODIFIED --- */
         #mainContainer.mobile-fullscreen-landscape header img {
-            width: 2.25rem !important; /* w-9 */
-            height: 2.25rem !important; /* h-9 */
+             width: 1.75rem !important; /* w-7 */
+             height: 1.75rem !important; /* h-7 */
         }
+        /* --- END OF MODIFICATION --- */
         #mainContainer.mobile-fullscreen-landscape header .cursor-help {
-            /* Kept same size, it's already small */
+             /* Kept same size, it's already small */
         }
         #mainContainer.mobile-fullscreen-landscape #fullscreenBtn svg {
-            width: 1.25rem !important; /* w-5 */
-            height: 1.25rem !important; /* h-5 */
+             width: 1.25rem !important; /* w-5 */
+             height: 1.25rem !important; /* h-5 */
         }
         /* --- END: Mobile Fullscreen Optimizations --- */
 
@@ -258,7 +260,7 @@
 
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
-                <div id="growthExponentDiv"></div>                  
+                <div id="growthExponentDiv"></div>              
                 <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
@@ -498,16 +500,16 @@
 
             // Handle data loading failure
             if (!baseData || baseData.length === 0) {
-                 if (!statusDiv.innerHTML.includes('Error')) {
-                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
-                 }
-                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
-                 modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
-                 modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
-                 if (useOptimalOffsetCheckbox) useOptimalOffsetCheckbox.disabled = true;
-                 showBandsContainer.classList.add('hidden');
-                 loader.style.display = 'none';
-                 return;
+                if (!statusDiv.innerHTML.includes('Error')) {
+                    statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                }
+                growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
+                modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
+                modelFitDiv.innerHTML = '<strong>Fit (R²):</strong> N/A';
+                if (useOptimalOffsetCheckbox) useOptimalOffsetCheckbox.disabled = true;
+                showBandsContainer.classList.add('hidden');
+                loader.style.display = 'none';
+                return;
             }
 
             // --- 1. GET MODEL PARAMETERS BASED ON SELECTION ---
@@ -719,11 +721,11 @@
                    if (actualYear > year && year > firstDataYear) continue; // Already found a tick for the previous year
 
                    if (year > lastYearFound) {
-                       const xValue = dayData.dayIndex + activeDayOffset;
-                       if (xValue >= axisMinDay && xValue <= axisMaxDay) {
-                            newTicks.push({ value: xValue, label: year.toString() });
-                            lastYearFound = year;
-                       }
+                        const xValue = dayData.dayIndex + activeDayOffset;
+                        if (xValue >= axisMinDay && xValue <= axisMaxDay) {
+                             newTicks.push({ value: xValue, label: year.toString() });
+                             lastYearFound = year;
+                        }
                    }
                  }
 
@@ -738,7 +740,7 @@
                    const xValue = estimatedDayIndex + activeDayOffset;
 
                    if (xValue >= axisMinDay && xValue <= axisMaxDay) {
-                        newTicks.push({ value: xValue, label: year.toString() });
+                         newTicks.push({ value: xValue, label: year.toString() });
                    }
                  }
                  
@@ -880,25 +882,25 @@
                                              let dataPoint = baseData.find(p => p.dayIndex === Math.round(targetDayIndex));
                                              
                                              if (!dataPoint) {
-                                                  // Fallback for projected points: find closest
-                                                  dataPoint = baseData.reduce((prev, curr) => {
-                                                      return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
-                                                  });
+                                                 // Fallback for projected points: find closest
+                                                 dataPoint = baseData.reduce((prev, curr) => {
+                                                     return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
+                                                 });
                                              }
 
                                              if (dataPoint) {
-                                                  const date = new Date(dataPoint.time);
-                                                  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                                                 const date = new Date(dataPoint.time);
+                                                 return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                                              }
 
                                              return `Day ~${targetDayIndex.toFixed(0)}`;
-                                 }
+                                        }
                                          return '';
                                      },
-                                     label: (context) => {
-                                         if (context.dataset.label.includes('Band') || context.datasetIndex === 5) return null;
-                                         return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-                                     }
+                                    label: (context) => {
+                                        if (context.dataset.label.includes('Band') || context.datasetIndex === 5) return null;
+                                        return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                    }
                                 }
                             }
                         },
@@ -1126,48 +1128,48 @@
          */
         function handleFullscreenChange() {
              requestAnimationFrame(() => { 
-                 const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                 const isMobile = window.innerWidth < 1024;
-                 const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
+                const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                const isMobile = window.innerWidth < 1024;
+                const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
-                 if (isInFullscreen) {
-                     fsIconEnter.classList.add('hidden');
-                     fsIconExit.classList.remove('hidden');
-                     fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-                 } else {
-                     fsIconEnter.classList.remove('hidden');
-                     fsIconExit.classList.add('hidden');
-                     fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
-                 }
+                if (isInFullscreen) {
+                    fsIconEnter.classList.add('hidden');
+                    fsIconExit.classList.remove('hidden');
+                    fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                } else {
+                    fsIconEnter.classList.remove('hidden');
+                    fsIconExit.classList.add('hidden');
+                    fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
+                }
 
-                 // --- MODIFIED: Apply/remove class instead of inline styles ---
-                 if (isInFullscreen && isMobile && isLandscape) {
-                    mainContainer.classList.add('mobile-fullscreen-landscape');
-                 } else {
-                    mainContainer.classList.remove('mobile-fullscreen-landscape');
-                 }
-                 // --- END: MODIFIED ---
+                // --- MODIFIED: Apply/remove class instead of inline styles ---
+                if (isInFullscreen && isMobile && isLandscape) {
+                   mainContainer.classList.add('mobile-fullscreen-landscape');
+                } else {
+                   mainContainer.classList.remove('mobile-fullscreen-landscape');
+                }
+                // --- END: MODIFIED ---
 
-                 // --- REMOVED: Old inline style logic ---
-                 // if (headerElement) headerElement.style.display = '';
-                 // if (bottomBarElement) bottomBarElement.style.display = '';
-                 // if (topBarElement) topBarElement.style.display = '';
-                 // if (chartCardElement) chartCardElement.style.padding = '';
-                 
-                 // if (isInFullscreen && isMobile && isLandscape) {
-                 //     if (bottomBarElement) bottomBarElement.style.display = 'none'; 
-                 //     if (chartCardElement) chartCardElement.style.padding = '0';
-                 // }
-                 // --- END: REMOVED ---
+                // --- REMOVED: Old inline style logic ---
+                // if (headerElement) headerElement.style.display = '';
+                // if (bottomBarElement) bottomBarElement.style.display = '';
+                // if (topBarElement) topBarElement.style.display = '';
+                // if (chartCardElement) chartCardElement.style.padding = '';
+                
+                // if (isInFullscreen && isMobile && isLandscape) {
+                //    if (bottomBarElement) bottomBarElement.style.display = 'none'; 
+                //    if (chartCardElement) chartCardElement.style.padding = '0';
+                // }
+                // --- END: REMOVED ---
 
-                  if (chart) {
-                     setTimeout(() => {
+                 if (chart) {
+                    setTimeout(() => {
                          requestAnimationFrame(() => {
                              if (chart) chart.resize();
                          });
-                     }, 50); 
-                  }
-             });
+                    }, 50); 
+                 }
+            });
         }
 
         /**
@@ -1182,7 +1184,7 @@
             const visibleData = priceData.filter(p => p.x >= currentXMin && p.x <= currentXMax);
 
             if (visibleData.length < 2) {
-                 return; 
+                return; 
             }
 
             const prices = visibleData.map(p => p.y);
@@ -1354,9 +1356,9 @@
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
         window.addEventListener('resize', handleFullscreenChange);
          if (screen.orientation) {
-              screen.orientation.addEventListener('change', handleFullscreenChange);
+             screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-              window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
          }
 
         // Initial load
