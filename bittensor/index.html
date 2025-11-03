@@ -87,7 +87,7 @@
         }
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        #mainContainer.mobile-fullscreen-landscape header,
+        /* MODIFIED: Removed header from this rule */
         #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
              display: none !important;
         }
@@ -96,6 +96,30 @@
         }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
              display: flex !important;
+             /* NEW: Added styles to shrink top bar */
+             padding: 0.125rem 0.5rem !important; /* p-0.5 px-2 */
+             margin-bottom: 0.25rem !important; /* mb-1 */
+             gap: 0.5rem 1rem !important; /* gap-y-2 gap-x-4 */
+             font-size: 0.75rem !important; /* text-xs */
+        }
+        /* NEW: Added rules for header in mobile landscape fullscreen */
+        #mainContainer.mobile-fullscreen-landscape header {
+            height: 2.25rem !important; /* h-9 */
+            margin-bottom: 0.25rem !important; /* mb-1 */
+        }
+        #mainContainer.mobile-fullscreen-landscape header h1 {
+            font-size: 1.125rem !important; /* text-lg */
+        }
+        #mainContainer.mobile-fullscreen-landscape header img {
+            width: 2.25rem !important; /* w-9 */
+            height: 2.25rem !important; /* h-9 */
+        }
+        #mainContainer.mobile-fullscreen-landscape header .cursor-help {
+            /* Kept same size, it's already small */
+        }
+        #mainContainer.mobile-fullscreen-landscape #fullscreenBtn svg {
+            width: 1.25rem !important; /* w-5 */
+            height: 1.25rem !important; /* h-5 */
         }
         /* --- END: Mobile Fullscreen Optimizations --- */
 
@@ -1116,25 +1140,25 @@
                      fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                  }
 
-                 // --- UNCOMMENTED: Reset styles for all elements ---
-                 // This ensures desktop fullscreen shows everything
-                 if (headerElement) headerElement.style.display = '';
-                 if (bottomBarElement) bottomBarElement.style.display = '';
-                 if (topBarElement) topBarElement.style.display = '';
-                 if (chartCardElement) chartCardElement.style.padding = '';
-                 // --- END: UNCOMMENTED ---
-
-                 // --- UNCOMMENTED: Apply mobile-specific overrides ---
+                 // --- MODIFIED: Apply/remove class instead of inline styles ---
                  if (isInFullscreen && isMobile && isLandscape) {
-                     // headerElement is VISIBLE (no style change needed)
-                     // topBarElement is VISIBLE (no style change needed)
-                     
-                     // Hides bottom bar for mobile landscape
-                     if (bottomBarElement) bottomBarElement.style.display = 'none'; 
-                     // Removes padding for mobile landscape
-                     if (chartCardElement) chartCardElement.style.padding = '0';
+                    mainContainer.classList.add('mobile-fullscreen-landscape');
+                 } else {
+                    mainContainer.classList.remove('mobile-fullscreen-landscape');
                  }
-                 // --- END: UNCOMMENTED ---
+                 // --- END: MODIFIED ---
+
+                 // --- REMOVED: Old inline style logic ---
+                 // if (headerElement) headerElement.style.display = '';
+                 // if (bottomBarElement) bottomBarElement.style.display = '';
+                 // if (topBarElement) topBarElement.style.display = '';
+                 // if (chartCardElement) chartCardElement.style.padding = '';
+                 
+                 // if (isInFullscreen && isMobile && isLandscape) {
+                 //     if (bottomBarElement) bottomBarElement.style.display = 'none'; 
+                 //     if (chartCardElement) chartCardElement.style.padding = '0';
+                 // }
+                 // --- END: REMOVED ---
 
                   if (chart) {
                      setTimeout(() => {
