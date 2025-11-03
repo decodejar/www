@@ -87,7 +87,10 @@
         }
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        /* MODIFIED: Removed header from this rule */
+        /* NEW: Added padding rule for main container */
+        #mainContainer.mobile-fullscreen-landscape {
+            padding: 0.25rem !important; /* p-1 */
+        }
         #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
              display: none !important;
         }
@@ -98,14 +101,14 @@
              display: flex !important;
              /* NEW: Added styles to shrink top bar */
              padding: 0.125rem 0.5rem !important; /* p-0.5 px-2 */
-             margin-bottom: 0.25rem !important; /* mb-1 */
+             margin-bottom: 0.125rem !important; /* MODIFIED: mb-0.5 */
              gap: 0.5rem 1rem !important; /* gap-y-2 gap-x-4 */
              font-size: 0.75rem !important; /* text-xs */
         }
         /* NEW: Added rules for header in mobile landscape fullscreen */
         #mainContainer.mobile-fullscreen-landscape header {
              height: 2.25rem !important; /* h-9 */
-             margin-bottom: 0.25rem !important; /* mb-1 */
+             margin-bottom: 0.125rem !important; /* MODIFIED: mb-0.5 */
         }
         #mainContainer.mobile-fullscreen-landscape header h1 {
              font-size: 1.125rem !important; /* text-lg */
@@ -1392,3 +1395,4 @@
     </script>
 </body>
 </html>
+
