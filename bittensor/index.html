@@ -93,10 +93,10 @@
         }
          #mainContainer.mobile-fullscreen-landscape #chartCard {
              padding: 0 !important;
-         }
+        }
          #mainContainer.mobile-fullscreen-landscape #topStatusBar {
              display: flex !important;
-         }
+        }
         /* --- END: Mobile Fullscreen Optimizations --- */
 
         /* --- Projection Table Styles --- */
@@ -234,7 +234,7 @@
 
             <!-- Bottom Model Info Bar: Model parameters -->
             <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
-                <div id="growthExponentDiv"></div>                   
+                <div id="growthExponentDiv"></div>                  
                 <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
@@ -259,6 +259,16 @@
          */
 
         // --- SECTION: GLOBAL ELEMENT REFERENCES ---
+        // --- ADDED missing element references for fullscreen logic ---
+        const mainContainer = document.getElementById('mainContainer');
+        const headerElement = document.querySelector('header');
+        const topBarElement = document.getElementById('topStatusBar');
+        const bottomBarElement = document.getElementById('bottomModelBar');
+        const chartCardElement = document.getElementById('chartCard');
+        const fsIconEnter = document.getElementById('fsIconEnter');
+        const fsIconExit = document.getElementById('fsIconExit');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        // --- END: Added references ---
         const growthExponentDiv = document.getElementById('growthExponentDiv');
         const modelFitDiv = document.getElementById('modelFitDiv');
         const loader = document.getElementById('loader');
@@ -302,7 +312,7 @@
         let panStartX = 0;
         let panStartMin = 0;
         let panStartLogRange = 0;
- 
+
         // Band Fill Colors
         const blueFillColor = 'rgba(147, 197, 253, 0.1)';
         const greenFillColor = 'rgba(34, 197, 94, 0.1)';
@@ -465,7 +475,7 @@
             // Handle data loading failure
             if (!baseData || baseData.length === 0) {
                  if (!statusDiv.innerHTML.includes('Error')) {
-                     statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                      statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
                  }
                  growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
                  modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
@@ -552,11 +562,11 @@
             } else {
                 extendedMaxDay = lastDayNum * 1.4; // Fallback
             }
- 
+
             // Store the full range for this model for zoom reset
             originalExtendedMinDay = extendedMinDay;
             originalExtendedMaxDay = extendedMaxDay;
- 
+
             // Y-Axis Range (with padding)
             const logMinPrice = Math.log10(minPrice);
             const logMaxPrice = Math.log10(maxPrice);
@@ -617,8 +627,8 @@
                  const safeStartIndex = Math.max(startIndex, 1); 
                  const safeEndIndex = Math.max(endIndex, 1);
                  return [
-                      { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
-                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
+                     { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
+                     { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
                  ];
             };
             const medianLineData = calculateLinePoints(medianIntercept);
@@ -674,45 +684,45 @@
 
                  // Loop 1: Find ticks for years *within* the data
                  for (let year = firstDataYear; year <= lastDataYear; year++) {
-                    const yearStartTime = new Date(year, 0, 1).getTime();
-                    // Find the first data point on or after Jan 1st of that year
-                    const dayData = baseData.find(p => p.time >= yearStartTime);
-                    
-                    if (!dayData) continue;
-                    
-                    // Get the year from the found data point's time to handle edge cases
-                    const actualYear = new Date(dayData.time).getFullYear();
-                    if (actualYear > year && year > firstDataYear) continue; // Already found a tick for the previous year
+                   const yearStartTime = new Date(year, 0, 1).getTime();
+                   // Find the first data point on or after Jan 1st of that year
+                   const dayData = baseData.find(p => p.time >= yearStartTime);
+                   
+                   if (!dayData) continue;
+                   
+                   // Get the year from the found data point's time to handle edge cases
+                   const actualYear = new Date(dayData.time).getFullYear();
+                   if (actualYear > year && year > firstDataYear) continue; // Already found a tick for the previous year
 
-                    if (year > lastYearFound) {
-                        const xValue = dayData.dayIndex + activeDayOffset;
-                        if (xValue >= axisMinDay && xValue <= axisMaxDay) {
-                             newTicks.push({ value: xValue, label: year.toString() });
-                             lastYearFound = year;
-                        }
-                    }
+                   if (year > lastYearFound) {
+                       const xValue = dayData.dayIndex + activeDayOffset;
+                       if (xValue >= axisMinDay && xValue <= axisMaxDay) {
+                            newTicks.push({ value: xValue, label: year.toString() });
+                            lastYearFound = year;
+                       }
+                   }
                  }
 
                  // Loop 2: Estimate ticks for *future* years
                  for (let year = lastDataYear + 1; year <= maxYear; year++) {
-                    const yearStartTime = new Date(year, 0, 1).getTime();
-                    
-                    // Estimate the dayIndex for this future Jan 1st
-                    const diffTime = yearStartTime - firstDayTime;
-                    const estimatedDayIndex = firstDayIndex + (diffTime / msPerDay);
-                    
-                    const xValue = estimatedDayIndex + activeDayOffset;
+                   const yearStartTime = new Date(year, 0, 1).getTime();
+                   
+                   // Estimate the dayIndex for this future Jan 1st
+                   const diffTime = yearStartTime - firstDayTime;
+                   const estimatedDayIndex = firstDayIndex + (diffTime / msPerDay);
+                   
+                   const xValue = estimatedDayIndex + activeDayOffset;
 
-                    if (xValue >= axisMinDay && xValue <= axisMaxDay) {
-                         newTicks.push({ value: xValue, label: year.toString() });
-                    }
+                   if (xValue >= axisMinDay && xValue <= axisMaxDay) {
+                        newTicks.push({ value: xValue, label: year.toString() });
+                   }
                  }
                  
                  axis.ticks.length = 0; // Clear existing ticks
                  const validTicks = newTicks.filter(tick => !isNaN(tick.value) && tick.label);
                  axis.ticks.push(...validTicks);
              };
- 
+
             /**
              * Manually generates Y-axis ticks for powers of 10.
              */
@@ -846,15 +856,15 @@
                                              let dataPoint = baseData.find(p => p.dayIndex === Math.round(targetDayIndex));
                                              
                                              if (!dataPoint) {
-                                                // Fallback for projected points: find closest
-                                                dataPoint = baseData.reduce((prev, curr) => {
-                                                    return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
-                                                });
+                                                  // Fallback for projected points: find closest
+                                                  dataPoint = baseData.reduce((prev, curr) => {
+                                                      return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
+                                                  });
                                              }
 
                                              if (dataPoint) {
-                                                 const date = new Date(dataPoint.time);
-                                                 return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                                                  const date = new Date(dataPoint.time);
+                                                  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
                                              }
 
                                              return `Day ~${targetDayIndex.toFixed(0)}`;
@@ -975,7 +985,7 @@
                  if (medianDataset) Object.assign(medianDataset, orangeLineStyle);
              }
         }
- 
+
         /**
          * Calculates R-squared (coefficient of determination) for the log-log regression.
          */
@@ -996,7 +1006,7 @@
             });
              return ss_tot === 0 ? 1 : Math.max(0, 1 - (ss_res / ss_tot)); 
         }
- 
+
         /**
          * Calculates and displays future price projections in the floating table.
          */
@@ -1070,7 +1080,7 @@
             tableElement.style.display = ''; 
             tableElement.classList.remove('hidden');
         }
- 
+
         // --- SECTION: CHART INTERACTIVITY (PAN & ZOOM) ---
 
         /**
@@ -1088,6 +1098,7 @@
 
         /**
          * Handles UI changes on fullscreen, resize, and orientation change.
+         * --- MODIFIED: Uncommented logic and ensured element references are used ---
          */
         function handleFullscreenChange() {
              requestAnimationFrame(() => { 
@@ -1105,18 +1116,27 @@
                      fullscreenBtn.setAttribute('title', 'Enter Fullscreen');
                  }
 
+                 // --- UNCOMMENTED: Reset styles for all elements ---
+                 // This ensures desktop fullscreen shows everything
                  if (headerElement) headerElement.style.display = '';
                  if (bottomBarElement) bottomBarElement.style.display = '';
-                 if (topBarElement) topBarElement.style.display = '';
-                 if (chartCardElement) chartCardElement.style.padding = '';
+                 if (topBarElement) topBarElement.style.display = '';
+                 if (chartCardElement) chartCardElement.style.padding = '';
+                 // --- END: UNCOMMENTED ---
 
-                 if (isInFullscreen && isMobile && isLandscape) {
-                     // if (headerElement) headerElement.style.display = 'none'; // MODIFIED: Kept header visible
-                     if (bottomBarElement) bottomBarElement.style.display = 'none'; // Hides bottom bar
-                     if (chartCardElement) chartCardElement.style.padding = '0';
-                 }
+                 // --- UNCOMMENTED: Apply mobile-specific overrides ---
+                 if (isInFullscreen && isMobile && isLandscape) {
+                     // headerElement is VISIBLE (no style change needed)
+                     // topBarElement is VISIBLE (no style change needed)
+                     
+                     // Hides bottom bar for mobile landscape
+                     if (bottomBarElement) bottomBarElement.style.display = 'none'; 
+                     // Removes padding for mobile landscape
+                     if (chartCardElement) chartCardElement.style.padding = '0';
+                 }
+                 // --- END: UNCOMMENTED ---
 
-                  if (chart) {
+                  if (chart) {
                      setTimeout(() => {
                          requestAnimationFrame(() => {
                              if (chart) chart.resize();
@@ -1125,7 +1145,7 @@
                   }
              });
         }
- 
+
         /**
          * Recalculates Y-axis limits based on the current X-axis view.
          */
@@ -1185,7 +1205,7 @@
         function handleWheelZoom(event) {
             if (!chart || !priceData || priceData.length === 0) return;
             event.preventDefault(); 
- 
+
             const chartArea = chart.chartArea;
             if (!chartArea) return;
 
@@ -1242,7 +1262,7 @@
             // 8. Update chart
             chart.update('none');
         }
- 
+
         /**
          * Handles starting the pan action.
          */
@@ -1303,16 +1323,16 @@
             event.target.style.cursor = 'default';
         }
 
-        // --- SECTION: EVENT LISTENERS ---
+    // --- SECTION: EVENT LISTENERS ---
 
         // Listen for fullscreen and orientation changes
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
         window.addEventListener('resize', handleFullscreenChange);
          if (screen.orientation) {
-             screen.orientation.addEventListener('change', handleFullscreenChange);
+              screen.orientation.addEventListener('change', handleFullscreenChange);
          } else {
-             window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
+              window.addEventListener('orientationchange', handleFullscreenChange); // Older mobile
          }
 
         // Initial load
@@ -1344,6 +1364,5 @@
             setTimeout(handleFullscreenChange, 150); 
         }
     </script>
- 
 </body>
 </html>
