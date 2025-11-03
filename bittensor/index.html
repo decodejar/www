@@ -819,7 +819,7 @@
                                 borderWidth: 2, 
                                 tension: 0.1,
                                 pointRadius: 0, // Explicitly invisible
-                                pointHoverRadius: 10, // Larger hover radius
+                                pointHoverRadius: 0, // Set to 0 to hide hover point
                                 pointHitRadius: 15 // Large invisible hit box
                             },
                             { ...datasetDefaults, label: '50th Percentile', data: medianLineData, ...orangeLineStyle, hidden: false },
@@ -1366,4 +1366,3 @@
     </script>
 </body>
 </html>
-
