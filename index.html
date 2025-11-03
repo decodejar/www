@@ -59,15 +59,18 @@
         <!-- ===== HEADER & PROFILE SECTION ===== -->
         <div>
             <!-- Banner Image -->
-            <img 
-                src="/banner.png" 
-                alt="Banner" 
-                class="w-full h-[120px] sm:h-[200px] object-cover object-center bg-gray-200"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-            >
-            <!-- Fallback for Banner -->
-            <div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
-                <!-- Banner failed to load -->
+            <!-- This new div creates the 3:1 aspect ratio container -->
+            <div class="relative w-full pb-[33.33%] h-0 bg-gray-200">
+                <img 
+                    src="/banner.png" 
+                    alt="Banner" 
+                    class="absolute top-0 left-0 w-full h-full object-cover object-center"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <!-- Fallback for Banner -->
+                <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-500" style="display: none;">
+                    <!-- Banner failed to load -->
+                </div>
             </div>
 
             <!-- Profile Info Container -->
@@ -203,5 +206,3 @@
 
 </body>
 </html>
-
-
