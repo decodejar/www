@@ -1107,16 +1107,16 @@
 
                  if (headerElement) headerElement.style.display = '';
                  if (bottomBarElement) bottomBarElement.style.display = '';
-                 if (topBarElement) topBarElement.style.display = '';
-                 if (chartCardElement) chartCardElement.style.padding = '';
+                 if (topBarElement) topBarElement.style.display = '';
+                 if (chartCardElement) chartCardElement.style.padding = '';
 
-                 if (isInFullscreen && isMobile && isLandscape) {
-                     if (headerElement) headerElement.style.display = 'none';
-                     if (bottomBarElement) bottomBarElement.style.display = 'none';
-                     if (chartCardElement) chartCardElement.style.padding = '0';
-                 }
+                 if (isInFullscreen && isMobile && isLandscape) {
+                     // if (headerElement) headerElement.style.display = 'none'; // MODIFIED: Kept header visible
+                     if (bottomBarElement) bottomBarElement.style.display = 'none'; // Hides bottom bar
+                     if (chartCardElement) chartCardElement.style.padding = '0';
+                 }
 
-                  if (chart) {
+                  if (chart) {
                      setTimeout(() => {
                          requestAnimationFrame(() => {
                              if (chart) chart.resize();
