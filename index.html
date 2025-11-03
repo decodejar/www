@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decode - Bitcoin and Crypto Analysis</title>
+    <title>Bitcoin and Crypto Analysis | Decode</title>
     <!--
       NOTE:
       This file is a complete, self-contained HTML document.
       It includes:
       1. Tailwind CSS (via CDN)
       2. All HTML structure
-    --><!-- 1. Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. Load Inter Font --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- 3. Custom Scrollbar Styles --><style>
+    <style>
         /* Simple scrollbar for light mode */
         ::-webkit-scrollbar {
             width: 8px;
@@ -33,13 +34,12 @@
             background: #a8a8a8;
         }
 
-        /* Ensure body has a background color transition for a smoother theme change */
         body {
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             font-family: 'Inter', sans-serif; /* Apply Inter font */
         }
     </style>
-    <!-- We need to tell Tailwind to use Inter --><script>
+    <script>
         tailwind.config = {
             theme: {
                 extend: {
@@ -53,58 +53,70 @@
 </head>
 <body class="font-sans bg-white text-gray-900 min-h-screen">
 
-    <!-- Main Content Container --><main class="max-w-[576px] mx-auto border-x border-gray-200 min-h-screen">
+    <!-- Main Content Container -->
+    <main class="max-w-[576px] mx-auto border-x border-gray-200 min-h-screen">
         
-        <!-- ===== HEADER & PROFILE SECTION ===== --><div>
-            <!-- 1. Banner Image --><img 
+        <!-- ===== HEADER & PROFILE SECTION ===== -->
+        <div>
+            <!-- Banner Image -->
+            <img 
                 src="/banner.png" 
                 alt="Banner" 
                 class="w-full h-[120px] sm:h-[200px] object-cover object-center bg-gray-200"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
             >
-            <!-- Fallback for Banner --><div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
-                <!-- Banner failed to load --></div>
+            <!-- Fallback for Banner -->
+            <div class="w-full h-[120px] sm:h-[200px] bg-gray-200 flex items-center justify-center text-gray-500" style="display: none;">
+                <!-- Banner failed to load -->
+            </div>
 
-            <!-- 2. Profile Info Container --><div class="p-3 relative">
+            <!-- Profile Info Container -->
+            <div class="p-3 relative">
                 
-                <!-- UPDATED: Increased space from space-x-3 to space-x-4 --><div class="absolute top-5 left-5 flex space-x-4">
+                <!-- Social Links -->
+                <div class="absolute top-5 left-5 flex space-x-4">
                     <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" title="Follow on X">
                         <svg class="w-8 h-8 text-black hover:text-gray-700 transition-colors" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.918l-3.965-5.187L2.6 15.25H.146l5.383-6.142L0 .75h5.063l3.495 4.631L12.6.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/>
+                            <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.918l-3.965-5.187L2.6 15.25H.146l5.383-6.142L0 .75h5.063l3.495 4.631L12.6.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/>
                         </svg>
                     </a>
                     <a href="https://substack.com/@decodejar" target="_blank" rel="noopener noreferrer" title="Subscribe on Substack">
                         <svg class="w-8 h-8 text-orange-500 hover:text-orange-700 transition-colors" fill="currentColor" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <title>Substack</title>
-                          <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24l10.54-9.6L22.54 24V10.812H1.46zM0 0h24v2.836H0V0z"/>
+                            <title>Substack</title>
+                            <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24l10.54-9.6L22.54 24V10.812H1.46zM0 0h24v2.836H0V0z"/>
                         </svg>
                     </a>
                 </div>
 
-                <!-- UPDATED: Added decodejar.com text back to the right. Added pt-1 to vertically align. --><div class="absolute top-5 right-5">
+                <!-- Website Link -->
+                <div class="absolute top-5 right-5">
                     <p class="pt-1 text-md sm:text-sm text-gray-500">
                         decodejar.com
                     </p>
                 </div>
                 
-                <!-- Profile Picture --><img 
+                <!-- Profile Picture -->
+                <img 
                     src="/decode.png" 
                     alt="Profile Picture"
                     class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 relative z-10 mx-auto"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                 >
-                <!-- Fallback "initials" circle --><div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10 mx-auto" style="display: none;">
+                <!-- Fallback "initials" circle -->
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full -mt-16 sm:-mt-20 border-4 border-white bg-gray-300 hidden items-center justify-center text-4xl font-bold text-gray-700 relative z-10 mx-auto" style="display: none;">
                     D
                 </div>
 
-                <!-- Name, Handle, and Website --><div class="text-center">
+                <!-- Name & Handle -->
+                <div class="text-center">
                     <div>
                         <h1 class="text-2xl sm:text-xl font-bold mt-3">Decode</h1>
                         <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-md sm:text-sm text-gray-500 hover:text-blue-600 hover:underline">@decodejar</a>
                     </div>
                 </div>
 
-                <!-- Bio --><p class="mt-3 text-base sm:text-sm text-center">
+                <!-- Bio -->
+                <p class="mt-3 text-base sm:text-sm text-center">
                     Bitcoin and Crypto Analysis | Macro Perspectives | Elliott Wave Forecasts<br>
                     
                     Biweekly Market Intelligence Newsletter on Substack and X
@@ -114,60 +126,67 @@
         </div>
         <!-- ===== END HEADER & PROFILE SECTION ===== -->
         
-        <!-- Horizontal Line --><div class="mt-6 px-6">
+        <!-- Horizontal Line -->
+        <div class="mt-6 px-6">
              <div class="border-t border-gray-200 w-full"></div>
         </div>
         
-        <!-- ===== LINKS SECTION ===== --><!-- UPDATED: Changed pt-6 to pt-3 to balance spacing -->
+        <!-- ===== LINKS SECTION ===== -->
         <div class="pt-3">
             
-            <!-- Group 0: Subscribe --><h2 class="text-xl sm:text-lg font-bold p-3 pb-1 text-center">Decode Newsletter</h2>
+            <!-- Group: Subscribe -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 text-center">Decode Newsletter</h2>
             
             <div class="flex flex-col items-center space-y-3 p-3">
                 <a href="https://substack.decodejar.com" target="_blank" rel="noopener noreferrer" class="w-5/6 py-3 px-4 bg-gray-100 rounded-lg shadow-sm hover:bg-orange-100 transition-colors flex items-center justify-center relative">
                     <svg class="w-5 h-5 text-gray-400 absolute left-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
                     </svg>
-                    <span class="font-semibold text-base sm:text-sm text-gray-800">Read on Substack</span>
+                    <span class="font-semibold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">Read on Substack</span>
                 </a>
                 <a href="httpss://x.com/decodejar/superfollows" target="_blank" rel="noopener noreferrer" class="w-5/6 py-3 px-4 bg-gray-100 rounded-lg shadow-sm hover:bg-orange-100 transition-colors flex items-center justify-center relative">
                     <svg class="w-5 h-5 text-gray-400 absolute left-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25H5.625a2.25 2.25 0 0 1-2.25-2.25V7.5c0-.621.504-1.125 1.125-1.125H9M3 7.5l.75-1.5h16.5l.75 1.5M3 7.5h18M3 7.5c0-1.119.893-2.01 1.967-2.062a48.877 48.877 0 0 1 12.066 0C18.107 5.49 19 6.381 19 7.5h-16Z" />
                     </svg>
-                    <span class="font-semibold text-base sm:text-sm text-gray-800">Read on X</span>
+                    <span class="font-semibold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">Read on X</span>
                 </a>
             </div>
             
-            <!-- Group 2: Asset Models --><h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5 text-center">Asset Models</h2>
+            <!-- Group: Asset Models -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5 text-center">Asset Models</h2>
             
             <div class="flex flex-col items-center space-y-3 p-3">
                 <a href="https://decodejar.com/bittensor" target="_blank" rel="noopener noreferrer" class="w-5/6 py-3 px-4 bg-gray-100 rounded-lg shadow-sm hover:bg-orange-100 transition-colors flex items-center justify-center relative">
                     <svg class="w-5 h-5 text-gray-400 absolute left-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 21v-1.5M15.75 3v1.5M12 4.5V3m0 18v-1.5M15.75 21v-1.5m-3.75-18v1.5M12 19.5V21m0-18h.008v.008H12V3Zm0 18h.008v.008H12V21Zm3.75-18h.008v.008H15.75V3Zm0 18h.008v.008H15.75V21Zm-7.5-18h.008v.008H8.25V3Zm0 18h.008v.008H8.25V21Zm-3.75-18h.008v.008H4.5V3Zm0 18h.008v.008H4.5V21Zm15-18h.008v.008H19.5V3Zm0 18h.008v.008H19.5V21Zm-7.5-6h.008v.008H12V15Zm0-3.75h.008v.008H12v-.008Zm0 7.5h.008v.008H12V18.75Zm3.75-3.75h.008v.008H15.75v-.008Zm0 3.75h.008v.008H15.75V18.75Zm-7.5-3.75h.008v.008H8.25v-.008Zm0 3.75h.008v.008H8.25V18.75Z" />
                     </svg>
-                    <span class="font-semibold text-base sm:text-sm text-gray-800">TAO Tensor Law Model</span>
+                    <span class="font-semibold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">TAO Tensor Law Model</span>
                 </a>
             </div>
 
-            <!-- Group 3: TradingView --><h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5 text-center">Trading View Indicators</h2>
+            <!-- Group: TradingView -->
+            <h2 class="text-xl sm:text-lg font-bold p-3 pb-1 pt-5 text-center">Trading View Indicators</h2>
 
             <div class="flex flex-col items-center space-y-3 p-3">
                 <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" rel="noopener noreferrer" class="w-5/6 py-3 px-4 bg-gray-100 rounded-lg shadow-sm hover:bg-orange-100 transition-colors flex items-center justify-center relative">
                     <svg class="w-5 h-5 text-gray-400 absolute left-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                     </svg>
-                    <span class="font-semibold text-base sm:text-sm text-gray-800">Global Liquidity Index</span>
+                    <span class="font-semibold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">Global Liquidity Index</span>
                 </a>
                 <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" rel="noopener noreferrer" class="w-5/6 py-3 px-4 bg-gray-100 rounded-lg shadow-sm hover:bg-orange-100 transition-colors flex items-center justify-center relative">
                     <svg class="w-5 h-5 text-gray-400 absolute left-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                     </svg>
-                    <span class="font-semibold text-base sm:text-sm text-gray-800">Moving Average Toolkit</span>
+                    <span class="font-semibold text-xs sm:text-sm text-gray-800 uppercase tracking-wider">Moving Average Toolkit</span>
                 </a>
             </div>
-           
+            
         </div>
-        <!-- ===== END LINKS SECTION ===== --><!-- ===== FOOTER SECTION ===== --><footer class="mt-6 text-center">
+        <!-- ===== END LINKS SECTION ===== -->
+
+        <!-- ===== FOOTER SECTION ===== -->
+        <footer class="mt-6 text-center">
             
             <!-- Horizontal Line -->
             <div class="px-6">
@@ -179,7 +198,10 @@
                 <p class="text-gray-400 text-xs">Disclaimer: Content on this page is for informational and research purposes only and does not constitute financial, investment, or trading advice. We do not recommend any specific asset. Always consult a financial advisor before making investment decisions.</p>
             </div>
         </footer>
-        <!-- ===== END FOOTER SECTION ===== --></main>
+        <!-- ===== END FOOTER SECTION ===== -->
+    </main>
 
-    <!-- Removed Theme Toggle Javascript --></body>
+</body>
 </html>
+
+
