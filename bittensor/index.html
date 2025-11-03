@@ -243,7 +243,7 @@
         <!-- Top Status Bar: Data status, price, bands toggle -->
         <div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
              <div id="dataStatusDiv" class="flex items-center">
-                 <span class="status-dot bg-yellow-400"></span><strong>Updated:</strong> Loading...
+                 <span class="status-dot bg-yellow-400"></span><strong>Updated:</strong>&nbsp;N/A (Loading)
              </div>
              <div id="lastPriceDiv" class="hidden sm:block"></div>
              <div id="priceZoneDiv" class="flex items-center hidden sm:block"></div>
@@ -411,7 +411,7 @@
                 return baseData;
             } catch (error) {
                 console.error("Error loading price data:", error);
-                dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong> N/A (Error)`;
+                dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong>&nbsp;N/A (Error)`;
                 loader.style.display = 'none';
                 return null;
             }
@@ -513,7 +513,7 @@
             // Handle data loading failure
             if (!baseData || baseData.length === 0) {
                 if (!dataStatusDiv.innerHTML.includes('Error')) { // Check updated div
-                    dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong> N/A`; // Updated
+                    dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong>&nbsp;N/A`; // Updated
                 }
                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
                 modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
@@ -585,7 +585,7 @@
                 dotColor = "bg-yellow-400"; // Yellow (within 7 days)
             }
             
-            dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><strong>Updated:</strong> ${lastUpdateDate}`;
+            dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><strong>Updated:</strong>&nbsp;${lastUpdateDate}`;
             // --- End New Status Logic ---
 
             lastPriceDiv.innerHTML = `<strong>Price:</strong> $${lastBaseDataPoint.y.toFixed(2)}`;
@@ -1417,10 +1417,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
