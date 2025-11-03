@@ -268,10 +268,13 @@
                 <canvas id="powerLawChart"></canvas>
             </div>
 
-            <!-- Bottom Model Info Bar: Model parameters -->
-            <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600">
-                <div id="growthExponentDiv"></div>              
-                <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
+            <!-- Bottom Model Info Bar: MOVED FROM HERE -->
+        </div>
+
+        <!-- Bottom Model Info Bar: MOVED TO HERE -->
+        <div id="bottomModelBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 text-sm text-gray-600 px-4">
+            <div id="growthExponentDiv"></div>              
+            <div id="modelParamDiv"></div> <!-- Renamed from optimalOffsetDiv -->
                 <!-- NEW: Replaced dropdown with checkbox -->
                 <div class="flex items-center">
                     <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-1.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
@@ -1414,6 +1417,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
