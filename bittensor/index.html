@@ -87,10 +87,8 @@
         }
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        /* NEW: Added padding rule for main container */
-        #mainContainer.mobile-fullscreen-landscape {
-            padding: 0.25rem !important; /* p-1 */
-        }
+        /* REMOVED: Padding rule for main container */
+        
         #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
              display: none !important;
         }
@@ -125,6 +123,11 @@
         #mainContainer.mobile-fullscreen-landscape #fullscreenBtn svg {
              width: 1.25rem !important; /* w-5 */
              height: 1.25rem !important; /* h-5 */
+        }
+        /* NEW: Rule to show text link on mobile landscape */
+        #mainContainer.mobile-fullscreen-landscape header a[href="https://x.com/decodejar"].hidden {
+            display: block !important;
+            font-size: 0.75rem !important; /* text-xs */
         }
         /* --- END: Mobile Fullscreen Optimizations --- */
 
@@ -234,10 +237,9 @@
 
         <!-- Top Status Bar: Data status, price, bands toggle -->
         <div id="topStatusBar" class="bg-gray-100 p-1 rounded-lg flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-2 text-sm text-gray-600 px-4">
-             <div id="statusDiv" class="flex items-center">
-                 <span class="status-dot bg-yellow-400"></span>Loading latest data...
+             <div id="dataStatusDiv" class="flex items-center">
+                 <span class="status-dot bg-yellow-400"></span><strong>Updated:</strong> Loading...
              </div>
-             <div id="lastUpdateDiv" class="hidden sm:block"></div>
              <div id="lastPriceDiv" class="hidden sm:block"></div>
              <div id="priceZoneDiv" class="flex items-center hidden sm:block"></div>
              
@@ -301,8 +303,7 @@
         const growthExponentDiv = document.getElementById('growthExponentDiv');
         const modelFitDiv = document.getElementById('modelFitDiv');
         const loader = document.getElementById('loader');
-        const statusDiv = document.getElementById('statusDiv');
-        const lastUpdateDiv = document.getElementById('lastUpdateDiv');
+        const dataStatusDiv = document.getElementById('dataStatusDiv'); // Renamed from statusDiv
         const lastPriceDiv = document.getElementById('lastPriceDiv');
         const priceZoneDiv = document.getElementById('priceZoneDiv');
         const ctx = document.getElementById('powerLawChart').getContext('2d');
@@ -402,7 +403,7 @@
                 return baseData;
             } catch (error) {
                 console.error("Error loading price data:", error);
-                statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>Error loading data. Check console.`;
+                dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong> N/A (Error)`;
                 loader.style.display = 'none';
                 return null;
             }
@@ -503,8 +504,8 @@
 
             // Handle data loading failure
             if (!baseData || baseData.length === 0) {
-                if (!statusDiv.innerHTML.includes('Error')) {
-                    statusDiv.innerHTML = `<span class="status-dot bg-red-500"></span>No valid data to display.`;
+                if (!dataStatusDiv.innerHTML.includes('Error')) { // Check updated div
+                    dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong> N/A`; // Updated
                 }
                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
                 modelParamDiv.innerHTML = '<strong>Day Offset:</strong> N/A';
@@ -563,10 +564,23 @@
                 year: 'numeric', month: 'short', day: 'numeric'
             });
 
-            statusDiv.innerHTML = `<span class="status-dot bg-green-500"></span>Data Loaded`;
-            lastUpdateDiv.innerHTML = `<strong>Updated:</strong> ${lastUpdateDate}`;
+            // --- New Status Logic ---
+            const now = new Date().getTime();
+            const diffMs = now - lastTimestamp;
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            const sevenDaysMs = 7 * oneDayMs;
+
+            let dotColor = "bg-red-500"; // Default to red (older than 7 days)
+            if (diffMs < oneDayMs) {
+                dotColor = "bg-green-500"; // Green (within 24 hours)
+            } else if (diffMs < sevenDaysMs) {
+                dotColor = "bg-yellow-400"; // Yellow (within 7 days)
+            }
+            
+            dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><strong>Updated:</strong> ${lastUpdateDate}`;
+            // --- End New Status Logic ---
+
             lastPriceDiv.innerHTML = `<strong>Price:</strong> $${lastBaseDataPoint.y.toFixed(2)}`;
-            lastUpdateDiv.classList.remove('hidden');
             lastPriceDiv.classList.remove('hidden');
 
             // Calculate axis ranges based on the *active* priceData
@@ -1395,4 +1409,5 @@
     </script>
 </body>
 </html>
+
 
