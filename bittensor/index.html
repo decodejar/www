@@ -1092,7 +1092,7 @@
         function handleFullscreenChange() {
              requestAnimationFrame(() => { 
                  const isInFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                 const isMobile = window.innerWidth < 640;
+                 const isMobile = window.innerWidth < 1024;
                  const isLandscape = screen.orientation ? screen.orientation.type.includes('landscape') : window.innerWidth > window.innerHeight;
 
                  if (isInFullscreen) {
