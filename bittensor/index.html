@@ -87,7 +87,14 @@
         }
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
-        /* REMOVED: Padding rule for main container */
+        /* NEW: Rule to adjust padding */
+        #mainContainer.mobile-fullscreen-landscape {
+             padding-top: 0.25rem !important;    /* py-1 */
+             padding-bottom: 0.25rem !important; /* py-1 */
+             /* Keep existing horizontal padding from p-2 */
+             padding-left: 0.5rem !important;    /* px-2 */
+             padding-right: 0.5rem !important;   /* px-2 */
+        }
         
         #mainContainer.mobile-fullscreen-landscape #bottomModelBar {
              display: none !important;
@@ -1409,5 +1416,4 @@
     </script>
 </body>
 </html>
-
 
