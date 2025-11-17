@@ -16,7 +16,7 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-EXV4MXZNHJ');
-    </script>   
+    </script>    
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -101,7 +101,7 @@
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
         #mainContainer.mobile-fullscreen-landscape {
-             padding-top: 0.375rem !important;    /* py-1.5 */
+             padding-top: 0.375rem !important;     /* py-1.5 */
              padding-bottom: 0.375rem !important; /* py-1.5 */
         }
         
@@ -145,68 +145,67 @@
         
         /* --- END: Mobile Fullscreen Optimizations --- */
 
-        /* --- Projection & Band Table Styles --- */
-        #projectionTable,
-        #bandLevelsTable {
-            position: absolute;
-            top: 12%;
-            z-index: 5; /* Below loader (10) but above chart */
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 0.5rem 0.75rem; /* p-2 p-3 */
-            font-size: 0.75rem; /* text-xs */
-            line-height: 1.15rem;
-            color: #374151; /* text-gray-700 */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        #projectionTable { left: 10%; }
-        #bandLevelsTable { right: 10%; }
+        /* --- Projection & Band Table Styles --- */
+        #projectionTable,
+        #bandLevelsTable {
+            position: absolute;
+            top: 12%;
+            z-index: 5; /* Below loader (10) but above chart */
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem 0.75rem; /* p-2 p-3 */
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1.15rem;
+            color: #374151; /* text-gray-700 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        #projectionTable { left: 10%; }
+        #bandLevelsTable { right: 10%; }
 
-        #projectionTable h3,
-        #bandLevelsTable h3 {
-            font-weight: 600; /* font-semibold */
-            color: #1f2937; /* text-gray-800 */
-            margin-bottom: 0.25rem; /* mb-1 */
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding-bottom: 0.25rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        #projectionTable h3,
+        #bandLevelsTable h3 {
+            font-weight: 600; /* font-semibold */
+            color: #1f2937; /* text-gray-800 */
+            margin-bottom: 0.25rem; /* mb-1 */
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* Use direct child selector to avoid styling nested divs */
-        #projectionTable > div,
-        #bandLevelsTable > div {
-            display: flex;
-            justify-content: space-between;
-        }
+        /* Use direct child selector to avoid styling nested divs */
+        #projectionTable > div,
+        #bandLevelsTable > div {
+            display: flex;
+            justify-content: space-between;
+        }
 
-        #projectionTable > div span:first-child,
-        #bandLevelsTable > div span:first-child {
-            margin-right: 1.25rem; /* mr-5 */
-            color: #4b5563; /* text-gray-600 */
-        }
-        #projectionTable > div span:last-child,
-        #bandLevelsTable > div span:last-child {
-            font-weight: 500; /* font-medium */
-            color: #1f2937; /* text-gray-800 */
-        }
-        #projectionTable h3 button,
-        #bandLevelsTable h3 button {
-            margin-left: 0.5rem; /* ml-2 */
-            color: #9ca3af; /* text-gray-400 */
-Click 'Bands' to show the coloured regression bands, a popup needs to appear. This is similar to the fair value popup, but will show different information, it will show the price range of each band. the popup can be clsoed by the user, but would also disappear if the user unticked 'Bands'
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            line-height: 1;
-        }
-        #projectionTable h3 button:hover,
-        #bandLevelsTable h3 button:hover { color: #374151; }
-        /* --- END: Projection & Band Table Styles --- */
+        #projectionTable > div span:first-child,
+        #bandLevelsTable > div span:first-child {
+            margin-right: 1.25rem; /* mr-5 */
+            color: #4b5563; /* text-gray-600 */
+        }
+        #projectionTable > div span:last-child,
+        #bandLevelsTable > div span:last-child {
+            font-weight: 500; /* font-medium */
+            color: #1f2937; /* text-gray-800 */
+        }
+        #projectionTable h3 button,
+        #bandLevelsTable h3 button {
+            margin-left: 0.5rem; /* ml-2 */
+            color: #9ca3af; /* text-gray-400 */
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        #projectionTable h3 button:hover,
+        #bandLevelsTable h3 button:hover { color: #374151; }
+        /* --- END: Projection & Band Table Styles --- */
         
     </style>
 </head>
@@ -296,34 +295,34 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
             <div id="chartWrapper" class="relative flex-grow min-h-0">
                 <div id="projectionTable" class="hidden"></div>
 
-                <!-- NEW: Band Levels Table -->
-                <div id="bandLevelsTable" class="hidden">
-                    <h3>
-                        <span>Band Levels (Current)</span>
-                        <button onclick="document.getElementById('bandLevelsTable').style.display='none'" type="button" title="Close">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </h3>
-                    <div id="bandLevelBubble">
-                        <span>Bubble (P80-P99)</span>
-                        <span>$N/A - $N/A</span>
-                    </div>
-                    <div id="bandLevelExpensive">
-                        <span>Expensive (P50-P80)</span>
-                        <span>$N/A - $N/A</span>
-                    </div>
-                    <div id="bandLevelValue">
-                        <span>Value (P20-P50)</span>
-                        <span>$N/A - $N/A</span>
-                _   </div>
-                    <div id="bandLevelDiscount">
-                        <span>Discount (P1-P20)</span>
-                        <span>$N/A - $N/A</span>
-                    </div>
-                </div>
-                <!-- END: Band Levels Table -->
+                <!-- NEW: Band Levels Table -->
+                <div id="bandLevelsTable" class="hidden">
+                    <h3>
+                        <span>Band Levels (Current)</span>
+                        <button onclick="document.getElementById('bandLevelsTable').style.display='none'" type="button" title="Close">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </h3>
+                    <div id="bandLevelBubble">
+                        <span>Bubble (P80-P99)</span>
+                        <span>$N/A - $N/A</span>
+                    </div>
+                    <div id="bandLevelExpensive">
+                        <span>Expensive (P50-P80)</span>
+                        <span>$N/A - $N/A</span>
+                    </div>
+                    <div id="bandLevelValue">
+                        <span>Value (P20-P50)</span>
+                        <span>$N/A - $N/A</span>
+                    </div>
+                    <div id="bandLevelDiscount">
+                        <span>Discount (P1-P20)</span>
+                        <span>$N/A - $N/A</span>
+                    </div>
+                </div>
+                <!-- END: Band Levels Table -->
                 
                 <canvas id="powerLawChart"></canvas>
             </div>
@@ -376,17 +375,17 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
         const ctx = document.getElementById('powerLawChart').getContext('2d');
         const modelParamDiv = document.getElementById('modelParamDiv');
         const showBandsContainer = document.getElementById('showBandsContainer');
-        const showBandsCheckbox = document.getElementById('showBandsCheckbox');
-        const projectionTable = document.getElementById('projectionTable');
-        const bandLevelsTable = document.getElementById('bandLevelsTable'); // NEW
-        const useOptimalOffsetCheckbox = document.getElementById('useOptimalOffsetCheckbox');
+        const showBandsCheckbox = document.getElementById('showBandsCheckbox');
+        const projectionTable = document.getElementById('projectionTable');
+        const bandLevelsTable = document.getElementById('bandLevelsTable'); // NEW
+        const useOptimalOffsetCheckbox = document.getElementById('useOptimalOffsetCheckbox');
 
         // --- SECTION: CHART CONFIGURATION & CONSTANTS ---
 
         /** The hardcoded day offset used by the "Default Offset" model. */
         const HARDCODED_OFFSET = 74;
         /** The maximum day offset value to search for when finding the "Optimal Offset". */
-        const MAX_OFFSET_SEARCH_LIMIT = 730; 
+        const MAX_OFFSET_SEARCH_LIMIT = 730;    
         
         /** The percentage of the log-time range to add as padding to the right of the x-axis. */
         const X_AXIS_PROJECTION_PADDING = 0.33; // 33%
@@ -436,8 +435,8 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
                 ctx.save();
                 
                 /**
-                const text = 'decodejar';
-                */
+                 const text = 'decodejar';
+                 */
                 const text = 'taotensorlaw.com';
                 
                 // Dynamically set font size based on chart width.
@@ -715,34 +714,34 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
             priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><strong>Rating:</strong>&nbsp;${priceZone}`;
             priceZoneDiv.classList.remove('hidden');
 
-            // --- NEW: Update Band Levels Table ---
-            if (bandLevelsTable) {
-                // Calculate current prices at each percentile
-                const lastP1Price = Math.pow(10, slope * lastLogX + p1Intercept);
-                const lastP20Price = Math.pow(10, slope * lastLogX + p20Intercept);
-                const lastP50Price = Math.pow(10, slope * lastLogX + medianIntercept);
-                const lastP80Price = Math.pow(10, slope * lastLogX + p80Intercept);
-                const lastP99Price = Math.pow(10, slope * lastLogX + p99Intercept);
-
-                // Find the *last span* within each named div
-                const bubbleEl = document.querySelector('#bandLevelsTable #bandLevelBubble span:last-child');
-                const expensiveEl = document.querySelector('#bandLevelsTable #bandLevelExpensive span:last-child');
-                const valueEl = document.querySelector('#bandLevelsTable #bandLevelValue span:last-child');
-                const discountEl = document.querySelector('#bandLevelsTable #bandLevelDiscount span:last-child');
-
-                if (bubbleEl) bubbleEl.textContent = `$${lastP80Price.toFixed(2)} - $${lastP99Price.toFixed(2)}`;
-                if (expensiveEl) expensiveEl.textContent = `$${lastP50Price.toFixed(2)} - $${lastP80Price.toFixed(2)}`;
-                if (valueEl) valueEl.textContent = `$${lastP20Price.toFixed(2)} - $${lastP50Price.toFixed(2)}`;
-                if (discountEl) discountEl.textContent = `$${lastP1Price.toFixed(2)} - $${lastP20Price.toFixed(2)}`;
-            }
-            // --- END: Update Band Levels Table ---
-            
             const medianIntercept = meanIntercept + medianResidual;
             const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
             const p20Intercept = meanIntercept + p20Residual;
             const p80Intercept = meanIntercept + p80Residual;
 
+            // --- NEW: Update Band Levels Table ---
+            if (bandLevelsTable) {
+                // Calculate current prices at each percentile
+                const lastP1Price = Math.pow(10, slope * lastLogX + p1Intercept);
+                const lastP20Price = Math.pow(10, slope * lastLogX + p20Intercept);
+                const lastP50Price = Math.pow(10, slope * lastLogX + medianIntercept);
+                const lastP80Price = Math.pow(10, slope * lastLogX + p80Intercept);
+                const lastP99Price = Math.pow(10, slope * lastLogX + p99Intercept);
+
+                // Find the *last span* within each named div
+                const bubbleEl = document.querySelector('#bandLevelsTable #bandLevelBubble span:last-child');
+                const expensiveEl = document.querySelector('#bandLevelsTable #bandLevelExpensive span:last-child');
+                const valueEl = document.querySelector('#bandLevelsTable #bandLevelValue span:last-child');
+                const discountEl = document.querySelector('#bandLevelsTable #bandLevelDiscount span:last-child');
+
+                if (bubbleEl) bubbleEl.textContent = `$${lastP80Price.toFixed(2)} - $${lastP99Price.toFixed(2)}`;
+                if (expensiveEl) expensiveEl.textContent = `$${lastP50Price.toFixed(2)} - $${lastP80Price.toFixed(2)}`;
+                if (valueEl) valueEl.textContent = `$${lastP20Price.toFixed(2)} - $${lastP50Price.toFixed(2)}`;
+                if (discountEl) discountEl.textContent = `$${lastP1Price.toFixed(2)} - $${lastP20Price.toFixed(2)}`;
+            }
+            // --- END: Update Band Levels Table ---
+            
             // Call projection function (passes full baseData for date calculations)
             calculateProjections(baseData, activeModelParams, projectionTable);
 
@@ -1076,23 +1075,23 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
         /**
          * Event handler for the "Show Bands" checkbox.
          */
-        function handleBandToggle() {
-             if (!chart || !bandLevelsTable) return; // Added check for bandLevelsTable
-             
-             const showBands = showBandsCheckbox.checked;
-             
-             // --- NEW: Show/hide band levels table ---
-             if (showBands) {
-                 bandLevelsTable.style.display = ''; // Show it
-                 bandLevelsTable.classList.remove('hidden'); 
-             } else {
-                 bandLevelsTable.style.display = 'none'; // Hide it
-             }
-             // --- END: NEW ---
+        function handleBandToggle() {
+             if (!chart || !bandLevelsTable) return; // Added check for bandLevelsTable
+             
+             const showBands = showBandsCheckbox.checked;
+             
+             // --- NEW: Show/hide band levels table ---
+             if (showBands) {
+                 bandLevelsTable.style.display = ''; // Show it
+                 bandLevelsTable.classList.remove('hidden'); 
+             } else {
+                 bandLevelsTable.style.display = 'none'; // Hide it
+             }
+             // --- END: NEW ---
 
-             applyBandVisibility(showBands);
-             chart.update();
-        }
+             applyBandVisibility(showBands);
+             chart.update();
+        }
 
         /**
          * Toggles visibility and styles for band datasets.
@@ -1280,19 +1279,19 @@ Click 'Bands' to show the coloured regression bands, a popup needs to appear. Th
                 // if (chartCardElement) chartCardElement.style.padding = '';
                 
                 // if (isInFullscreen && isMobile && isLandscape) {
-                //    if (bottomBarElement) bottomBarElement.style.display = 'none'; 
-                //    if (chartCardElement) chartCardElement.style.padding = '0';
+                //     if (bottomBarElement) bottomBarElement.style.display = 'none'; 
+                //     if (chartCardElement) chartCardElement.style.padding = '0';
                 // }
                 // --- END: REMOVED ---
 
                  if (chart) {
-                    setTimeout(() => {
+                     setTimeout(() => {
                          requestAnimationFrame(() => {
                              if (chart) chart.resize();
                          });
-                    }, 50); 
+                     }, 50); 
                  }
-            });
+             });
         }
 
         /**
