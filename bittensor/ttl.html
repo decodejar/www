@@ -742,10 +742,10 @@
                 const lastP99Price = Math.pow(10, slope * lastLogX + p99Intercept);
 
                 // Find the *last span* within each named div
-                const bubbleEl = document.querySelector('#bandLevelsTable #bandLevelBubble span:last-child');
-                const expensiveEl = document.querySelector('#bandLevelsTable #bandLevelExpensive span:last-child');
-                const valueEl = document.querySelector('#bandLevelsTable #bandLevelValue span:last-child');
-                const discountEl = document.querySelector('#bandLevelsTable #bandLevelDiscount span:last-child');
+                const bubbleEl = document.querySelector('#bandLevelsTable #bandLevelBubble > span:last-child');
+                const expensiveEl = document.querySelector('#bandLevelsTable #bandLevelExpensive > span:last-child');
+                const valueEl = document.querySelector('#bandLevelsTable #bandLevelValue > span:last-child');
+                const discountEl = document.querySelector('#bandLevelsTable #bandLevelDiscount > span:last-child');
 
                 if (bubbleEl) bubbleEl.textContent = `$${lastP80Price.toFixed(2)} - $${lastP99Price.toFixed(2)}`;
                 if (expensiveEl) expensiveEl.textContent = `$${lastP50Price.toFixed(2)} - $${lastP80Price.toFixed(2)}`;
