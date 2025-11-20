@@ -82,10 +82,7 @@
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="https://taotensorlaw.com" target="_blank" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">TAO Tensor Law</a>
                     <a href="#models" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Models & Indicators</a>
-                    <a href="#testimonials" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Reviews</a>
-                    <a href="https://newsletter.decodejar.com" target="_blank" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all shadow-sm">
-                        Newsletter
-                    </a>
+                    <a href="https://newsletter.decodejar.com" target="_blank" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all shadow-sm">Newsletter</a>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -104,7 +101,6 @@
             <div class="px-4 pt-2 pb-4 space-y-1 shadow-lg">
                 <a href="https://taotensorlaw.com" target="_blank" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">TAO Tensor Law</a>
                 <a href="#models" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Models & Indicators</a>
-                <a href="#testimonials" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reviews</a>
                 <a href="https://newsletter.decodejar.com" class="block w-full text-center mt-4 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Newsletter</a>
             </div>
         </div>
@@ -137,20 +133,40 @@
         </div>
         
         <!-- Background Decoration - Crypto Chart Shape -->
-<!--        <div class="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+        <div class="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
             <!-- SVG Chart: Increased opacity and specific gray color for visibility -->
-            <svg class="absolute bottom-0 w-full h-2/3 text-gray-200 opacity-100" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="currentColor">
+        <svg class="absolute bottom-0 w-full h-2/3 text-gray-200 opacity-100" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="currentColor">
                 <path d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
             </svg>
             <svg class="absolute bottom-0 w-full h-2/3 text-gray-300 opacity-40" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192"></path>
             </svg>
         </div>
--->
+    </section>
+
+    <!-- ===== NEWSLETTER CTA ===== -->
+    <section id="newsletter" class="bg-gray-900 py-16">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Stay Ahead of the Market</h2>
+            <p class="text-gray-400 mb-8 text-lg">Join thousands of investors receiving insights, charts, and forecasts directly to their inbox</p>
+            
+            <!-- Custom Simpler Substack Form -->
+            <div class="max-w-md mx-auto">
+                <form onsubmit="window.open('https://newsletter.decodejar.com/subscribe?email=' + this.email.value); return false;" class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" name="email" placeholder="Enter your email address..." required class="flex-1 appearance-none rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange transition-colors">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-orange px-6 py-3 text-base font-bold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 transition-all transform hover:-translate-y-0.5">
+                        Subscribe
+                    </button>
+                </form>
+                <p class="text-gray-500 text-xs mt-4 text-center">
+                    No spam. Unsubscribe at any time. By subscribing you agree to Substack's <a href="https://substack.com/tos" target="_blank" class="underline hover:text-gray-300">Terms of Use</a>, our <a href="https://substack.com/privacy" target="_blank" class="underline hover:text-gray-300">Privacy Policy</a> and our <a href="https://substack.com/ccpa#information-collection-notice" target="_blank" class="underline hover:text-gray-300">Information Collection Notice</a>.
+                </p>
+            </div>
+        </div>
     </section>
 
     <!-- ===== ASSET MODELS & SERVICES ===== -->
-    <section id="models" class="py-16 sm:py-24 bg-white">
+    <section id="models" class="py-16 bg-white">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
@@ -208,84 +224,6 @@
         </div>
     </section>
 
-    <!-- ===== NEWSLETTER CTA ===== -->
-    <section id="newsletter" class="bg-gray-900 py-16">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold text-white mb-4">Stay Ahead of the Market</h2>
-            <p class="text-gray-400 mb-8 text-lg">Join thousands of investors receiving insights, charts, and forecasts directly to their inbox</p>
-            
-            <!-- Custom Simpler Substack Form -->
-            <div class="max-w-md mx-auto">
-                <form onsubmit="window.open('https://newsletter.decodejar.com/subscribe?email=' + this.email.value); return false;" class="flex flex-col sm:flex-row gap-3">
-                    <input type="email" name="email" placeholder="Enter your email address..." required class="flex-1 appearance-none rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange transition-colors">
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-orange px-6 py-3 text-base font-bold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 transition-all transform hover:-translate-y-0.5">
-                        Subscribe
-                    </button>
-                </form>
-                <p class="text-gray-500 text-xs mt-4 text-center">
-                    No spam. Unsubscribe at any time. By subscribing you agree to Substack's <a href="https://substack.com/tos" target="_blank" class="underline hover:text-gray-300">Terms of Use</a>, our <a href="https://substack.com/privacy" target="_blank" class="underline hover:text-gray-300">Privacy Policy</a> and our <a href="https://substack.com/ccpa#information-collection-notice" target="_blank" class="underline hover:text-gray-300">Information Collection Notice</a>.
-                </p>
-            </div>
-        </div>
-    </section>
-    
-    <!-- ===== TESTIMONIALS ===== -->
-    <section id="testimonials" class="py-16 bg-gray-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                    What Subscribers Are Saying
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Review 1 -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex items-center mb-4">
-                        <div class="text-yellow-400 flex">★★★★★</div>
-                    </div>
-                    <p class="text-gray-600 mb-4 italic">"Decode separates the signal from the noise. The Elliott Wave counts are precise, but the macro context is what keeps me subscribed."</p>
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">M</div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">Michael T.</p>
-                            <p class="text-xs text-gray-500">Subscriber</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 2 -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex items-center mb-4">
-                        <div class="text-yellow-400 flex">★★★★★</div>
-                    </div>
-                    <p class="text-gray-600 mb-4 italic">"The Tao Tensor Law model is a game changer for trading long term swings. I've stopped FOMOing into green candles thanks to this newsletter."</p>
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">S</div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">Sarah J.</p>
-                            <p class="text-xs text-gray-500">Trader</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex items-center mb-4">
-                        <div class="text-yellow-400 flex">★★★★★</div>
-                    </div>
-                    <p class="text-gray-600 mb-4 italic">"Finally, analysis that isn't just moonboy hype. Data-driven, calm, and highly actionable. Worth every penny."</p>
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">D</div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">David R.</p>
-                            <p class="text-xs text-gray-500">Investor</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- ===== FOOTER ===== -->
     <footer class="bg-white border-t border-gray-200 mt-auto">
@@ -293,7 +231,7 @@
             <!-- Changed items-center to items-start md:items-center for consistent left alignment on mobile -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div class="mb-4 md:mb-0">
-                    <span class="font-bold text-lg text-gray-900">decodejar</span>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">decodejar</span>
                     <p class="text-sm text-gray-500 mt-1">&copy; 2025 decodejar.com. All Rights Reserved.</p>
                 </div>
                 <div class="flex space-x-6">
