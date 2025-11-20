@@ -308,7 +308,8 @@
              <!-- Left Group: Price & Status -->
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
                  <!-- Price (First) -->
-                 <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
+                 <!-- FIXED: Removed font-mono-data from container -->
+                 <div id="lastPriceDiv" class="hidden sm:flex items-center text-slate-700"></div>
                  <!-- Data Status (Second) -->
                  <div id="dataStatusDiv" class="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
                      <span class="status-dot bg-slate-200 animate-pulse"></span><span class="text-slate-400">Loading...</span>
@@ -397,7 +398,8 @@
         <!-- Bottom Model Info Bar -->
         <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500 rounded-b-2xl">
             <!-- Order: Offset, Toggle, Exponent, Fit -->
-            <div id="modelParamDiv" class="font-mono-data text-slate-600"></div>
+             <!-- FIXED: Removed font-mono-data from container -->
+            <div id="modelParamDiv" class="text-slate-600"></div>
             
             <!-- Model Toggle -->
             <div class="flex items-center bg-white px-2 py-0.5 rounded border border-slate-200">
@@ -405,7 +407,8 @@
                 <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1 text-slate-600 hover:text-slate-800">Use Optimal</label>
             </div>
             
-            <div id="growthExponentDiv" class="font-mono-data text-slate-600"></div>
+             <!-- FIXED: Removed font-mono-data from container -->
+            <div id="growthExponentDiv" class="text-slate-600"></div>
             <div id="modelFitDiv" class="flex items-center"></div>
         </div>
     </div>
@@ -630,7 +633,8 @@
                 slope = regression.slope;
                 meanIntercept = regression.intercept;
                 rSquared = optimalOffsetRSquared; 
-                modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${optimalOffset}</span>`;
+                // FIXED: Added font-mono-data to value
+                modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${optimalOffset}</span>`;
             } else {
                 activeDayOffset = HARDCODED_OFFSET;
                 priceData = baseData.map(p => ({ ...p, x: p.dayIndex + HARDCODED_OFFSET }));
@@ -639,9 +643,11 @@
                 meanIntercept = regression.intercept;
                 rSquared = calculateRSquared(priceData, slope, meanIntercept);
                 if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span> (Opt: ${optimalOffset})`;
+                      // FIXED: Added font-mono-data to values
+                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${HARDCODED_OFFSET}</span> (Opt: <span class="font-mono-data">${optimalOffset}</span>)`;
                 } else {
-                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span>`;
+                      // FIXED: Added font-mono-data to value
+                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${HARDCODED_OFFSET}</span>`;
                 }
             }
             
@@ -674,10 +680,12 @@
             
             // Only update status if not in Demo mode (to preserve the yellow demo text)
             if(!dataStatusDiv.innerHTML.includes("Demo")) {
-                dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><span>${lastUpdateDate}</span>`;
+                // FIXED: Added font-mono-data to date value
+                dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><span class="font-mono-data">${lastUpdateDate}</span>`;
             }
 
-            lastPriceDiv.innerHTML = `Price: <span class="ml-2 font-bold text-slate-900">$${lastBaseDataPoint.y.toFixed(2)}</span>`;
+            // FIXED: Added font-mono-data to price value
+            lastPriceDiv.innerHTML = `Price: <span class="ml-2 font-bold text-slate-900 font-mono-data">$${lastBaseDataPoint.y.toFixed(2)}</span>`;
             lastPriceDiv.classList.remove('hidden');
 
             const chartPrices = priceData.map(p => p.y);
@@ -731,7 +739,8 @@
             else if (lastResidual > p20Residual) { priceZone = "Value"; priceZoneColor = "bg-green-500"; }
             else { priceZone = "Discount"; priceZoneColor = "bg-blue-400"; }
 
-            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><span class="font-medium text-slate-600">${priceZone}</span>`;
+            // FIXED: Added font-mono-data to zone value text
+            priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><span class="font-medium text-slate-600 font-mono-data">${priceZone}</span>`;
             priceZoneDiv.classList.remove('hidden');
 
             const medianIntercept = meanIntercept + medianResidual;
@@ -760,7 +769,8 @@
             
             calculateProjections(baseData, activeModelParams, projectionData);
 
-            growthExponentDiv.innerHTML = `Exponent (α): <span class="font-bold text-slate-800">${slope.toFixed(3)}</span>`;
+            // FIXED: Added font-mono-data to exponent value
+            growthExponentDiv.innerHTML = `Exponent (α): <span class="font-bold text-slate-800 font-mono-data">${slope.toFixed(3)}</span>`;
             
             let fitColorClass = "";
             if (rSquared >= 0.9) fitColorClass = "bg-blue-400";
@@ -768,6 +778,7 @@
             else if (rSquared >= 0.5) fitColorClass = "bg-yellow-400";
             else fitColorClass = "bg-red-500";
             
+            // FIXED: fitDiv was already largely correct, ensuring mono data on value span
             modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>Fit (R²):&nbsp;<span class="font-mono-data font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
             
             const startIndex = extendedMinDay;
