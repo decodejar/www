@@ -58,7 +58,6 @@
             /* Lighter background as requested */
             background-color: #f1f5f9; 
             background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
-            /* Removed overflow-hidden to allow scrolling on mobile landscape */
         }
         
         .font-mono-data { font-family: 'JetBrains Mono', monospace; }
@@ -90,7 +89,7 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* --- Fullscreen CSS Logic (PRESERVED) --- */
+        /* --- Fullscreen CSS Logic --- */
         
         body:has(#mainContainer:fullscreen) { display: block; background: white; }
 
@@ -161,7 +160,7 @@
         #mainContainer.mobile-fullscreen-landscape #headerLinkWrapper a:first-of-type,
         #mainContainer.mobile-fullscreen-landscape #headerLinkWrapper span { display: none !important; }
         
-        /* --- Projection & Band Table Styles (MODERNIZED) --- */
+        /* --- Projection & Band Table Styles --- */
         #projectionTable,
         #bandLevelsTable {
             position: absolute;
@@ -209,7 +208,6 @@
             cursor: grabbing;
         }
 
-        /* Updated Spacing: gap-8 for horizontal separation, padding 2px for tighter vertical */
         #projectionData > div,
         #bandLevelsTable > div:not(h3) {
             display: flex;
@@ -255,7 +253,6 @@
     </div>
 
     <!-- Main application container -->
-    <!-- Removed backdrop filters, applied explicit colors to children sections. Added overflow-hidden to clip corners. -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] min-h-[30rem] flex flex-col rounded-2xl border border-white/60 shadow-2xl shadow-slate-300/50 relative overflow-hidden transition-all duration-300 bg-white">
 
         <!-- Mobile Rotate Overlay -->
@@ -295,8 +292,8 @@
                 <!-- Tooltip -->
                 <div class="group relative flex items-center">
                      <span class="text-[10px] font-bold text-slate-400 cursor-help border border-slate-300 rounded-full w-4 h-4 flex items-center justify-center hover:bg-slate-100 hover:text-indigo-500 transition-colors">?</span>
-                     <!-- Adjusted tooltip positioning and styling for better legibility/mobile fit -->
-                     <div class="absolute top-8 left-1/2 -translate-x-1/2 w-[85vw] max-w-xs bg-slate-900 text-white text-xs rounded-lg p-4 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-2xl z-50 font-normal leading-relaxed">
+                     <!-- Adjusted tooltip positioning and opacity for better legibility/mobile fit -->
+                     <div class="absolute top-8 left-1/2 -translate-x-1/2 w-[85vw] max-w-xs bg-slate-900 text-white text-xs rounded-lg p-4 hidden group-hover:block pointer-events-none shadow-2xl z-50 font-normal leading-relaxed">
                         This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression. With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands. <br><br> <span class="font-semibold text-blue-300">Blue:</span> Discount, <span class="font-semibold text-green-400">Green:</span> Value, <span class="font-semibold text-yellow-300">Yellow:</span> Expensive, <span class="font-semibold text-red-400">Red:</span> Bubble.
                      </div>
                 </div>
@@ -565,7 +562,6 @@
 
         function getPercentile(sortedResiduals, percentile) {
             if (!sortedResiduals || sortedResiduals.length === 0) return 0;
-            const index = (percentile / 100) * (sortedResiduals.length - 1);
             const index = (percentile / 100) * (sortedResiduals.length - 1);
             const lowerIndex = Math.floor(index);
             const upperIndex = Math.ceil(index);
