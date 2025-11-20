@@ -139,14 +139,34 @@
         <!-- Background Decoration - Crypto Chart Shape -->
         <div class="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
             <!-- SVG Chart: Increased opacity and specific gray color for visibility -->
-<!--        <svg class="absolute bottom-0 w-full h-2/3 text-gray-200 opacity-100" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="currentColor">
+        <svg class="absolute bottom-0 w-full h-2/3 text-gray-200 opacity-100" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="currentColor">
                 <path d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
             </svg>
             <svg class="absolute bottom-0 w-full h-2/3 text-gray-300 opacity-40" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192"></path>
             </svg>
         </div>
--->
+    </section>
+
+    <!-- ===== NEWSLETTER CTA ===== -->
+    <section id="newsletter" class="bg-gray-900 py-16">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Stay Ahead of the Market</h2>
+            <p class="text-gray-400 mb-8 text-lg">Join thousands of investors receiving insights, charts, and forecasts directly to their inbox</p>
+            
+            <!-- Custom Simpler Substack Form -->
+            <div class="max-w-md mx-auto">
+                <form onsubmit="window.open('https://newsletter.decodejar.com/subscribe?email=' + this.email.value); return false;" class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" name="email" placeholder="Enter your email address..." required class="flex-1 appearance-none rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange transition-colors">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-orange px-6 py-3 text-base font-bold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 transition-all transform hover:-translate-y-0.5">
+                        Subscribe
+                    </button>
+                </form>
+                <p class="text-gray-500 text-xs mt-4 text-center">
+                    No spam. Unsubscribe at any time. By subscribing you agree to Substack's <a href="https://substack.com/tos" target="_blank" class="underline hover:text-gray-300">Terms of Use</a>, our <a href="https://substack.com/privacy" target="_blank" class="underline hover:text-gray-300">Privacy Policy</a> and our <a href="https://substack.com/ccpa#information-collection-notice" target="_blank" class="underline hover:text-gray-300">Information Collection Notice</a>.
+                </p>
+            </div>
+        </div>
     </section>
 
     <!-- ===== ASSET MODELS & SERVICES ===== -->
@@ -207,28 +227,7 @@
             </div>
         </div>
     </section>
-
-    <!-- ===== NEWSLETTER CTA ===== -->
-    <section id="newsletter" class="bg-gray-900 py-16">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold text-white mb-4">Stay Ahead of the Market</h2>
-            <p class="text-gray-400 mb-8 text-lg">Join thousands of investors receiving insights, charts, and forecasts directly to their inbox</p>
-            
-            <!-- Custom Simpler Substack Form -->
-            <div class="max-w-md mx-auto">
-                <form onsubmit="window.open('https://newsletter.decodejar.com/subscribe?email=' + this.email.value); return false;" class="flex flex-col sm:flex-row gap-3">
-                    <input type="email" name="email" placeholder="Enter your email address..." required class="flex-1 appearance-none rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange transition-colors">
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-orange px-6 py-3 text-base font-bold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 transition-all transform hover:-translate-y-0.5">
-                        Subscribe
-                    </button>
-                </form>
-                <p class="text-gray-500 text-xs mt-4 text-center">
-                    No spam. Unsubscribe at any time. By subscribing you agree to Substack's <a href="https://substack.com/tos" target="_blank" class="underline hover:text-gray-300">Terms of Use</a>, our <a href="https://substack.com/privacy" target="_blank" class="underline hover:text-gray-300">Privacy Policy</a> and our <a href="https://substack.com/ccpa#information-collection-notice" target="_blank" class="underline hover:text-gray-300">Information Collection Notice</a>.
-                </p>
-            </div>
-        </div>
-    </section>
-    
+   
     <!-- ===== TESTIMONIALS ===== -->
     <section id="testimonials" class="py-16 bg-gray-50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
