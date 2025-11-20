@@ -4,19 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TAO Tensor Law Model — by decodejar</title>
-    <!-- ===== FAVICON TAGS ===== -->
-    <link rel="icon" href="/decode-favicon.png" type="image/png">
-    <link rel="shortcut icon" href="/decode-favicon.png" type="image/png">
-    <link rel="apple-touch-icon" href="/decode-favicon.png">
-    <!-- ===== END FAVICON TAGS ===== -->
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EXV4MXZNHJ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-EXV4MXZNHJ');
-    </script>    
+    <!-- ===== FAVICON TAGS (Placeholders) ===== -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>τ</text></svg>">
+    
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -55,8 +45,8 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            /* Darkened background as requested */
-            background-color: #e2e8f0; 
+            /* Darkened background as requested -> Now Lightened to slate-100 */
+            background-color: #f1f5f9; /* slate-100 */
             background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
         }
         
@@ -265,22 +255,15 @@
         </div>
 
         <!-- Page Header -->
-        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-100">
+        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-100 bg-white">
             <!-- Left: Logo/Links -->
-            <div class="flex items-center gap-4">
-                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="flex-shrink-0 group">
+            <div class="flex items-center">
+                <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 group">
                     <div class="p-0.5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 group-hover:scale-105 transition-transform duration-300">
-                        <img src="decode.png" alt="Decode Logo" class="w-9 h-9 rounded-full bg-white border-2 border-white" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
+                        <img src="decode.png" alt="decodejar" class="w-8 h-8 rounded-full bg-white border-2 border-white" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                     </div>
+                    <span class="font-bold text-slate-700 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
                 </a>
-                <div id="headerLinkWrapper" class="hidden sm:flex flex-col items-start text-xs sm:text-sm text-slate-500 font-medium">
-                    <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-600 transition-colors">
-                        @decodejar
-                    </a>
-                    <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-600 transition-colors font-normal text-slate-400">
-                        decodejar.com
-                    </a>
-                </div>
             </div>
 
             <!-- Center: Title -->
@@ -310,7 +293,7 @@
         </header>
 
         <!-- Top Status Bar -->
-        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-white/50">
+        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-slate-50">
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
                  <!-- Price (First) -->
                  <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
@@ -343,7 +326,7 @@
         </div>
 
         <!-- Chart Area -->
-        <div id="chartCard" class="relative flex-grow min-h-0 w-full p-0">
+        <div id="chartCard" class="relative flex-grow min-h-0 w-full p-0 bg-white">
             <!-- Loading Spinner -->
             <div id="loader" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col gap-3 items-center justify-center z-30 transition-opacity duration-300">
                 <div class="loader"></div>
@@ -351,7 +334,7 @@
             </div>
             
             <!-- Canvas Wrapper -->
-            <div id="chartWrapper" class="relative w-full h-full">
+            <div id="chartWrapper" class="relative w-full h-full bg-white">
                 
                 <!-- Draggable Tables (Hidden by default, structure preserved) -->
                 <div id="projectionTable" class="hidden transform transition-transform active:scale-[1.02]">
@@ -401,7 +384,7 @@
         </div>
 
         <!-- Bottom Model Info Bar -->
-        <div id="bottomModelBar" class="bg-white/50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
+        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
             <!-- Order: Offset, Toggle, Exponent, Fit -->
             <div id="modelParamDiv" class="font-mono-data text-slate-600"></div>
             
@@ -418,8 +401,8 @@
 
     <!-- Footer -->
     <footer class="py-3 px-4 text-center space-y-1 w-full">
-        <p class="text-slate-400 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
-        <p class="text-slate-400 text-[10px] tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
+        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
+        <p class="text-slate-500 text-[10px] tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
     </footer>
 
 
@@ -504,7 +487,7 @@
                 
                 const baseFontSize = Math.max(30, Math.min(80, width / 12)); 
                 ctx.font = `bold ${baseFontSize.toFixed(0)}px Inter, sans-serif`;
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.04)'; // Very subtle slate-900
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.06)'; // Slightly increased opacity for white background
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
@@ -611,7 +594,7 @@
             }
 
             if (!baseData || baseData.length === 0) {
-                if (!dataStatusDiv.innerHTML.includes('Error')) { 
+                if (!dataStatusDiv.innerHTML.includes('Error') && !dataStatusDiv.innerHTML.includes('Demo')) { 
                     dataStatusDiv.innerHTML = `<span class="status-dot bg-red-500"></span><strong>Updated:</strong>&nbsp;N/A`;
                 }
                 growthExponentDiv.innerHTML = '<strong>Exponent (α):</strong> N/A';
@@ -678,7 +661,10 @@
                 dotColor = "bg-yellow-400"; 
             }
             
-            dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><span>${lastUpdateDate}</span>`;
+            // Only update status if not in Demo mode (to preserve the yellow demo text)
+            if(!dataStatusDiv.innerHTML.includes("Demo")) {
+                dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><span>${lastUpdateDate}</span>`;
+            }
 
             lastPriceDiv.innerHTML = `Price: <span class="ml-2 font-bold text-slate-900">$${lastBaseDataPoint.y.toFixed(2)}</span>`;
             lastPriceDiv.classList.remove('hidden');
@@ -771,7 +757,7 @@
             else if (rSquared >= 0.5) fitColorClass = "bg-yellow-400";
             else fitColorClass = "bg-red-500";
             
-            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>Fit (R²): <span class="font-mono-data font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
+            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>Fit (R²):&nbsp;<span class="font-mono-data font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
             
             const startIndex = extendedMinDay;
             const endIndex = extendedMaxDay;
@@ -1016,35 +1002,35 @@
                                 padding: 10,
                                 callbacks: {
                                      title: (tooltipItems) => {
-                                         if (tooltipItems.length > 0) {
-                                              const item = tooltipItems[0];
-                                              const dayNumber = item.parsed.x; 
-                                              
-                                              const { activeDayOffset } = activeModelParams;
-                                              let targetDayIndex = dayNumber - activeDayOffset;
-                                              
-                                              let dataPoint = baseData.find(p => p.dayIndex === Math.round(targetDayIndex));
-                                              
-                                              if (!dataPoint) {
-                                                  dataPoint = baseData.reduce((prev, curr) => {
-                                                       return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
-                                                  });
-                                              }
+                                           if (tooltipItems.length > 0) {
+                                                 const item = tooltipItems[0];
+                                                 const dayNumber = item.parsed.x; 
+                                                 
+                                                 const { activeDayOffset } = activeModelParams;
+                                                 let targetDayIndex = dayNumber - activeDayOffset;
+                                                 
+                                                 let dataPoint = baseData.find(p => p.dayIndex === Math.round(targetDayIndex));
+                                                 
+                                                 if (!dataPoint) {
+                                                     dataPoint = baseData.reduce((prev, curr) => {
+                                                          return (Math.abs(curr.dayIndex - targetDayIndex) < Math.abs(prev.dayIndex - targetDayIndex) ? curr : prev);
+                                                      });
+                                                 }
 
-                                              if (dataPoint) {
-                                                  const date = new Date(dataPoint.time);
-                                                  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                                              }
+                                                 if (dataPoint) {
+                                                     const date = new Date(dataPoint.time);
+                                                     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                                                 }
 
-                                              return `Day ~${targetDayIndex.toFixed(0)}`;
-                                         }
-                                         return '';
-                                     },
-                                    label: (context) => {
-                                        // Hide tooltips for the transparent band layers
-                                        if (context.datasetIndex < 5) return null;
-                                        return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-                                    }
+                                                 return `Day ~${targetDayIndex.toFixed(0)}`;
+                                            }
+                                            return '';
+                                      },
+                                     label: (context) => {
+                                         // Hide tooltips for the transparent band layers
+                                         if (context.datasetIndex < 5) return null;
+                                         return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                     }
                                 }
                             }
                         },
