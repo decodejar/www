@@ -176,10 +176,10 @@
             justify-content: space-between;
         }
         
-        /* Modified Projection Table to be compact and left-aligned */
+        /* Modified Projection Table to be compact and aligned like bands */
         #projectionTable > div {
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between; /* Aligns columns to edges */
             align-items: center;
         }
 
@@ -194,11 +194,11 @@
             margin-right: 1.25rem; /* mr-5 */
         }
 
-        /* Specific margin for Projection Table (needs to be compact) */
+        /* Specific margin for Projection Table (compact but flexible) */
         #projectionTable > div span:first-child {
-            width: 2.5rem; /* Fixed width for vertical alignment */
+            width: auto; /* Let text define width */
             flex-shrink: 0;
-            margin-right: 0.25rem; /* Tiny gap */
+            margin-right: 1rem; /* Consistent gap between columns */
         }
 
         #projectionTable > div span:last-child,
@@ -376,7 +376,7 @@
     <script>
         /*
          * TAO Tensor Law Model — by decodejar.
-         * Copyright (c) 2025 DECODEJAR.COM. All Rights Reserved.
+         * Copyright (c) 2025 TAOTENSORLAW.COM. All Rights Reserved.
          */
 
         // --- SECTION: GLOBAL ELEMENT REFERENCES ---
