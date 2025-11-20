@@ -161,7 +161,7 @@
             border-radius: 0.75rem;
             padding: 0.75rem 1rem;
             font-size: 0.75rem;
-            line-height: 1.5; /* Increased line-height for spacing */
+            line-height: 1.4; /* Reduced from 1.5 */
             color: #334155;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -181,9 +181,9 @@
         #bandLevelsTable h3 {
             font-weight: 600;
             color: #0f172a;
-            margin-bottom: 0.75rem; /* Increased spacing */
+            margin-bottom: 0.5rem; /* Reduced spacing */
             border-bottom: 1px solid rgba(203, 213, 225, 0.5);
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -201,7 +201,7 @@
         #bandLevelsTable > div:not(h3) {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0; /* Increased padding for vertical spacing */
+            padding: 1px 0; /* Reduced padding from 4px to 1px */
             gap: 2rem; /* Ensure gap between label and value */
         }
 
@@ -344,7 +344,8 @@
                             </svg>
                         </button>
                     </h3>
-                    <div id="projectionData" class="flex flex-col gap-1 pt-1"></div>
+                    <!-- Removed gap-1 class to tighten spacing -->
+                    <div id="projectionData" class="flex flex-col pt-1"></div>
                 </div>
 
                 <div id="bandLevelsTable" class="hidden transform transition-transform active:scale-[1.02]">
