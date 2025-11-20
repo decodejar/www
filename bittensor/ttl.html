@@ -8,7 +8,7 @@
     <link rel="icon" href="/decode-favicon.png" type="image/png">
     <link rel="shortcut icon" href="/decode-favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/decode-favicon.png">
-    <!-- ===== END FAVICON TAGS ===== -->
+    <!-- ===== END FAVICON TAGS ===== --> 
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,9 +17,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courgette&display=swap" rel="stylesheet">
     <!-- Internal Styles -->
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .font-handwriting { font-family: 'Courgette', cursive; }
         /* Loader animation */
         .loader {
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -93,7 +95,7 @@
 
         /* Styles applied by JS for mobile LANDSCAPE fullscreen */
         #mainContainer.mobile-fullscreen-landscape {
-             padding-top: 0.375rem !important;     /* py-1.5 */
+             padding-top: 0.375rem !important;      /* py-1.5 */
              padding-bottom: 0.375rem !important; /* py-1.5 */
         }
         
@@ -205,7 +207,7 @@
 
     <!-- SEO text for search engines -->
     <div class="sr-only">
-        This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model. The TAO Tensor Law Model was created by Decode (x.com/decodejar | decodejar.com).
+        This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model. The TAO Tensor Law Model was created by decodejar (x.com/decodejar, decodejar.com).
     </div>
 
     <!-- Main application container -->
@@ -228,13 +230,11 @@
                 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
                     <img src="decode.png" alt="Decode Logo" class="w-10 h-10 rounded-full border border-gray-200" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                 </a>
-                <!-- Text links wrapper: Hidden on XS, Stacked on SM, Row on MD+ -->
-               <div id="headerLinkWrapper" class="hidden sm:flex sm:items-start flex-col gap-0 text-sm text-gray-600 sm:leading-4 md:leading-5 md:text-gray-800 lg:flex-row lg:items-center lg:gap-1 lg:leading-5 lg:text-gray-900">
+                <!-- Text links wrapper: Always stacked when visible -->
+               <div id="headerLinkWrapper" class="hidden sm:flex flex-col items-start gap-0 text-sm text-gray-600 sm:leading-4 md:leading-5 md:text-gray-800 lg:text-gray-900">
                     <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">
                         x.com/decodejar
                     </a>
-                    <!-- Separator: hidden when stacked, visible in row mode -->
-                    <span class="hidden lg:block text-gray-400">|</span>
                     <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-500 transition-colors">
                         decodejar.com
                     </a>
@@ -243,11 +243,12 @@
 
             <!-- Center Element: Title (Absolutely centered) -->
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center space-x-2">
-                <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900 whitespace-nowrap">
+                <h1 class="text-xl sm:text-2xl md:text-3xl text-gray-900 whitespace-nowrap flex items-center">
                     TAO Tensor Law Model
+                    <span class="hidden lg:inline ml-2 text-xl text-black font-handwriting font-normal">&mdash; by decodejar</span>
                 </h1>
                 <!-- Tooltip Icon -->
-                <span title="This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model. The TAO Tensor Law Model was created by Decode (x.com/decodejar | decodejar.com)." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
+                <span title="This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model. The TAO Tensor Law Model was created by decodejar (x.com/decodejar, decodejar.com)." class="text-xs text-gray-600 cursor-help border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center hover:bg-gray-300">?</span>
             </div>
 
              <!-- Right Element: Fullscreen Button -->
@@ -355,8 +356,8 @@
 
     <script>
         /*
-         * TAO Tensor Law Model & Regression Logic
-         * Copyright (c) 2025 decodejar.com. All Rights Reserved.
+         * TAO Tensor Law Model — by decodejar.
+         * Copyright (c) 2025 DECODEJAR.COM. All Rights Reserved.
          */
 
         // --- SECTION: GLOBAL ELEMENT REFERENCES ---
@@ -957,7 +958,7 @@
                                 backgroundColor: 'rgba(0, 0, 0, 0.05)', 
                                 borderColor: 'rgba(0, 0, 0, 1)', 
                                 borderWidth: 2, 
-                                tension: 0.1,
+                                tension: 0.1, 
                                 pointRadius: 0, // Explicitly invisible
                                 pointHoverRadius: 0, // Set to 0 to hide hover point
                                 pointHitRadius: 15 // Large invisible hit box
@@ -1008,7 +1009,7 @@
                                              }
 
                                              return `Day ~${targetDayIndex.toFixed(0)}`;
-                                        }
+                                         }
                                          return '';
                                      },
                                     label: (context) => {
