@@ -412,7 +412,7 @@
 
     <!-- Footer -->
     <footer class="py-4 px-4 text-center space-y-1 w-full">
-        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed font-medium">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk and only what you can afford to lose. Past performance does not guarantee future results.</p>
+        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed font-medium">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
         <p class="text-slate-500 text-[10px] tracking-wide font-medium"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
     </footer>
 
@@ -563,7 +563,6 @@
         function getPercentile(sortedResiduals, percentile) {
             if (!sortedResiduals || sortedResiduals.length === 0) return 0;
             const index = (percentile / 100) * (sortedResiduals.length - 1);
-            // Duplicate line removed here
             const lowerIndex = Math.floor(index);
             const upperIndex = Math.ceil(index);
             
