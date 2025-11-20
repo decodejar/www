@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin and Crypto Analysis — decodejar</title>
+    
+    <!-- ===== FAVICON TAGS ===== -->
+    <link rel="icon" href="/decode-favicon.png" type="image/png">
+    <link rel="shortcut icon" href="/decode-favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/decode-favicon.png">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNPN3H8MXB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LNPN3H8MXB');
+    </script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            900: '#111827',
+                            orange: '#FF6719', // Substack orange-ish
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Fade in animation for elements */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 bg-white flex flex-col min-h-screen">
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3">
+                    <img src="/decode.png" alt="Decode Logo" class="h-8 w-8 rounded-full bg-gray-200" onerror="this.style.display='none'">
+                    <span class="font-bold text-xl tracking-tight text-gray-900">DECODEJAR</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#newsletter" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Newsletter</a>
+                    <a href="#models" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Models & Indicators</a>
+                    <a href="#testimonials" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Reviews</a>
+                    <a href="https://newsletter.decodejar.com" target="_blank" class="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-all shadow-sm">
+                        Subscribe
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-500 hover:text-black focus:outline-none p-2">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-gray-100 absolute w-full">
+            <div class="px-4 pt-2 pb-4 space-y-1 shadow-lg">
+                <a href="#newsletter" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Newsletter</a>
+                <a href="#models" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Models & Indicators</a>
+                <a href="#testimonials" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reviews</a>
+                <a href="https://newsletter.decodejar.com" class="block w-full text-center mt-4 px-4 py-3 bg-gray-900 text-white rounded-lg font-medium">Subscribe Now</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== HERO SECTION ===== -->
+    <section class="relative bg-brand-50 pt-12 pb-16 sm:pt-16 sm:pb-24 overflow-hidden">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <!-- Profile Image -->
+                <div class="mx-auto w-24 h-24 sm:w-32 sm:h-32 mb-6 relative">
+                    <div class="absolute inset-0 rounded-full bg-gray-200 animate-pulse"></div>
+                    <img src="/decode.png" alt="Decode" class="w-full h-full rounded-full border-4 border-white shadow-lg relative z-10 object-cover" onerror="this.src='https://via.placeholder.com/150?text=D'">
+                </div>
+                
+                <!-- Main Headlines -->
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+                    Bitcoin & Crypto <br class="hidden sm:block"/>Market Intelligence
+                </h1>
+                <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+                    Expert medium-to-long term analysis identifying structural trends and macro drivers. Actionable Elliott Wave forecasts and exclusive asset models.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="https://newsletter.decodejar.com" target="_blank" class="inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-lg text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-all transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24l10.54-9.6L22.54 24V10.812H1.46zM0 0h24v2.836H0V0z"/></svg>
+                        Subscribe on Substack
+                    </a>
+                    <a href="https://x.com/decodejar" target="_blank" class="inline-flex items-center justify-center px-8 py-3.5 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 16 16"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.918l-3.965-5.187L2.6 15.25H.146l5.383-6.142L0 .75h5.063l3.495 4.631L12.6.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg>
+                        Follow on X
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Optional Background Decoration -->
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-full overflow-hidden -z-0 opacity-5">
+             <svg class="absolute w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="currentColor" />
+             </svg>
+        </div>
+    </section>
+
+    <!-- ===== ASSET MODELS & SERVICES ===== -->
+    <section id="models" class="py-16 sm:py-24 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-base text-brand-orange font-semibold tracking-wide uppercase">Our Toolkit</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Asset Models & Indicators
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                    Exclusive tools and proprietary models designed to navigate market volatility.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <a href="https://taotensorlaw.com" target="_blank" class="group block p-8 bg-white border border-gray-200 rounded-2xl hover:shadow-xl hover:border-gray-300 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-gray-900 group-hover:bg-brand-orange transition-colors"></div>
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-orange-50 transition-colors">
+                        <svg class="w-6 h-6 text-gray-700 group-hover:text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-brand-orange transition-colors">TAO Tensor Law</h3>
+                    <p class="text-gray-500 leading-relaxed mb-4">Exclusive asset model for determining fair value and trend exhaustion.</p>
+                    <span class="text-sm font-semibold text-gray-900 flex items-center">
+                        View Model <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </span>
+                </a>
+
+                <!-- Card 2 -->
+                <a href="https://www.tradingview.com/script/1MQTgPMe-DECODE-Global-Liquidity-Index/" target="_blank" class="group block p-8 bg-white border border-gray-200 rounded-2xl hover:shadow-xl hover:border-gray-300 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-gray-900 group-hover:bg-brand-orange transition-colors"></div>
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-orange-50 transition-colors">
+                         <svg class="w-6 h-6 text-gray-700 group-hover:text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-brand-orange transition-colors">Global Liquidity Index</h3>
+                    <p class="text-gray-500 leading-relaxed mb-4">TradingView indicator tracking global M2 supply and liquidity injections.</p>
+                    <span class="text-sm font-semibold text-gray-900 flex items-center">
+                        Get Indicator <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </span>
+                </a>
+
+                <!-- Card 3 -->
+                <a href="https://www.tradingview.com/script/ORc9QErN-DECODE-Moving-Average-Toolkit/" target="_blank" class="group block p-8 bg-white border border-gray-200 rounded-2xl hover:shadow-xl hover:border-gray-300 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-gray-900 group-hover:bg-brand-orange transition-colors"></div>
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6 group-hover:bg-orange-50 transition-colors">
+                        <svg class="w-6 h-6 text-gray-700 group-hover:text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-brand-orange transition-colors">Moving Average Toolkit</h3>
+                    <p class="text-gray-500 leading-relaxed mb-4">Comprehensive suite of M
