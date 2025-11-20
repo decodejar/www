@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,6 +43,7 @@
 
     <!-- Internal Styles -->
     <style>
+        /* FIXED: Set height to 100% for html/body to ensure full viewport filling on desktop */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f1f5f9; /* slate-100 */
@@ -161,7 +162,7 @@
             border-radius: 0.75rem;
             padding: 0.75rem 1rem;
             font-size: 0.75rem;
-            line-height: 1.4; /* Reduced from 1.5 */
+            line-height: 1.4;
             color: #334155;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -181,7 +182,7 @@
         #bandLevelsTable h3 {
             font-weight: 600;
             color: #0f172a;
-            margin-bottom: 0.5rem; /* Reduced spacing */
+            margin-bottom: 0.5rem; 
             border-bottom: 1px solid rgba(203, 213, 225, 0.5);
             padding-bottom: 0.25rem;
             display: flex;
@@ -197,16 +198,12 @@
             cursor: grabbing;
         }
 
-        /* FIXED SELECTOR: 
-           Previously "#bandLevelsTable > div:not(h3)" targeted the wrapper div, not the rows.
-           Updated to match the row structure.
-        */
         #projectionData > div,
         #bandLevelsTable .flex-col > div {
             display: flex;
             justify-content: space-between;
-            padding: 1px 0; /* Tight padding */
-            gap: 2rem; /* Ensure gap between label and value */
+            padding: 1px 0; 
+            gap: 2rem; 
         }
 
         #projectionData > div span:first-child,
@@ -239,10 +236,11 @@
     </style>
 </head>
 <!-- 
-    FIXED: Removed h-screen and overflow-hidden. 
-    Added min-h-screen to allow scrolling if content is too tall. 
+    FIXED: Layout & Scroll Logic
+    1. h-full on html and body ensures percentage heights work.
+    2. overflow-y-auto on body makes the body the scroll container.
 -->
-<body class="text-slate-800 flex flex-col items-center min-h-screen p-3 sm:p-4 md:p-6 bg-slate-200 overflow-y-auto">
+<body class="text-slate-800 flex flex-col items-center h-full p-3 sm:p-4 md:p-6 bg-slate-200 overflow-y-auto">
 
     <!-- SEO text -->
     <div class="sr-only">
@@ -250,7 +248,12 @@
     </div>
 
     <!-- Main application container -->
-    <!-- Removed strict height constraint (max-h) that might cause clipping on very small screens, used min-h instead -->
+    <!-- 
+         FIXED: 
+         - min-h-[30rem] ensures it doesn't collapse too small.
+         - flex-grow ensures it fills the vertical height of the parent (body), allowing the chart to expand.
+         - This combination restores the "full viewport" feel on desktop while allowing scroll on small screens.
+    -->
     <div id="mainContainer" class="w-full flex-grow max-w-[1920px] min-h-[30rem] flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-400/30 relative transition-all duration-300">
 
         <!-- Mobile Rotate Overlay -->
@@ -267,18 +270,15 @@
             <!-- Left: Logo/Links -->
             <div class="flex items-center">
                 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 group">
-                    <!-- FIXED: Removed gradient ring div -->
                     <div class="group-hover:scale-105 transition-transform duration-300">
                         <img src="decode.png" alt="decodejar" class="w-8 h-8 rounded-full" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                     </div>
-                    <!-- FIXED: Changed text-slate-700 to text-black -->
                     <span class="hidden sm:block font-bold text-black text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
                 </a>
             </div>
 
             <!-- Center: Title -->
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
-                <!-- FIXED: Changed text-slate-800 to text-black -->
                 <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-black tracking-tight whitespace-nowrap">
                     TAO Tensor Law
                     <span class="hidden sm:inline ml-1 text-lg text-slate-400 font-handwriting font-normal text-indigo-500/80">by decodejar</span>
@@ -304,11 +304,11 @@
         </header>
 
         <!-- Top Status Bar -->
-        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-slate-50">
+        <!-- FIXED: Changed gap-4 to gap-x-4 gap-y-1 to reduce vertical spacing on wrap -->
+        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-1 px-6 py-3 border-b border-slate-100 bg-slate-50">
              <!-- Left Group: Price & Status -->
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
                  <!-- Price (First) -->
-                 <!-- FIXED: Removed font-mono-data from container -->
                  <div id="lastPriceDiv" class="hidden sm:flex items-center text-slate-700"></div>
                  <!-- Data Status (Second) -->
                  <div id="dataStatusDiv" class="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
@@ -326,7 +326,6 @@
                      <label for="showBandsCheckbox" class="flex items-center cursor-pointer select-none">
                          <div class="relative">
                              <input type="checkbox" id="showBandsCheckbox" class="peer sr-only">
-                             <!-- FIXED: Changed peer-checked:bg-indigo-500 to peer-checked:bg-blue-500 -->
                              <div class="block h-6 w-10 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 transition-colors peer-checked:bg-blue-500"></div>
                              <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></div>
                          </div>
@@ -396,9 +395,9 @@
         </div>
 
         <!-- Bottom Model Info Bar -->
-        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500 rounded-b-2xl">
+        <!-- FIXED: Changed gap-6 to gap-x-6 gap-y-1 to reduce vertical spacing on wrap -->
+        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs font-medium text-slate-500 rounded-b-2xl">
             <!-- Order: Offset, Toggle, Exponent, Fit -->
-             <!-- FIXED: Removed font-mono-data from container -->
             <div id="modelParamDiv" class="text-slate-600"></div>
             
             <!-- Model Toggle -->
@@ -407,7 +406,6 @@
                 <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1 text-slate-600 hover:text-slate-800">Use Optimal</label>
             </div>
             
-             <!-- FIXED: Removed font-mono-data from container -->
             <div id="growthExponentDiv" class="text-slate-600"></div>
             <div id="modelFitDiv" class="flex items-center"></div>
         </div>
@@ -501,7 +499,8 @@
                 
                 const baseFontSize = Math.max(30, Math.min(80, width / 12)); 
                 ctx.font = `bold ${baseFontSize.toFixed(0)}px Inter, sans-serif`;
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.06)'; // Slightly increased opacity for white background
+                // FIXED: Increased alpha from 0.06 to 0.12 for stronger watermark
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.12)'; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
@@ -633,7 +632,6 @@
                 slope = regression.slope;
                 meanIntercept = regression.intercept;
                 rSquared = optimalOffsetRSquared; 
-                // FIXED: Added font-mono-data to value
                 modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${optimalOffset}</span>`;
             } else {
                 activeDayOffset = HARDCODED_OFFSET;
@@ -643,10 +641,8 @@
                 meanIntercept = regression.intercept;
                 rSquared = calculateRSquared(priceData, slope, meanIntercept);
                 if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                      // FIXED: Added font-mono-data to values
                       modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${HARDCODED_OFFSET}</span> (Opt: <span class="font-mono-data">${optimalOffset}</span>)`;
                 } else {
-                      // FIXED: Added font-mono-data to value
                       modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800 font-mono-data">${HARDCODED_OFFSET}</span>`;
                 }
             }
@@ -680,11 +676,9 @@
             
             // Only update status if not in Demo mode (to preserve the yellow demo text)
             if(!dataStatusDiv.innerHTML.includes("Demo")) {
-                // FIXED: Added font-mono-data to date value
                 dataStatusDiv.innerHTML = `<span class="status-dot ${dotColor}"></span><span class="font-mono-data">${lastUpdateDate}</span>`;
             }
 
-            // FIXED: Added font-mono-data to price value
             lastPriceDiv.innerHTML = `Price: <span class="ml-2 font-bold text-slate-900 font-mono-data">$${lastBaseDataPoint.y.toFixed(2)}</span>`;
             lastPriceDiv.classList.remove('hidden');
 
@@ -739,7 +733,6 @@
             else if (lastResidual > p20Residual) { priceZone = "Value"; priceZoneColor = "bg-green-500"; }
             else { priceZone = "Discount"; priceZoneColor = "bg-blue-400"; }
 
-            // FIXED: Added font-mono-data to zone value text
             priceZoneDiv.innerHTML = `<span class="status-dot ${priceZoneColor}"></span><span class="font-medium text-slate-600 font-mono-data">${priceZone}</span>`;
             priceZoneDiv.classList.remove('hidden');
 
@@ -769,7 +762,6 @@
             
             calculateProjections(baseData, activeModelParams, projectionData);
 
-            // FIXED: Added font-mono-data to exponent value
             growthExponentDiv.innerHTML = `Exponent (α): <span class="font-bold text-slate-800 font-mono-data">${slope.toFixed(3)}</span>`;
             
             let fitColorClass = "";
@@ -778,7 +770,6 @@
             else if (rSquared >= 0.5) fitColorClass = "bg-yellow-400";
             else fitColorClass = "bg-red-500";
             
-            // FIXED: fitDiv was already largely correct, ensuring mono data on value span
             modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>Fit (R²):&nbsp;<span class="font-mono-data font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
             
             const startIndex = extendedMinDay;
