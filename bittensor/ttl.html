@@ -262,7 +262,7 @@
                     <div class="p-0.5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 group-hover:scale-105 transition-transform duration-300">
                         <img src="decode.png" alt="decodejar" class="w-8 h-8 rounded-full bg-white border-2 border-white" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                     </div>
-                    <span class="font-bold text-slate-700 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
+                    <span class="hidden sm:block font-bold text-slate-700 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
                 </a>
             </div>
 
@@ -294,6 +294,7 @@
 
         <!-- Top Status Bar -->
         <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-slate-50">
+             <!-- Left Group: Price & Status -->
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
                  <!-- Price (First) -->
                  <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
@@ -301,27 +302,24 @@
                  <div id="dataStatusDiv" class="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
                      <span class="status-dot bg-slate-200 animate-pulse"></span><span class="text-slate-400">Loading...</span>
                  </div>
-                 <!-- Zone (Third) -->
-                 <div id="priceZoneDiv" class="hidden sm:flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm"></div>
              </div>
              
-             <!-- Bands Toggle -->
-             <div id="showBandsContainer" class="flex items-center hidden group">
-                 <label for="showBandsCheckbox" class="flex items-center cursor-pointer select-none">
-                     <div class="relative">
-                         <input type="checkbox" id="showBandsCheckbox" class="peer sr-only">
-                         <div class="block h-6 w-10 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 transition-colors peer-checked:bg-indigo-500"></div>
-                         <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></div>
-                     </div>
-                     <span class="ml-3 text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors">Valuation Bands</span>
-                 </label>
-                 <!-- Band Info Tooltip -->
-                 <div class="group/tooltip relative flex items-center ml-2">
-                    <span class="text-[10px] font-bold text-slate-400 cursor-help border border-slate-300 rounded-full w-4 h-4 flex items-center justify-center hover:bg-slate-100 hover:text-indigo-500 transition-colors">?</span>
-                    <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 bg-slate-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity duration-200 shadow-xl z-50 font-light leading-relaxed">
-                       Blue: Discount (P1-P20)<br>Green: Value (P20-P50)<br>Yellow: Expensive (P50-P80)<br>Red: Bubble (P80-P99)
-                    </div>
-                </div>
+             <!-- Right Group: Rating & Toggle -->
+             <div class="flex items-center gap-4 text-xs sm:text-sm">
+                 <!-- Zone (Moved here) -->
+                 <div id="priceZoneDiv" class="hidden sm:flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm"></div>
+
+                 <!-- Bands Toggle -->
+                 <div id="showBandsContainer" class="flex items-center hidden group">
+                     <label for="showBandsCheckbox" class="flex items-center cursor-pointer select-none">
+                         <div class="relative">
+                             <input type="checkbox" id="showBandsCheckbox" class="peer sr-only">
+                             <div class="block h-6 w-10 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 transition-colors peer-checked:bg-indigo-500"></div>
+                             <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></div>
+                         </div>
+                         <span class="ml-3 text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors">Bands</span>
+                     </label>
+                 </div>
              </div>
         </div>
 
@@ -401,7 +399,7 @@
 
     <!-- Footer -->
     <footer class="py-3 px-4 text-center space-y-1 w-full">
-        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
+        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk and only what you can afford to lose. Past performance does not guarantee future results.</p>
         <p class="text-slate-500 text-[10px] tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
     </footer>
 
