@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Added JetBrains Mono for technical data display -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Courgette&display=swap" rel="stylesheet">
     
     <!-- Tailwind Configuration for Custom Fonts/Colors -->
     <script>
@@ -45,6 +45,7 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
+            /* Darkened background as requested -> Now Lightened to slate-100 */
             background-color: #f1f5f9; /* slate-100 */
             background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
         }
@@ -80,7 +81,7 @@
 
         /* --- Fullscreen CSS Logic (PRESERVED) --- */
         
-        body:has(#mainContainer:fullscreen) { display: block; background: white; overflow: hidden; }
+        body:has(#mainContainer:fullscreen) { display: block; background: white; }
 
         #mainContainer:fullscreen {
             width: 100vw;
@@ -92,7 +93,6 @@
             flex-direction: column;
             padding: 1rem !important;
             background: white;
-            overflow: hidden;
         }
 
         #mainContainer:fullscreen #chartCard {
@@ -197,25 +197,22 @@
             cursor: grabbing;
         }
 
-        /* FIXED SELECTOR: 
-           Previously "#bandLevelsTable > div:not(h3)" targeted the wrapper div, not the rows.
-           Updated to match the row structure.
-        */
         #projectionData > div,
-        #bandLevelsTable .flex-col > div {
+        #bandLevelsTable > div:not(h3) {
             display: flex;
             justify-content: space-between;
-            padding: 1px 0; /* Tight padding */
+            padding: 1px 0; /* Reduced padding from 4px to 1px */
             gap: 2rem; /* Ensure gap between label and value */
         }
 
         #projectionData > div span:first-child,
-        #bandLevelsTable .flex-col > div span:first-child {
+        #bandLevelsTable > div:not(h3) span:first-child {
+            /* margin-right: 1.5rem; Removed fixed margin, relying on justify-between + gap */
             color: #64748b;
             font-weight: 500;
         }
         #projectionData > div span:last-child,
-        #bandLevelsTable .flex-col > div span:last-child {
+        #bandLevelsTable > div:not(h3) span:last-child {
             font-family: 'JetBrains Mono', monospace;
             font-weight: 500;
             color: #0f172a;
@@ -238,11 +235,7 @@
         
     </style>
 </head>
-<!-- 
-    FIXED: Removed h-screen and overflow-hidden. 
-    Added min-h-screen to allow scrolling if content is too tall. 
--->
-<body class="text-slate-800 flex flex-col items-center min-h-screen p-3 sm:p-4 md:p-6 bg-slate-200 overflow-y-auto">
+<body class="text-slate-800 flex flex-col items-center h-screen p-3 sm:p-4 md:p-6 overflow-hidden bg-slate-200">
 
     <!-- SEO text -->
     <div class="sr-only">
@@ -250,8 +243,7 @@
     </div>
 
     <!-- Main application container -->
-    <!-- Removed strict height constraint (max-h) that might cause clipping on very small screens, used min-h instead -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] min-h-[30rem] flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-400/30 relative transition-all duration-300">
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-400/30 relative overflow-hidden transition-all duration-300">
 
         <!-- Mobile Rotate Overlay -->
         <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8 backdrop-blur-sm">
@@ -263,23 +255,20 @@
         </div>
 
         <!-- Page Header -->
-        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-100 bg-white z-50 rounded-t-2xl">
+        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-100 bg-white z-50">
             <!-- Left: Logo/Links -->
             <div class="flex items-center">
                 <a href="https://decodejar.com" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 group">
-                    <!-- FIXED: Removed gradient ring div -->
-                    <div class="group-hover:scale-105 transition-transform duration-300">
-                        <img src="decode.png" alt="decodejar" class="w-8 h-8 rounded-full" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
+                    <div class="p-0.5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 group-hover:scale-105 transition-transform duration-300">
+                        <img src="decode.png" alt="decodejar" class="w-8 h-8 rounded-full bg-white border-2 border-white" onerror="this.src='https://placehold.co/40x40/eeeeee/333333?text=D'; this.onerror=null;">
                     </div>
-                    <!-- FIXED: Changed text-slate-700 to text-black -->
-                    <span class="hidden sm:block font-bold text-black text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
+                    <span class="hidden sm:block font-bold text-slate-700 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">decodejar</span>
                 </a>
             </div>
 
             <!-- Center: Title -->
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
-                <!-- FIXED: Changed text-slate-800 to text-black -->
-                <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-black tracking-tight whitespace-nowrap">
+                <h1 class="text-lg sm:text-xl md:text-2xl font-semibold text-slate-800 tracking-tight whitespace-nowrap">
                     TAO Tensor Law
                     <span class="hidden sm:inline ml-1 text-lg text-slate-400 font-handwriting font-normal text-indigo-500/80">by decodejar</span>
                 </h1>
@@ -325,8 +314,7 @@
                      <label for="showBandsCheckbox" class="flex items-center cursor-pointer select-none">
                          <div class="relative">
                              <input type="checkbox" id="showBandsCheckbox" class="peer sr-only">
-                             <!-- FIXED: Changed peer-checked:bg-indigo-500 to peer-checked:bg-blue-500 -->
-                             <div class="block h-6 w-10 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 transition-colors peer-checked:bg-blue-500"></div>
+                             <div class="block h-6 w-10 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 transition-colors peer-checked:bg-indigo-500"></div>
                              <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4"></div>
                          </div>
                          <span class="ml-3 text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors">Bands</span>
@@ -336,7 +324,7 @@
         </div>
 
         <!-- Chart Area -->
-        <div id="chartCard" class="relative flex-grow min-h-[400px] w-full p-0 bg-white">
+        <div id="chartCard" class="relative flex-grow min-h-0 w-full p-0 bg-white">
             <!-- Loading Spinner -->
             <div id="loader" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col gap-3 items-center justify-center z-30 transition-opacity duration-300">
                 <div class="loader"></div>
@@ -395,7 +383,7 @@
         </div>
 
         <!-- Bottom Model Info Bar -->
-        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500 rounded-b-2xl">
+        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
             <!-- Order: Offset, Toggle, Exponent, Fit -->
             <div id="modelParamDiv" class="font-mono-data text-slate-600"></div>
             
@@ -776,8 +764,8 @@
                  const safeStartIndex = Math.max(startIndex, 1); 
                  const safeEndIndex = Math.max(endIndex, 1);
                  return [
-                      { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
-                      { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
+                     { x: startIndex, y: Math.pow(10, slope * Math.log10(safeStartIndex) + intercept) },
+                     { x: endIndex, y: Math.pow(10, slope * Math.log10(safeEndIndex) + intercept) }
                  ];
             };
             const medianLineData = calculateLinePoints(medianIntercept);
@@ -1013,7 +1001,7 @@
                                 padding: 10,
                                 callbacks: {
                                      title: (tooltipItems) => {
-                                             if (tooltipItems.length > 0) {
+                                           if (tooltipItems.length > 0) {
                                                  const item = tooltipItems[0];
                                                  const dayNumber = item.parsed.x; 
                                                  
@@ -1034,16 +1022,16 @@
                                                  }
 
                                                  return `Day ~${targetDayIndex.toFixed(0)}`;
-                                             }
-                                             return '';
-                                     },
+                                            }
+                                            return '';
+                                      },
                                      label: (context) => {
                                          // Hide tooltips for the transparent band layers
                                          if (context.datasetIndex < 5) return null;
                                          return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
                                      }
                                 }
-                            },
+                            }
                         },
                         scales: {
                             x: {
