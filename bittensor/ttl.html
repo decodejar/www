@@ -55,7 +55,8 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc;
+            /* Darkened background as requested */
+            background-color: #e2e8f0; 
             background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
         }
         
@@ -85,8 +86,8 @@
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
         /* --- Fullscreen CSS Logic (PRESERVED) --- */
         
@@ -170,7 +171,7 @@
             border-radius: 0.75rem;
             padding: 0.75rem 1rem;
             font-size: 0.75rem;
-            line-height: 1.4;
+            line-height: 1.5; /* Increased line-height for spacing */
             color: #334155;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -184,13 +185,13 @@
         }
 
         #projectionTable { left: 5%; }
-        #bandLevelsTable { left: 5%; /* Overlap by default as requested */ }
+        #bandLevelsTable { left: 5%; }
 
         #projectionTable h3,
         #bandLevelsTable h3 {
             font-weight: 600;
             color: #0f172a;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem; /* Increased spacing */
             border-bottom: 1px solid rgba(203, 213, 225, 0.5);
             padding-bottom: 0.5rem;
             display: flex;
@@ -210,12 +211,13 @@
         #bandLevelsTable > div:not(h3) {
             display: flex;
             justify-content: space-between;
-            padding: 2px 0;
+            padding: 4px 0; /* Increased padding for vertical spacing */
+            gap: 2rem; /* Ensure gap between label and value */
         }
 
         #projectionData > div span:first-child,
         #bandLevelsTable > div:not(h3) span:first-child {
-            margin-right: 1.5rem;
+            /* margin-right: 1.5rem; Removed fixed margin, relying on justify-between + gap */
             color: #64748b;
             font-weight: 500;
         }
@@ -224,6 +226,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-weight: 500;
             color: #0f172a;
+            text-align: right;
         }
         
         #projectionTable h3 button,
@@ -242,7 +245,7 @@
         
     </style>
 </head>
-<body class="text-slate-800 flex flex-col items-center h-screen p-3 sm:p-4 md:p-6 overflow-hidden bg-slate-50">
+<body class="text-slate-800 flex flex-col items-center h-screen p-3 sm:p-4 md:p-6 overflow-hidden bg-slate-200">
 
     <!-- SEO text -->
     <div class="sr-only">
@@ -250,7 +253,7 @@
     </div>
 
     <!-- Main application container -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-200/60 relative overflow-hidden transition-all duration-300">
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-400/30 relative overflow-hidden transition-all duration-300">
 
         <!-- Mobile Rotate Overlay -->
         <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8 backdrop-blur-sm">
@@ -309,13 +312,13 @@
         <!-- Top Status Bar -->
         <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-white/50">
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
-                 <!-- Data Status -->
+                 <!-- Price (First) -->
+                 <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
+                 <!-- Data Status (Second) -->
                  <div id="dataStatusDiv" class="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
                      <span class="status-dot bg-slate-200 animate-pulse"></span><span class="text-slate-400">Loading...</span>
                  </div>
-                 <!-- Price -->
-                 <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
-                 <!-- Zone -->
+                 <!-- Zone (Third) -->
                  <div id="priceZoneDiv" class="hidden sm:flex items-center bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm"></div>
              </div>
              
@@ -365,14 +368,14 @@
 
                 <div id="bandLevelsTable" class="hidden transform transition-transform active:scale-[1.02]">
                     <h3 id="bandsHeader">
-                        <span>Current Valuation Bands</span>
+                        <span>Valuation Bands (Current)</span>
                         <button onclick="document.getElementById('bandLevelsTable').style.display='none'" type="button" title="Close">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </h3>
-                    <div class="flex flex-col gap-1 pt-1">
+                    <div class="flex flex-col pt-1">
                         <div id="bandLevelBubble">
                             <span class="inline-flex items-center text-xs"><span class="w-2 h-2 rounded-full bg-red-400 mr-2 shadow-sm"></span>Bubble</span>
                             <span class="whitespace-nowrap text-slate-700">$N/A</span>
@@ -399,15 +402,16 @@
 
         <!-- Bottom Model Info Bar -->
         <div id="bottomModelBar" class="bg-white/50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
-            <div id="growthExponentDiv" class="font-mono-data text-slate-600"></div>              
+            <!-- Order: Offset, Toggle, Exponent, Fit -->
             <div id="modelParamDiv" class="font-mono-data text-slate-600"></div>
             
             <!-- Model Toggle -->
             <div class="flex items-center bg-white px-2 py-0.5 rounded border border-slate-200">
                 <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-2 h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" checked>
-                <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1 text-slate-600 hover:text-slate-800">Use Optimal Offset</label>
+                <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1 text-slate-600 hover:text-slate-800">Use Optimal</label>
             </div>
             
+            <div id="growthExponentDiv" class="font-mono-data text-slate-600"></div>
             <div id="modelFitDiv" class="flex items-center"></div>
         </div>
     </div>
@@ -415,7 +419,7 @@
     <!-- Footer -->
     <footer class="py-3 px-4 text-center space-y-1 w-full">
         <p class="text-slate-400 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
-        <p class="text-slate-300 text-[10px] font-mono tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
+        <p class="text-slate-400 text-[10px] tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
     </footer>
 
 
@@ -632,7 +636,7 @@
                 slope = regression.slope;
                 meanIntercept = regression.intercept;
                 rSquared = optimalOffsetRSquared; 
-                modelParamDiv.innerHTML = `Offset: <span class="font-bold text-slate-800">${optimalOffset}</span>`;
+                modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${optimalOffset}</span>`;
             } else {
                 activeDayOffset = HARDCODED_OFFSET;
                 priceData = baseData.map(p => ({ ...p, x: p.dayIndex + HARDCODED_OFFSET }));
@@ -641,9 +645,9 @@
                 meanIntercept = regression.intercept;
                 rSquared = calculateRSquared(priceData, slope, meanIntercept);
                 if (optimalOffset !== -1 && optimalOffset !== HARDCODED_OFFSET) {
-                      modelParamDiv.innerHTML = `Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span> (Opt: ${optimalOffset})`;
+                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span> (Opt: ${optimalOffset})`;
                 } else {
-                      modelParamDiv.innerHTML = `Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span>`;
+                      modelParamDiv.innerHTML = `Day Offset: <span class="font-bold text-slate-800">${HARDCODED_OFFSET}</span>`;
                 }
             }
             
@@ -759,7 +763,7 @@
             
             calculateProjections(baseData, activeModelParams, projectionData);
 
-            growthExponentDiv.innerHTML = `Alpha (α): <span class="font-bold text-slate-800">${slope.toFixed(3)}</span>`;
+            growthExponentDiv.innerHTML = `Exponent (α): <span class="font-bold text-slate-800">${slope.toFixed(3)}</span>`;
             
             let fitColorClass = "";
             if (rSquared >= 0.9) fitColorClass = "bg-blue-400";
@@ -767,7 +771,7 @@
             else if (rSquared >= 0.5) fitColorClass = "bg-yellow-400";
             else fitColorClass = "bg-red-500";
             
-            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>R²: <span class="font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
+            modelFitDiv.innerHTML = `<span class="status-dot ${fitColorClass}"></span>Fit (R²): <span class="font-mono-data font-bold text-slate-800 ml-1">${rSquared.toFixed(4)}</span>`;
             
             const startIndex = extendedMinDay;
             const endIndex = extendedMaxDay;
