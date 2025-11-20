@@ -563,6 +563,7 @@
         function getPercentile(sortedResiduals, percentile) {
             if (!sortedResiduals || sortedResiduals.length === 0) return 0;
             const index = (percentile / 100) * (sortedResiduals.length - 1);
+            // Duplicate line removed here
             const lowerIndex = Math.floor(index);
             const upperIndex = Math.ceil(index);
             
