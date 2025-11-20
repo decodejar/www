@@ -295,7 +295,8 @@
     <!-- ===== FOOTER ===== -->
     <footer class="bg-white border-t border-gray-200 mt-auto">
         <div class="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
+            <!-- Changed items-center to items-start md:items-center for consistent left alignment on mobile -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div class="mb-4 md:mb-0">
                     <span class="font-bold text-lg text-gray-900">decodejar</span>
                     <p class="text-sm text-gray-500 mt-1">&copy; 2025 decodejar.com. All Rights Reserved.</p>
@@ -312,7 +313,7 @@
                 </div>
             </div>
             <div class="mt-8 border-t border-gray-100 pt-8">
-                <p class="text-xs text-gray-400 text-left leading-relaxed max-w-3xl mx-auto">
+                <p class="text-xs text-gray-400 text-left leading-relaxed w-full">
                     Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk and only what you can afford to lose. Past performance does not guarantee future results.
                 </p>
             </div>
