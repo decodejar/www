@@ -55,10 +55,9 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            /* Lighter background as requested */
-            background-color: #f1f5f9; 
+            /* Darkened background as requested */
+            background-color: #e2e8f0; 
             background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
-            /* Removed overflow-hidden to allow scrolling on mobile landscape */
         }
         
         .font-mono-data { font-family: 'JetBrains Mono', monospace; }
@@ -104,7 +103,6 @@
             flex-direction: column;
             padding: 1rem !important;
             background: white;
-            overflow: hidden !important; /* Lock scroll in actual fullscreen API mode */
         }
 
         #mainContainer:fullscreen #chartCard {
@@ -113,7 +111,7 @@
             flex-direction: column;
             box-shadow: none !important;
             border: none !important;
-            background: white !important;
+            background: transparent !important;
         }
 
         #mainContainer:fullscreen #chartWrapper {
@@ -173,7 +171,7 @@
             border-radius: 0.75rem;
             padding: 0.75rem 1rem;
             font-size: 0.75rem;
-            line-height: 1.3; 
+            line-height: 1.5; /* Increased line-height for spacing */
             color: #334155;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -193,7 +191,7 @@
         #bandLevelsTable h3 {
             font-weight: 600;
             color: #0f172a;
-            margin-bottom: 0.5rem; 
+            margin-bottom: 0.75rem; /* Increased spacing */
             border-bottom: 1px solid rgba(203, 213, 225, 0.5);
             padding-bottom: 0.5rem;
             display: flex;
@@ -209,17 +207,17 @@
             cursor: grabbing;
         }
 
-        /* Updated Spacing: gap-8 for horizontal separation, padding 2px for tighter vertical */
         #projectionData > div,
         #bandLevelsTable > div:not(h3) {
             display: flex;
             justify-content: space-between;
-            padding: 2px 0; 
-            gap: 2rem; 
+            padding: 4px 0; /* Increased padding for vertical spacing */
+            gap: 2rem; /* Ensure gap between label and value */
         }
 
         #projectionData > div span:first-child,
         #bandLevelsTable > div:not(h3) span:first-child {
+            /* margin-right: 1.5rem; Removed fixed margin, relying on justify-between + gap */
             color: #64748b;
             font-weight: 500;
         }
@@ -247,7 +245,7 @@
         
     </style>
 </head>
-<body class="text-slate-800 flex flex-col items-center min-h-screen p-3 sm:p-4 md:p-6 bg-slate-100">
+<body class="text-slate-800 flex flex-col items-center h-screen p-3 sm:p-4 md:p-6 overflow-hidden bg-slate-200">
 
     <!-- SEO text -->
     <div class="sr-only">
@@ -255,8 +253,7 @@
     </div>
 
     <!-- Main application container -->
-    <!-- Removed backdrop filters, applied explicit colors to children sections. Added overflow-hidden to clip corners. -->
-    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] min-h-[30rem] flex flex-col rounded-2xl border border-white/60 shadow-2xl shadow-slate-300/50 relative overflow-hidden transition-all duration-300 bg-white">
+    <div id="mainContainer" class="w-full flex-grow max-w-[1920px] max-h-[1080px] min-h-[30rem] flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-2xl shadow-slate-400/30 relative overflow-hidden transition-all duration-300">
 
         <!-- Mobile Rotate Overlay -->
         <div id="rotateOverlay" class="hidden absolute inset-0 w-full h-full bg-white/95 z-50 flex-col items-center justify-center text-center p-8 backdrop-blur-sm">
@@ -267,8 +264,8 @@
             <p class="text-slate-500">This chart is optimized for landscape mode.</p>
         </div>
 
-        <!-- Page Header: White Background -->
-        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
+        <!-- Page Header -->
+        <header class="relative h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-100">
             <!-- Left: Logo/Links -->
             <div class="flex items-center gap-4">
                 <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="flex-shrink-0 group">
@@ -295,15 +292,14 @@
                 <!-- Tooltip -->
                 <div class="group relative flex items-center">
                      <span class="text-[10px] font-bold text-slate-400 cursor-help border border-slate-300 rounded-full w-4 h-4 flex items-center justify-center hover:bg-slate-100 hover:text-indigo-500 transition-colors">?</span>
-                     <!-- Adjusted tooltip positioning and styling for better legibility/mobile fit -->
-                     <div class="absolute top-8 left-1/2 -translate-x-1/2 w-[85vw] max-w-xs bg-slate-900 text-white text-xs rounded-lg p-4 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-2xl z-50 font-normal leading-relaxed">
-                        This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression. With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands. <br><br> <span class="font-semibold text-blue-300">Blue:</span> Discount, <span class="font-semibold text-green-400">Green:</span> Value, <span class="font-semibold text-yellow-300">Yellow:</span> Expensive, <span class="font-semibold text-red-400">Red:</span> Bubble.
+                     <div class="absolute top-6 left-1/2 -translate-x-1/2 w-72 bg-slate-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-xl z-50 font-light leading-relaxed">
+                        This interactive chart models the price history of TAO (Bittensor) against a logarithmic power law regression (Price = C * (Time + Offset)^α). With an optimal time offset for best fit, it calculates the 'fair value' trend line and price rating bands (discount, value, expensive, bubble) to help visualize TAO's historical valuation. The tool includes features to toggle bands, pan, zoom, and see future price projections based on this long-term model. The TAO Tensor Law Model was created by decodejar (x.com/decodejar, decodejar.com).
                      </div>
                 </div>
             </div>
 
              <!-- Right: Fullscreen -->
-            <button id="fullscreenBtn" onclick="toggleFullScreen()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-slate-100" title="Toggle Fullscreen">
+            <button id="fullscreenBtn" onclick="toggleFullScreen()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-slate-50" title="Toggle Fullscreen">
                 <svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m4.5 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                 </svg>
@@ -313,8 +309,8 @@
             </button>
         </header>
 
-        <!-- Top Status Bar: Light Gray Background -->
-        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-200 bg-slate-50">
+        <!-- Top Status Bar -->
+        <div id="topStatusBar" class="flex flex-wrap items-center justify-center sm:justify-between gap-4 px-6 py-3 border-b border-slate-100 bg-white/50">
              <div class="flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
                  <!-- Price (First) -->
                  <div id="lastPriceDiv" class="hidden sm:flex items-center font-mono-data text-slate-700"></div>
@@ -336,11 +332,18 @@
                      </div>
                      <span class="ml-3 text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors">Valuation Bands</span>
                  </label>
+                 <!-- Band Info Tooltip -->
+                 <div class="group/tooltip relative flex items-center ml-2">
+                    <span class="text-[10px] font-bold text-slate-400 cursor-help border border-slate-300 rounded-full w-4 h-4 flex items-center justify-center hover:bg-slate-100 hover:text-indigo-500 transition-colors">?</span>
+                    <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 bg-slate-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity duration-200 shadow-xl z-50 font-light leading-relaxed">
+                       Blue: Discount (P1-P20)<br>Green: Value (P20-P50)<br>Yellow: Expensive (P50-P80)<br>Red: Bubble (P80-P99)
+                    </div>
+                </div>
              </div>
         </div>
 
-        <!-- Chart Area: White Background with Padding -->
-        <div id="chartCard" class="relative flex-grow min-h-0 w-full px-4 bg-white">
+        <!-- Chart Area -->
+        <div id="chartCard" class="relative flex-grow min-h-0 w-full p-0">
             <!-- Loading Spinner -->
             <div id="loader" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col gap-3 items-center justify-center z-30 transition-opacity duration-300">
                 <div class="loader"></div>
@@ -360,7 +363,7 @@
                             </svg>
                         </button>
                     </h3>
-                    <div id="projectionData" class="flex flex-col gap-0.5 pt-1"></div>
+                    <div id="projectionData" class="flex flex-col gap-1 pt-1"></div>
                 </div>
 
                 <div id="bandLevelsTable" class="hidden transform transition-transform active:scale-[1.02]">
@@ -372,7 +375,7 @@
                             </svg>
                         </button>
                     </h3>
-                    <div class="flex flex-col gap-0.5 pt-1">
+                    <div class="flex flex-col pt-1">
                         <div id="bandLevelBubble">
                             <span class="inline-flex items-center text-xs"><span class="w-2 h-2 rounded-full bg-red-400 mr-2 shadow-sm"></span>Bubble</span>
                             <span class="whitespace-nowrap text-slate-700">$N/A</span>
@@ -397,13 +400,13 @@
             </div>
         </div>
 
-        <!-- Bottom Model Info Bar: Light Gray Background -->
-        <div id="bottomModelBar" class="bg-slate-50 border-t border-slate-200 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
+        <!-- Bottom Model Info Bar -->
+        <div id="bottomModelBar" class="bg-white/50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
             <!-- Order: Offset, Toggle, Exponent, Fit -->
             <div id="modelParamDiv" class="font-mono-data text-slate-600"></div>
             
             <!-- Model Toggle -->
-            <div class="flex items-center bg-white px-2 py-0.5 rounded border border-slate-200 shadow-sm">
+            <div class="flex items-center bg-white px-2 py-0.5 rounded border border-slate-200">
                 <input type="checkbox" id="useOptimalOffsetCheckbox" class="mr-2 h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" checked>
                 <label for="useOptimalOffsetCheckbox" class="cursor-pointer mr-1 text-slate-600 hover:text-slate-800">Use Optimal</label>
             </div>
@@ -414,9 +417,9 @@
     </div>
 
     <!-- Footer -->
-    <footer class="py-4 px-4 text-center space-y-1 w-full">
-        <p class="text-slate-500 text-[10px] mx-auto leading-relaxed font-medium">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
-        <p class="text-slate-500 text-[10px] tracking-wide font-medium"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
+    <footer class="py-3 px-4 text-center space-y-1 w-full">
+        <p class="text-slate-400 text-[10px] mx-auto leading-relaxed">Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk.</p>
+        <p class="text-slate-400 text-[10px] tracking-wide"><span class="font-sans">&copy;</span> 2025 taotensorlaw.com</p>
     </footer>
 
 
@@ -565,7 +568,6 @@
 
         function getPercentile(sortedResiduals, percentile) {
             if (!sortedResiduals || sortedResiduals.length === 0) return 0;
-            const index = (percentile / 100) * (sortedResiduals.length - 1);
             const index = (percentile / 100) * (sortedResiduals.length - 1);
             const lowerIndex = Math.floor(index);
             const upperIndex = Math.ceil(index);
@@ -736,7 +738,7 @@
             priceZoneDiv.classList.remove('hidden');
 
             const medianIntercept = meanIntercept + medianResidual;
-            const p1Intercept = meanIntercept + p1Intercept;
+            const p1Intercept = meanIntercept + p1Residual;
             const p99Intercept = meanIntercept + p99Residual;
             const p20Intercept = meanIntercept + p20Residual;
             const p80Intercept = meanIntercept + p80Residual;
