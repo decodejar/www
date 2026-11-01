@@ -99,10 +99,17 @@
                     <img src="https://decodejar.com/decode.png" alt="Decode Logo" width="32" height="32" class="h-8 w-8 rounded-full bg-gray-200" onerror="this.style.display='none'">
                     <span class="font-bold text-xl tracking-tight text-gray-900">decodejar</span>
                 </div>
-                <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-                    <svg class="w-4 h-4 mr-2 hidden sm:block" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.918l-3.965-5.187L2.6 15.25H.146l5.383-6.142L0 .75h5.063l3.495 4.631L12.6.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg>
-                    Follow us on X
-                </a>
+                <!-- Follow buttons: icon-only on phones, icon + label from sm up -->
+                <div class="flex items-center gap-2">
+                    <a href="https://substack.com/@decodejar" target="_blank" rel="noopener noreferrer" aria-label="Follow on Substack" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24l10.54-9.6L22.54 24V10.812H1.46zM0 0h24v2.836H0V0z"/></svg>
+                        <span class="hidden sm:block">Follow on Substack</span>
+                    </a>
+                    <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" aria-label="Follow on X" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.918l-3.965-5.187L2.6 15.25H.146l5.383-6.142L0 .75h5.063l3.495 4.631L12.6.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg>
+                        <span class="hidden sm:block">Follow on X</span>
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -262,21 +269,9 @@
     <!-- ===== FOOTER ===== -->
     <footer class="bg-brand-50 border-t border-gray-200 mt-auto">
         <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div class="mb-4 md:mb-0">
-                    <span class="font-bold text-xl tracking-tight text-gray-900">decodejar</span>
-                    <p class="text-sm text-gray-500 mt-1">&copy; 2026 decodejar.com. All Rights Reserved.</p>
-                </div>
-                <div class="flex space-x-6">
-                    <a href="https://x.com/decodejar" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-900">
-                        <span class="sr-only">X</span>
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    </a>
-                    <a href="https://substack.com/@decodejar" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-brand-orange">
-                        <span class="sr-only">Substack</span>
-                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24l10.54-9.6L22.54 24V10.812H1.46zM0 0h24v2.836H0V0z"/></svg>
-                    </a>
-                </div>
+            <div>
+                <span class="font-bold text-xl tracking-tight text-gray-900">decodejar</span>
+                <p class="text-sm text-gray-500 mt-1">&copy; 2026 decodejar.com. All Rights Reserved.</p>
             </div>
             <p class="text-xs text-gray-500 text-left leading-relaxed w-full mt-8">
                 Disclaimer: This content is for informational and research purposes only, reflects the author's opinion, and is not financial, investment or trading advice. The cryptocurrency market is volatile; invest at your own risk and only what you can afford to lose. Past performance does not guarantee future results.
